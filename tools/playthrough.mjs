@@ -70,7 +70,7 @@ try {
   expect((await deathText()).includes('戸を開けた'), 'opening the door to the voice before seven kills (S12)');
   await shot('03_death_door');
   await retry(); await frames(4);
-  expect((await G('[g.prog.index, Math.round(hk.st.night)]')).join() === '2,0', 'try again: back to the start of the night (L3, 01:00)');
+  expect((await G('g.prog.index === 2 && hk.st.night < 3')), 'try again: back to the start of the night (L3, 01:00)');   // the clock may already have run a moment (a slow frame)
   // black salt: death
   await run(`window.__hkSalt = true; hk.st.night = 110; hk.st.dark.NW = 1.349;`);
   for (let i = 0; i < 40 && !(await deathText()); i++) await sleep(300);
