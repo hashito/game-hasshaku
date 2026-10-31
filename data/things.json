@@ -25,6 +25,7 @@
   ],
   "y": 1.2,
   "label": "田んぼの生垣",
+  "photo": "assets/photos/ph-hedge.webp",
   "size": 1,
   "text": [
    "大人の背より高い生垣。向こうは田んぼだ。",
@@ -41,6 +42,7 @@
   ],
   "y": 1.4,
   "label": "二つ目の電柱",
+  "photo": "assets/photos/ph-pole.webp",
   "size": 1,
   "text": [
    "電柱に、古い迷子の貼り紙の跡。日付だけが読める。「一九九八年 八月」。"
@@ -56,6 +58,7 @@
   ],
   "y": 1.3,
   "label": "店の柱の張り紙",
+  "photo": "assets/photos/ph-shopnote.webp",
   "size": 1,
   "text": [
    "「夕方以降、畑の先で妙な声を聞いた方は、真似をせず、まっすぐ帰宅してください。　区長」"
@@ -71,6 +74,7 @@
   ],
   "y": 1.0,
   "label": "仏壇",
+  "photo": "assets/photos/ph-butsudan.webp",
   "size": 1,
   "text": [
    "仏壇の扉が開いている。位牌が一つ、裏返しに置かれている。",
@@ -87,6 +91,7 @@
   ],
   "y": 1.3,
   "label": "柱の背比べの傷",
+  "photo": "assets/photos/ph-hashira.webp",
   "size": 1,
   "text": [
    "柱に、子どもの背を刻んだ傷が並んでいる。私の名前、母の名前。",
@@ -103,6 +108,7 @@
   ],
   "y": 1.6,
   "label": "掛け軸「静」",
+  "photo": "assets/photos/ph-kakejiku.webp",
   "size": 1,
   "text": [
    "床の間の掛け軸。一文字だけ「静」。"
@@ -118,6 +124,7 @@
   ],
   "y": 0.9,
   "label": "かまど",
+  "photo": "assets/photos/ph-kamado.webp",
   "size": 1,
   "text": [
    "まだ温かい。鍋が二つ。祖母が夕飯を作りかけていたようだ。"
@@ -133,6 +140,7 @@
   ],
   "y": 2.0,
   "label": "座敷の柱時計",
+  "photo": "assets/photos/ph-clock.webp",
   "size": 1,
   "text": [
    "文字盤の「七」に、赤い印がつけてある。",
@@ -149,6 +157,7 @@
   ],
   "y": 1.2,
   "label": "物置小屋",
+  "photo": "assets/photos/ph-shed.webp",
   "size": 1,
   "text": [
    "薪と農具。戸の内側に、塩の袋の空き袋がたくさん畳んである。"
@@ -181,6 +190,7 @@
   ],
   "y": 0.8,
   "label": "南の地蔵",
+  "photo": "assets/photos/ph-jizo.webp",
   "size": 1,
   "text": [
    "道端の地蔵。前掛けが新しい。足元に、白い塩。"

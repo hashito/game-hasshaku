@@ -32,6 +32,7 @@
  "shop": [
   {
    "who": "店のおばさん",
+   "img": "assets/photos/ph-shop-inside.webp",
    "text": "いらっしゃい。あら、あそこのお孫さんね。大きくなったこと。じいちゃん元気にしてるかい？"
   },
   {
@@ -48,6 +49,7 @@
   },
   {
    "who": "店のおばさん",
+   "img": "assets/photos/ph-goods.webp",
    "text": "その声を真似しちゃいけない。はい、醤油と電池。寄り道しないでね。"
   }
  ],
@@ -181,6 +183,7 @@
   {
    "who": "Ｋさん",
    "where": "襖の外",
+   "img": "assets/photos/ph-dawn-road.webp",
    "text": "七時だ。よく持ちこたえたね。"
   },
   {

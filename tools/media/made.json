@@ -1,0 +1,362 @@
+{
+ "aze_grass": {
+  "file": "assets/textures-game/ground/aze_grass.webp",
+  "bytes": 89622,
+  "size": "512x512",
+  "quality": 50,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 403553948,
+  "prompt": "Seamless top-down texture of short wild grass, clover and small weeds growing on a rice paddy levee path, patches of bare brown soil, orthographic overhead view filling the frame, even lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "cedar_foliage_far": {
+  "file": "assets/textures-game/foliage/cedar_foliage_far.webp",
+  "bytes": 81620,
+  "size": "512x512",
+  "quality": 78,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 158105234,
+  "prompt": "Seamless texture of dense Japanese sugi cedar foliage seen from a short distance, dark green clusters of needles and small branches filling the frame, no sky, even soft lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "fp_bare_large": {
+  "file": "assets/textures-game/decals/fp_bare_large.webp",
+  "bytes": 54832,
+  "size": "320x608",
+  "quality": 82,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 15390736,
+  "prompt": "A single very large long narrow bare human footprint pressed deep into smooth flat wet grey-brown mud, only one footprint, centred, toes at the top, orthographic top-down view, even soft lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "fusuma_old_a": {
+  "file": "assets/textures-game/paper/fusuma_old_a.webp",
+  "bytes": 30878,
+  "size": "512x1081",
+  "quality": 82,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 952576700,
+  "prompt": "An old Japanese fusuma sliding door seen straight on, faded cream paper with a pale painted pattern of distant mountains and pine branches in grey ink, a small round black lacquer handle at the side, dark wooden frame, stains and slight tears, orthographic, the door fills the whole frame edge to edge, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "fusuma_old_b": {
+  "file": "assets/textures-game/paper/fusuma_old_b.webp",
+  "bytes": 20446,
+  "size": "512x1081",
+  "quality": 82,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 2909557,
+  "prompt": "An old Japanese fusuma sliding door seen straight on, faded pale green paper with a small repeating pattern of white clouds, a small round black lacquer handle at the side, dark wooden frame, water stains and yellowing, orthographic, the door fills the whole frame edge to edge, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "paddy_water": {
+  "file": "assets/textures-game/ground/paddy_water.webp",
+  "bytes": 59502,
+  "size": "512x512",
+  "quality": 82,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 630489197,
+  "prompt": "Seamless top-down texture of a flooded Japanese rice paddy in summer, rows of young green rice seedlings standing in shallow muddy water that reflects a grey evening sky, orthographic overhead view filling the frame, even lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-butsudan": {
+  "file": "assets/photos/ph-butsudan.webp",
+  "bytes": 102418,
+  "size": "657x960",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 817417483,
+  "prompt": "An old Japanese family Buddhist altar butsudan with its black lacquered doors open, standing against the wall of a dim tatami living room, brass candle holders and an incense bowl, plain dark wooden memorial tablets with no writing, one tablet turned to face the wall, dim evening light, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-clock": {
+  "file": "assets/photos/ph-clock.webp",
+  "bytes": 93654,
+  "size": "657x960",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 440892622,
+  "prompt": "An old wooden pendulum wall clock hanging on a dark pillar of a Japanese tatami room at night, a round cream dial with plain black tick marks and no numerals, one small red painted mark at the seven o'clock position, brass pendulum behind glass, lit by a flashlight beam, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-dawn-road": {
+  "file": "assets/photos/ph-dawn-road.webp",
+  "bytes": 56022,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 37836563,
+  "prompt": "A rural Japanese village gravel road in thick white morning fog at dawn, hedges and rice fields on both sides, a simple wooden farm road barrier gate across the road ahead, utility poles fading into the fog, no people, silent, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-diary": {
+  "file": "assets/photos/ph-diary.webp",
+  "bytes": 92874,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 980921179,
+  "prompt": "An old cloth-bound notebook lying open on a small weathered wooden desk inside a dim wooden roadside shrine, yellowed pages with faint brush handwriting that is blurred and illegible, dust in the light from the open doorway, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-ending-shoes": {
+  "file": "assets/photos/ph-ending-shoes.webp",
+  "bytes": 100006,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 898439122,
+  "prompt": "The genkan entrance of an old Japanese house in the morning, four pairs of shoes neatly lined up on the stone floor, all of them pointing outward toward the sliding front door, a man's old leather shoes, a woman's low shoes, straw sandals and a child's sneakers, morning light through the frosted glass of the door, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-ending-town": {
+  "file": "assets/photos/ph-ending-town.webp",
+  "bytes": 106088,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 388372722,
+  "prompt": "The empty asphalt parking lot of a small town convenience store on an early summer morning, a few parked small cars, white painted parking lines, soft low morning sun, the store front out of frame at the edge, an empty bench, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-family-photo": {
+  "file": "assets/photos/ph-family-photo.webp",
+  "bytes": 125672,
+  "size": "960x657",
+  "quality": 68,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 788279241,
+  "prompt": "A faded 1990s colour print snapshot of a Japanese family of four standing in a row in front of a tall green hedge of a rural house in summer, an old man, an old woman, a young mother holding the hand of a small child, all small in the frame and seen from a distance, faces soft and blurred, the young mother looks upward above the camera, overexposed sky, yellowed print, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-flashlight": {
+  "file": "assets/photos/ph-flashlight.webp",
+  "bytes": 93554,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 959454438,
+  "prompt": "An old silver metal flashlight with a round lens lying on the dark wooden floor boards of an old Japanese farmhouse corridor at night, its beam lighting the boards, dim, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-gate-notice": {
+  "file": "assets/photos/ph-gate-notice.webp",
+  "bytes": 78042,
+  "size": "657x960",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 654089110,
+  "prompt": "Close-up of a small sheet of paper taped to a weathered concrete gate post of a rural farm road in the early morning fog, the paper wrinkled and soaked by rain, the ink has run into soft illegible grey streaks, droplets of water, shallow depth of field, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-goods": {
+  "file": "assets/photos/ph-goods.webp",
+  "bytes": 92118,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 73989002,
+  "prompt": "Close-up of an opened brown kraft paper bag standing on a dark wooden shop counter, inside the bag a glass bottle of dark soy sauce with a plain red cap and a small plain pack of four AA batteries, unbranded plain packaging with nothing printed, warm light of a bare bulb, shallow depth of field, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-hashira": {
+  "file": "assets/photos/ph-hashira.webp",
+  "bytes": 99636,
+  "size": "657x960",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 588722518,
+  "prompt": "Close-up of a dark polished wooden pillar in an old Japanese farmhouse, a row of small horizontal knife notches marking children's heights low on the pillar, and one single notch much higher, just under the ceiling beam, dim warm light, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-hedge": {
+  "file": "assets/photos/ph-hedge.webp",
+  "bytes": 82644,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 809009669,
+  "prompt": "A tall dense green hedge higher than a man along a narrow rural gravel road at dusk, a rice paddy beyond it, the flat top edge of the hedge against a pale evening sky, utility wires, empty and quiet, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-jizo": {
+  "file": "assets/photos/ph-jizo.webp",
+  "bytes": 104596,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 876101230,
+  "prompt": "A small weathered moss-covered stone Jizo statue standing by a rural gravel road at dusk, wearing a new red cloth bib, a small neat heap of white salt at its feet, rice fields and dark cedar forest behind, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-kakejiku": {
+  "file": "assets/photos/ph-kakejiku.webp",
+  "bytes": 93606,
+  "size": "657x960",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 19459086,
+  "prompt": "A tokonoma alcove in an old Japanese tatami room in the evening, a long hanging scroll with one single bold abstract black ink brush stroke on cream paper, a small ceramic vase on the wooden floor of the alcove, dim warm light, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-kamado": {
+  "file": "assets/photos/ph-kamado.webp",
+  "bytes": 106966,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 387300447,
+  "prompt": "A traditional Japanese plastered clay kamado cooking stove in an old farmhouse kitchen with an earthen floor, two black iron pots with wooden lids on top, faint wisps of steam, firewood stacked beside it, dim evening light from a small wooden window, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-letter": {
+  "file": "assets/photos/ph-letter.webp",
+  "bytes": 82996,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 764613416,
+  "prompt": "A folded sheet of thin letter paper with faint vertical ruled lines lying on a low round wooden chabudai table beside a small teacup, evening light, the faint handwriting is soft and out of focus and unreadable, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-newspaper": {
+  "file": "assets/photos/ph-newspaper.webp",
+  "bytes": 95114,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 931200347,
+  "prompt": "A stack of old yellowed folded local newspapers tied with white string on a wooden desk in a dim storeroom, close-up, the tiny print is completely blurred and unreadable, shallow depth of field, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-ofuda": {
+  "file": "assets/photos/ph-ofuda.webp",
+  "bytes": 84156,
+  "size": "657x960",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 860417379,
+  "prompt": "Two blank Japanese talisman paper strips of thick handmade cream washi paper lying side by side on a dark lacquered wooden tray, long vertical rectangles, plain paper with no characters and no ink, soft warm lamp light, seen from above, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-pole": {
+  "file": "assets/photos/ph-pole.webp",
+  "bytes": 87218,
+  "size": "657x960",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 707246586,
+  "prompt": "Close-up of an old wooden utility pole by a rural village road at dusk, torn remains of an old faded paper poster still stuck to the wood with yellowed tape, only scraps of blank weathered paper remain, overhead wires, cedar forest behind, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-salt-bag": {
+  "file": "assets/photos/ph-salt-bag.webp",
+  "bytes": 99392,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 208692695,
+  "prompt": "A large clear plastic bag of coarse white sea salt lying on a worn wooden worktable in an old Japanese farmhouse kitchen, the bag folded over at the top, a small wooden scoop beside it, blank bag with nothing printed, dim evening light from a small window, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-shed": {
+  "file": "assets/photos/ph-shed.webp",
+  "bytes": 120352,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 104470842,
+  "prompt": "Inside a small old wooden storage shed of a Japanese farmhouse, stacked firewood, old farming tools hanging on the wall, a thick bundle of many empty folded clear plastic bags tucked behind the door, dusty evening light through gaps in the boards, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-shop-inside": {
+  "file": "assets/photos/ph-shop-inside.webp",
+  "bytes": 122506,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 558934131,
+  "prompt": "Interior of a tiny old general store in a Japanese mountain village at dusk, worn wooden shelves with plain unlabelled glass jars, bottles and paper-wrapped packages, a dark wooden counter with an old wooden cash box, one bare incandescent light bulb hanging from the ceiling giving warm light, concrete earth floor, a sliding glass door at the side showing blue dusk outside, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-shopnote": {
+  "file": "assets/photos/ph-shopnote.webp",
+  "bytes": 89316,
+  "size": "657x960",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 832483141,
+  "prompt": "A small yellowed paper notice pinned with a thumbtack to a dark wooden pillar inside an old country store, the paper is completely blank with no writing at all, only a faint brown water stain and a torn corner, warm bulb light, close-up, shallow depth of field, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-van-window": {
+  "file": "assets/photos/ph-van-window.webp",
+  "bytes": 74490,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 765445308,
+  "prompt": "View from the back seat of an old van through the side window on a misty country road in the early morning, strong motion blur, outside the window a very tall pale figure in a long white dress and a white wide-brimmed hat keeps pace with the car, blurred and indistinct, no face visible, the window glass with water drops, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-window-shadow": {
+  "file": "assets/photos/ph-window-shadow.webp",
+  "bytes": 91674,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 798692987,
+  "prompt": "Inside a dark Japanese tatami room at night, an old wooden lattice window covered from the inside with sheets of plain grey paper, faint moonlight from outside, through the paper the dark blurred silhouette shadow of an extremely tall thin woman wearing a wide-brimmed hat, her head at the very top edge of the window frame, eerie, dim, grainy, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "road_gravel_ruts": {
+  "file": "assets/textures-game/ground/road_gravel_ruts.webp",
+  "bytes": 88782,
+  "size": "512x748",
+  "quality": 62,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 224234144,
+  "prompt": "Top-down texture of a rural Japanese gravel road, grey gravel and packed earth, two worn tyre ruts running straight from top to bottom, a strip of sparse grass in the middle, grass edges on the left and right, orthographic overhead view filling the frame, even lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "roof_kawara_ibushi": {
+  "file": "assets/textures-game/roof/roof_kawara_ibushi.webp",
+  "bytes": 51718,
+  "size": "512x512",
+  "quality": 82,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 738737618,
+  "prompt": "Seamless texture of a Japanese roof covered in ibushi kawara smoked clay roof tiles, rows of dark silver-grey wavy tiles, slightly weathered with small spots of lichen, orthographic straight-on view of the roof surface filling the whole frame, flat even overcast lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "salt_black": {
+  "file": "assets/textures-game/salt/salt_black.webp",
+  "bytes": 61884,
+  "size": "512x512",
+  "quality": 82,
+  "model": "derived",
+  "seed": null,
+  "prompt": "derived: {\"a\": \"salt_white\", \"b\": \"salt_black_crystals\", \"amount\": 0.78}"
+ },
+ "salt_black_crystals": {
+  "file": "assets/textures-game/salt/salt_black_crystals.webp",
+  "bytes": 62544,
+  "size": "512x512",
+  "quality": 82,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 360094169,
+  "prompt": "Seamless macro texture of coarse salt crystals that have turned black like soot and charcoal, glossy black and dark grey crystals with a few white grains left, top-down, filling the frame, even soft lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "salt_grey": {
+  "file": "assets/textures-game/salt/salt_grey.webp",
+  "bytes": 30464,
+  "size": "512x512",
+  "quality": 82,
+  "model": "derived",
+  "seed": null,
+  "prompt": "derived: {\"a\": \"salt_white\", \"b\": \"salt_black_crystals\", \"amount\": 0.38}"
+ },
+ "salt_white": {
+  "file": "assets/textures-game/salt/salt_white.webp",
+  "bytes": 4818,
+  "size": "512x512",
+  "quality": 82,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 81835287,
+  "prompt": "Seamless macro texture of a heap of coarse white sea salt crystals, top-down, filling the frame, even soft lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "shoji_lit": {
+  "file": "assets/textures-game/paper/shoji_lit.webp",
+  "bytes": 18316,
+  "size": "512x1081",
+  "quality": 82,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 250650208,
+  "prompt": "A Japanese shoji sliding door seen straight on from a dark room, a regular square grid of thin pale wooden lattice bars over white rice paper, the paper glowing warm yellow from a lamp behind it, slightly aged paper with a few small patches, orthographic, the door fills the whole frame edge to edge, symmetrical, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "wall_clay_stained": {
+  "file": "assets/textures-game/plaster/wall_clay_stained.webp",
+  "bytes": 3754,
+  "size": "512x512",
+  "quality": 82,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 784544696,
+  "prompt": "Seamless texture of an old Japanese earthen clay wall, beige brown tsuchikabe plaster with chopped straw fibres, water stains running down, dirt smudges and small hairline cracks, orthographic straight-on view filling the frame, flat even lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "wall_yakisugi": {
+  "file": "assets/textures-game/wood/wall_yakisugi.webp",
+  "bytes": 21822,
+  "size": "512x512",
+  "quality": 82,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 735938052,
+  "prompt": "Seamless texture of a yakisugi charred cedar board wall, vertical wooden boards with a crackled black charcoal surface, some boards brushed to dark brown grain, orthographic straight-on view filling the frame, flat even lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels"
+ }
+}

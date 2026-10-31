@@ -251,7 +251,7 @@ export default function story(ext) {
         if (who === '私') say(text, 5.5); else voice(who, text, 5.5);
         if (fx === 'knock') { snd.knock({ pan: 0.2 }); shake(1.6); }
         if (fx === 'knockFinal') { snd.knock({ n: 5, vol: 0.9, pan: 0.1 }); snd.sting(); shake(3.5); }
-        if (fx === 'po') { snd.po({ vol: 0.5, pan: -0.2 }); shadow(7); }
+        if (fx === 'po') { snd.po({ vol: 0.5, pan: -0.2 }); shadow(7); flashPhoto('assets/photos/ph-window-shadow.webp', '', 2.6); }
       }
     }
     let worst = 0;
@@ -259,7 +259,10 @@ export default function story(ext) {
       if (st.night > SALT_START[k] && !(ctx.qa && !window.__hkSalt)) st.dark[k] = Math.min(1.4, st.dark[k] + dt * SALT_RATE);   // ?qa: the smoke does not tend the salt (window.__hkSalt = true turns it back on)
       worst = Math.max(worst, st.dark[k]);
       const s = V.parts.plates[k].salt, v = clamp(st.dark[k] / 1.0, 0, 1);
-      s.material.color.setRGB(0.95 - v * 0.9, 0.93 - v * 0.89, 0.88 - v * 0.85); s.scale.setScalar(1 + v * 0.35);
+      const maps = V.saltMaps;
+      if (maps) { const m = maps[v < 0.35 ? 0 : v < 0.7 ? 1 : 2]; if (s.material.map !== m) { s.material.map = m; s.material.needsUpdate = true; } s.material.color.setScalar(1 - v * 0.35); }
+      else s.material.color.setRGB(0.95 - v * 0.9, 0.93 - v * 0.89, 0.88 - v * 0.85);
+      s.scale.setScalar(1 + v * 0.35);
     }
     if (worst > 0.85 && !st.warned) { st.warned = true; snd.po({ vol: 0.4, pan: 0 }); ctx.ui.toast('塩が黒くなっている。黒ずんだ皿に近づいて、[E] で替えよう。'); flashPhoto('assets/photos/salt-scene.webp', '', 1.2); }
     if (worst >= 1.35) return ctx.die('salt');
@@ -302,7 +305,7 @@ export default function story(ext) {
     const me = seat('rear1-right'); cam.position.set(me.x, me.y + 0.25, me.z + Math.sin(st.ride * 9) * 0.004);
     st.curse = curseStep(st.curse, { grip, yaw: fp.yaw, pitch: fp.pitch }, dt);
     if (H) { H.root.visible = k < 0.87; H.root.position.set(3.3 + Math.sin(st.ride * 2) * 0.12, 0, vz - 0.3 - Math.sin(st.ride * 1.3) * 1.2); H.root.rotation.y = Math.PI / 2; H.character.lookAt(cam); H.character.setSpeed(0); H.character.update(dt); }
-    for (const [t, who, text, fx] of T.ride) if (st.ride >= t && !st.fired.includes(`r${t}`)) { st.fired.push(`r${t}`); if (who === '私') say(text, 5); else voice(who, text, 5); if (fx === 'po') snd.po({ vol: 0.5, pan: 0.9 }); if (fx === 'knock') snd.knock({ pan: 0.9, vol: 0.6 }); }
+    for (const [t, who, text, fx] of T.ride) if (st.ride >= t && !st.fired.includes(`r${t}`)) { st.fired.push(`r${t}`); if (who === '私') say(text, 5); else voice(who, text, 5); if (fx === 'po') { snd.po({ vol: 0.5, pan: 0.9 }); flashPhoto('assets/photos/ph-van-window.webp', '', 2.2); } if (fx === 'knock') snd.knock({ pan: 0.9, vol: 0.6 }); }
     el('hk-ride-bar').style && (el('hk-ride-bar').style.width = `${Math.round(k * 100)}%`);
     el('hk-curse-bar').style && (el('hk-curse-bar').style.width = `${Math.round(st.curse * 100)}%`);
     const threat = el('hk-ride-threat'); const tt = grip ? '' : Math.abs(Math.sin(fp.yaw)) > 0.58 && fp.pitch > -0.3 ? '窓から、目が離せない。' : '窓を見続けない。札を握って、目を伏せる。'; if (threat.textContent !== tt) threat.textContent = tt;
@@ -317,6 +320,22 @@ export default function story(ext) {
   }
 
   // ---------------------------------------------------------------- set up once the world is built
+  // the title music (Issue #1, ACE-Step, 32 s, once): browsers only play after a gesture, so it starts with the first touch / key on the
+  // title screen and fades out when the game starts
+  ext.on('game:booted', (c) => {
+    let el = null;
+    const go = () => {
+      if (el || c.qa) return;
+      el = new Audio('assets/audio/music-title.mp3'); el.volume = 0.55 * (c.settings ? c.settings.volume : 0.8);
+      el.play().catch(() => {});
+    };
+    addEventListener('pointerdown', go, { once: true }); addEventListener('keydown', go, { once: true });
+    ext.on('game:start', () => {
+      removeEventListener('pointerdown', go); removeEventListener('keydown', go);
+      if (!el) return; const a = el, v0 = a.volume; let k = 0;
+      const t = setInterval(() => { k += 0.1; a.volume = Math.max(0, v0 * (1 - k)); if (k >= 1) { clearInterval(t); a.pause(); } }, 120);
+    });
+  });
   ext.on('game:ready', (c) => {
     ctx = c; T = c.data.talk; snd = createSound(c); loadVoices();
     c.hk = { state: st, sound: snd };
@@ -405,6 +424,7 @@ export default function story(ext) {
     updateNight(qdt);
     updateRide(qdt);
     const room = c.data.plan.rooms.find((r) => r.id === c.state.room);
-    snd.update(dt, { outdoor: !room || room.kind === 'outdoor' || lvl() === 4, insects: lvl() === 3 || lvl() === 4 ? 0.3 : 1, wind: lvl() === 2 ? 0.2 : 0.12 });
+    if (V.prints) V.prints.visible = lvl() >= 3;   // W13: the footprints are there in the morning
+    snd.update(dt, { level: lvl() === 4 && !st.ride ? 3 : lvl(), outdoor: !room || room.kind === 'outdoor' || lvl() === 4, insects: lvl() === 3 || lvl() === 4 ? 0.3 : 1, wind: lvl() === 2 ? 0.2 : 0.12 });
   } });
 }

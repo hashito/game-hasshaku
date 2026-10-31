@@ -2,7 +2,7 @@
  {
   "id": "I_LIGHT",
   "name": "懐中電灯",
-  "photo": "",
+  "photo": "assets/photos/ph-flashlight.webp",
   "desc": "祖父の家の懐中電灯。[F]（タッチは灯りのボタン）で点けたり消したりできる。",
   "why": "夜道と、家の暗い部屋を照らすため。",
   "feeling": "電池が弱くなっている。だから買いに行くんだった。",
@@ -13,7 +13,7 @@
  {
   "id": "I_SALT",
   "name": "粗塩の袋",
-  "photo": "assets/photos/salt-scene.webp",
+  "photo": "assets/photos/ph-salt-bag.webp",
   "desc": "台所の作業台にあった粗塩。四隅の皿に盛り、黒ずんだら替える。",
   "why": "座敷の四隅を守るため。黒くなった塩を替える分もある。",
   "feeling": "思ったより重い。何度も使ってきた袋だ。",
@@ -27,7 +27,7 @@
  {
   "id": "I_PAPER",
   "name": "新聞紙（村の便り）",
-  "photo": "",
+  "photo": "assets/photos/ph-newspaper.webp",
   "desc": "納戸の机に重ねてあった古い新聞。座敷の北の窓をふさぐのに使う。",
   "why": "外から部屋の中を見られないようにするため。",
   "feeling": "「北の木戸は日没で閉鎖」。見出しが小さい。",
@@ -41,7 +41,7 @@
  {
   "id": "I_OFUDA",
   "name": "Ｋさんの札",
-  "photo": "",
+  "photo": "assets/photos/ph-ofuda.webp",
   "desc": "「身代守」と書かれた札が二枚。一枚は襖に、もう一枚は手元に持つ。車の中では握りしめる。",
   "why": "朝まで部屋を守り、村境まで身を守るため。",
   "feeling": "墨の匂いが新しい。今日、書いたばかりの札だ。",

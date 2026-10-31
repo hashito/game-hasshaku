@@ -7,3 +7,4 @@ tools/_raw/
 tools/__pycache__/
 assets/sources/
 *.log
+tools/media/__pycache__/

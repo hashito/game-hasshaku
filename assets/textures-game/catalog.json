@@ -1,0 +1,488 @@
+{
+ "version": 1,
+ "about": "Textures made for 八尺様 ― 境の夜 (Issue #1). Same format as the kit's shared catalog (js/kit/texture-library.js); kept apart because tools/kit-sync rewrites assets/textures/catalog.json. Candidates for the game-kit shared library.",
+ "license": "CC0-1.0 for Game-fleet (generated locally with ComfyUI flux1-dev-fp8; FLUX.1 [dev] non-commercial licence terms apply to the model outputs as used by Game-fleet)",
+ "units": "repeat = metres covered by one tile [u, v]; meters = suggested decal size in metres [w, h]",
+ "categories": {
+  "ground": 3,
+  "foliage": 1,
+  "decal-footprint": 1,
+  "paper": 3,
+  "roof": 1,
+  "salt": 4,
+  "plaster": 1,
+  "wood": 1
+ },
+ "kits": {},
+ "textures": [
+  {
+   "id": "aze_grass",
+   "category": "ground",
+   "type": "surface",
+   "file": "ground/aze_grass.webp",
+   "size": [
+    512,
+    512
+   ],
+   "bytes": 89622,
+   "tileable": true,
+   "roughness": 0.95,
+   "metalness": 0,
+   "alpha": false,
+   "tags": [
+    "hasshaku",
+    "japanese",
+    "rural"
+   ],
+   "repeat": [
+    1.6,
+    1.6
+   ],
+   "source": {
+    "method": "comfyui",
+    "model": "flux1-dev-fp8",
+    "seed": 403553948,
+    "prompt": "Seamless top-down texture of short wild grass, clover and small weeds growing on a rice paddy levee path, patches of bare brown soil, orthographic overhead view filling the frame, even lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels",
+    "post": "tools/media/post-images.py seamless xy"
+   }
+  },
+  {
+   "id": "cedar_foliage_far",
+   "category": "foliage",
+   "type": "surface",
+   "file": "foliage/cedar_foliage_far.webp",
+   "size": [
+    512,
+    512
+   ],
+   "bytes": 81620,
+   "tileable": true,
+   "roughness": 0.95,
+   "metalness": 0,
+   "alpha": false,
+   "tags": [
+    "hasshaku",
+    "japanese",
+    "rural"
+   ],
+   "repeat": [
+    2,
+    2
+   ],
+   "source": {
+    "method": "comfyui",
+    "model": "flux1-dev-fp8",
+    "seed": 158105234,
+    "prompt": "Seamless texture of dense Japanese sugi cedar foliage seen from a short distance, dark green clusters of needles and small branches filling the frame, no sky, even soft lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels",
+    "post": "tools/media/post-images.py seamless xy"
+   }
+  },
+  {
+   "id": "fp_bare_large",
+   "category": "decal-footprint",
+   "type": "decal",
+   "file": "decals/fp_bare_large.webp",
+   "size": [
+    320,
+    608
+   ],
+   "bytes": 54832,
+   "tileable": false,
+   "roughness": 0.9,
+   "metalness": 0,
+   "alpha": true,
+   "tags": [
+    "hasshaku",
+    "japanese",
+    "rural"
+   ],
+   "meters": [
+    0.17,
+    0.4
+   ],
+   "source": {
+    "method": "comfyui",
+    "model": "flux1-dev-fp8",
+    "seed": 15390736,
+    "prompt": "A single very large long narrow bare human footprint pressed deep into smooth flat wet grey-brown mud, only one footprint, centred, toes at the top, orthographic top-down view, even soft lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels",
+    "post": "tools/media/post-images.py decal alpha"
+   }
+  },
+  {
+   "id": "fusuma_old_a",
+   "category": "paper",
+   "type": "surface",
+   "file": "paper/fusuma_old_a.webp",
+   "size": [
+    512,
+    1081
+   ],
+   "bytes": 30878,
+   "tileable": false,
+   "roughness": 0.9,
+   "metalness": 0,
+   "alpha": false,
+   "tags": [
+    "hasshaku",
+    "japanese",
+    "rural"
+   ],
+   "repeat": [
+    1,
+    2.2
+   ],
+   "source": {
+    "method": "comfyui",
+    "model": "flux1-dev-fp8",
+    "seed": 952576700,
+    "prompt": "An old Japanese fusuma sliding door seen straight on, faded cream paper with a pale painted pattern of distant mountains and pine branches in grey ink, a small round black lacquer handle at the side, dark wooden frame, stains and slight tears, orthographic, the door fills the whole frame edge to edge, no text, no letters, no writing, no signs, no logos, no labels",
+    "post": "tools/media/post-images.py door panel"
+   }
+  },
+  {
+   "id": "fusuma_old_b",
+   "category": "paper",
+   "type": "surface",
+   "file": "paper/fusuma_old_b.webp",
+   "size": [
+    512,
+    1081
+   ],
+   "bytes": 20446,
+   "tileable": false,
+   "roughness": 0.9,
+   "metalness": 0,
+   "alpha": false,
+   "tags": [
+    "hasshaku",
+    "japanese",
+    "rural"
+   ],
+   "repeat": [
+    1,
+    2.2
+   ],
+   "source": {
+    "method": "comfyui",
+    "model": "flux1-dev-fp8",
+    "seed": 2909557,
+    "prompt": "An old Japanese fusuma sliding door seen straight on, faded pale green paper with a small repeating pattern of white clouds, a small round black lacquer handle at the side, dark wooden frame, water stains and yellowing, orthographic, the door fills the whole frame edge to edge, no text, no letters, no writing, no signs, no logos, no labels",
+    "post": "tools/media/post-images.py door panel"
+   }
+  },
+  {
+   "id": "paddy_water",
+   "category": "ground",
+   "type": "surface",
+   "file": "ground/paddy_water.webp",
+   "size": [
+    512,
+    512
+   ],
+   "bytes": 59502,
+   "tileable": true,
+   "roughness": 0.2,
+   "metalness": 0,
+   "alpha": false,
+   "tags": [
+    "hasshaku",
+    "japanese",
+    "rural"
+   ],
+   "repeat": [
+    3,
+    3
+   ],
+   "source": {
+    "method": "comfyui",
+    "model": "flux1-dev-fp8",
+    "seed": 630489197,
+    "prompt": "Seamless top-down texture of a flooded Japanese rice paddy in summer, rows of young green rice seedlings standing in shallow muddy water that reflects a grey evening sky, orthographic overhead view filling the frame, even lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels",
+    "post": "tools/media/post-images.py seamless xy"
+   }
+  },
+  {
+   "id": "road_gravel_ruts",
+   "category": "ground",
+   "type": "surface",
+   "file": "ground/road_gravel_ruts.webp",
+   "size": [
+    512,
+    748
+   ],
+   "bytes": 88782,
+   "tileable": true,
+   "roughness": 0.95,
+   "metalness": 0,
+   "alpha": false,
+   "tags": [
+    "hasshaku",
+    "japanese",
+    "rural"
+   ],
+   "repeat": [
+    5.6,
+    8
+   ],
+   "source": {
+    "method": "comfyui",
+    "model": "flux1-dev-fp8",
+    "seed": 224234144,
+    "prompt": "Top-down texture of a rural Japanese gravel road, grey gravel and packed earth, two worn tyre ruts running straight from top to bottom, a strip of sparse grass in the middle, grass edges on the left and right, orthographic overhead view filling the frame, even lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels",
+    "post": "tools/media/post-images.py seamless y"
+   }
+  },
+  {
+   "id": "roof_kawara_ibushi",
+   "category": "roof",
+   "type": "surface",
+   "file": "roof/roof_kawara_ibushi.webp",
+   "size": [
+    512,
+    512
+   ],
+   "bytes": 51718,
+   "tileable": true,
+   "roughness": 0.6,
+   "metalness": 0,
+   "alpha": false,
+   "tags": [
+    "hasshaku",
+    "japanese",
+    "rural"
+   ],
+   "repeat": [
+    2.4,
+    2.4
+   ],
+   "source": {
+    "method": "comfyui",
+    "model": "flux1-dev-fp8",
+    "seed": 738737618,
+    "prompt": "Seamless texture of a Japanese roof covered in ibushi kawara smoked clay roof tiles, rows of dark silver-grey wavy tiles, slightly weathered with small spots of lichen, orthographic straight-on view of the roof surface filling the whole frame, flat even overcast lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels",
+    "post": "tools/media/post-images.py seamless xy"
+   }
+  },
+  {
+   "id": "salt_black",
+   "category": "salt",
+   "type": "surface",
+   "file": "salt/salt_black.webp",
+   "size": [
+    512,
+    512
+   ],
+   "bytes": 61884,
+   "tileable": true,
+   "roughness": 0.7,
+   "metalness": 0,
+   "alpha": false,
+   "tags": [
+    "hasshaku",
+    "japanese",
+    "rural"
+   ],
+   "repeat": [
+    0.3,
+    0.3
+   ],
+   "source": {
+    "method": "derived",
+    "from": [
+     "salt_white",
+     "salt_black_crystals"
+    ],
+    "amount": 0.78,
+    "note": "noise-mask blend of the two renders"
+   }
+  },
+  {
+   "id": "salt_black_crystals",
+   "category": "salt",
+   "type": "surface",
+   "file": "salt/salt_black_crystals.webp",
+   "size": [
+    512,
+    512
+   ],
+   "bytes": 62544,
+   "tileable": true,
+   "roughness": 0.6,
+   "metalness": 0,
+   "alpha": false,
+   "tags": [
+    "hasshaku",
+    "japanese",
+    "rural"
+   ],
+   "repeat": [
+    0.3,
+    0.3
+   ],
+   "source": {
+    "method": "comfyui",
+    "model": "flux1-dev-fp8",
+    "seed": 360094169,
+    "prompt": "Seamless macro texture of coarse salt crystals that have turned black like soot and charcoal, glossy black and dark grey crystals with a few white grains left, top-down, filling the frame, even soft lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels",
+    "post": "tools/media/post-images.py seamless xy"
+   }
+  },
+  {
+   "id": "salt_grey",
+   "category": "salt",
+   "type": "surface",
+   "file": "salt/salt_grey.webp",
+   "size": [
+    512,
+    512
+   ],
+   "bytes": 30464,
+   "tileable": true,
+   "roughness": 0.75,
+   "metalness": 0,
+   "alpha": false,
+   "tags": [
+    "hasshaku",
+    "japanese",
+    "rural"
+   ],
+   "repeat": [
+    0.3,
+    0.3
+   ],
+   "source": {
+    "method": "derived",
+    "from": [
+     "salt_white",
+     "salt_black_crystals"
+    ],
+    "amount": 0.38,
+    "note": "noise-mask blend of the two renders"
+   }
+  },
+  {
+   "id": "salt_white",
+   "category": "salt",
+   "type": "surface",
+   "file": "salt/salt_white.webp",
+   "size": [
+    512,
+    512
+   ],
+   "bytes": 4818,
+   "tileable": true,
+   "roughness": 0.8,
+   "metalness": 0,
+   "alpha": false,
+   "tags": [
+    "hasshaku",
+    "japanese",
+    "rural"
+   ],
+   "repeat": [
+    0.3,
+    0.3
+   ],
+   "source": {
+    "method": "comfyui",
+    "model": "flux1-dev-fp8",
+    "seed": 81835287,
+    "prompt": "Seamless macro texture of a heap of coarse white sea salt crystals, top-down, filling the frame, even soft lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels",
+    "post": "tools/media/post-images.py seamless xy"
+   }
+  },
+  {
+   "id": "shoji_lit",
+   "category": "paper",
+   "type": "surface",
+   "file": "paper/shoji_lit.webp",
+   "size": [
+    512,
+    1081
+   ],
+   "bytes": 18316,
+   "tileable": false,
+   "roughness": 0.9,
+   "metalness": 0,
+   "alpha": false,
+   "tags": [
+    "hasshaku",
+    "japanese",
+    "rural"
+   ],
+   "repeat": [
+    1,
+    2.2
+   ],
+   "source": {
+    "method": "comfyui",
+    "model": "flux1-dev-fp8",
+    "seed": 250650208,
+    "prompt": "A Japanese shoji sliding door seen straight on from a dark room, a regular square grid of thin pale wooden lattice bars over white rice paper, the paper glowing warm yellow from a lamp behind it, slightly aged paper with a few small patches, orthographic, the door fills the whole frame edge to edge, symmetrical, no text, no letters, no writing, no signs, no logos, no labels",
+    "post": "tools/media/post-images.py door panel"
+   }
+  },
+  {
+   "id": "wall_clay_stained",
+   "category": "plaster",
+   "type": "surface",
+   "file": "plaster/wall_clay_stained.webp",
+   "size": [
+    512,
+    512
+   ],
+   "bytes": 3754,
+   "tileable": true,
+   "roughness": 0.95,
+   "metalness": 0,
+   "alpha": false,
+   "tags": [
+    "hasshaku",
+    "japanese",
+    "rural"
+   ],
+   "repeat": [
+    2,
+    2
+   ],
+   "source": {
+    "method": "comfyui",
+    "model": "flux1-dev-fp8",
+    "seed": 784544696,
+    "prompt": "Seamless texture of an old Japanese earthen clay wall, beige brown tsuchikabe plaster with chopped straw fibres, water stains running down, dirt smudges and small hairline cracks, orthographic straight-on view filling the frame, flat even lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels",
+    "post": "tools/media/post-images.py seamless xy"
+   }
+  },
+  {
+   "id": "wall_yakisugi",
+   "category": "wood",
+   "type": "surface",
+   "file": "wood/wall_yakisugi.webp",
+   "size": [
+    512,
+    512
+   ],
+   "bytes": 21822,
+   "tileable": true,
+   "roughness": 0.95,
+   "metalness": 0,
+   "alpha": false,
+   "tags": [
+    "hasshaku",
+    "japanese",
+    "rural"
+   ],
+   "repeat": [
+    2,
+    2
+   ],
+   "source": {
+    "method": "comfyui",
+    "model": "flux1-dev-fp8",
+    "seed": 735938052,
+    "prompt": "Seamless texture of a yakisugi charred cedar board wall, vertical wooden boards with a crackled black charcoal surface, some boards brushed to dark brown grain, orthographic straight-on view filling the frame, flat even lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels",
+    "post": "tools/media/post-images.py seamless xy"
+   }
+  }
+ ]
+}

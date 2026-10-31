@@ -4,7 +4,7 @@
   "title": "写真を持って",
   "kind": "good",
   "kicker": "生還 ― 三つの記録を持ち帰った",
-  "photo": "assets/photos/grandfather-house.webp",
+  "photo": "assets/photos/ph-ending-shoes.webp",
   "requires": {
    "tasks": [
     "T_RIDE"
@@ -20,7 +20,7 @@
   "title": "帰れない家",
   "kind": "normal",
   "kicker": "生還 ― 境を越えた",
-  "photo": "assets/photos/grandfather-house.webp",
+  "photo": "assets/photos/ph-ending-town.webp",
   "requires": {
    "tasks": [
     "T_RIDE"

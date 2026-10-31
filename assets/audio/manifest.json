@@ -1,0 +1,32 @@
+{
+ "amb-dusk-village": {
+  "file": "assets/audio/amb-dusk-village.mp3",
+  "loop": true,
+  "use": "L1 夕暮れの山村"
+ },
+ "amb-night-insects": {
+  "file": "assets/audio/amb-night-insects.mp3",
+  "loop": true,
+  "use": "L2・L3 夜の虫と風（屋外）"
+ },
+ "amb-night-indoor": {
+  "file": "assets/audio/amb-night-indoor.mp3",
+  "loop": true,
+  "use": "L2・L3 夜の虫と風（屋内でこもる）"
+ },
+ "amb-dawn-fog": {
+  "file": "assets/audio/amb-dawn-fog.mp3",
+  "loop": true,
+  "use": "L4 朝霧の村（鳥が鳴かない）"
+ },
+ "amb-van": {
+  "file": "assets/audio/amb-van.mp3",
+  "loop": true,
+  "use": "L5 車内"
+ },
+ "music-title": {
+  "file": "assets/audio/music-title.mp3",
+  "loop": false,
+  "use": "タイトル"
+ }
+}

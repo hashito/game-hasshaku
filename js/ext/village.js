@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import * as E from '../kit/env-props.js';
 import * as P from '../kit/props.js';
 import { makeCharacter } from '../kit/character.js';
-import { TextureLibrary } from '../kit/texture-library.js';
+import { TextureLibrary, trailSteps } from '../kit/texture-library.js';
 
 const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
 const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.9, ...o });
@@ -89,12 +89,16 @@ export function dressVillage(ctx) {
 
   // ---------------------------------------------------------------- textures (loaded once; the recipes paint floors and walls)
   const texReady = TextureLibrary.load('assets/textures/', { renderer: ctx.renderer }).then((tex) => { api.tex = tex; return tex; }).catch(() => null);
+  // the game's own textures (Issue #1, assets/textures-game/catalog.json): roof tiles, the paddy, the levee, rutted gravel, cedar foliage,
+  // shoji and fusuma, the salt turning black. Applied over the kit's look once loaded; anything missing keeps the kit's material.
+  const ownReady = TextureLibrary.load('assets/textures-game/', { renderer: ctx.renderer }).then((t) => { api.own = t; return t; }).catch(() => null);
+  const own = (id, o, fn) => ownReady.then((t) => { if (t && (t.catalog.textures || []).some((e) => e.id === id)) fn(t.material(id, o)); });
 
   // ---------------------------------------------------------------- ground, road, forest, mountains
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(260, 260), mat(0x26301f)); ground.rotation.x = -Math.PI / 2; ground.position.set(0, -0.12, -20); ground.receiveShadow = true; G.add(ground);
   const road = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 104), mat(0x77756a)); road.rotation.x = -Math.PI / 2; road.position.set(0.5, 0.006, -21); road.receiveShadow = true; G.add(road);
   const tracks = [-1.0, 2.0].map((x) => { const t = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 104), mat(0x55534b)); t.rotation.x = -Math.PI / 2; t.position.set(x, 0.008, -21); G.add(t); return t; });
-  texReady.then((tex) => { if (!tex) return; road.material = tex.material('gravel', { size: [5.6, 104] }); ground.material = tex.material('grass_dry', { size: [260, 260] }); void tracks; });
+  texReady.then((tex) => { if (!tex) return; road.material = tex.material('gravel', { size: [5.6, 104] }); own('road_gravel_ruts', { size: [5.6, 104] }, (m) => { road.material = m; }); ground.material = tex.material('grass_dry', { size: [260, 260] }); void tracks; });
 
   // trees: instanced cedars (trunk + three tiers) outside the walkable area, and a row along every outer edge
   const treeSpots = [];
@@ -115,6 +119,7 @@ export function dressVillage(ctx) {
     const tiers = [[1.6, 3.2, 2.6], [1.25, 2.8, 4.2], [0.8, 2.4, 5.6]].map(([r, h, y]) => { const g = new THREE.ConeGeometry(r, h, 7); g.translate(0, y, 0); return g; });
     const tm = new THREE.InstancedMesh(trunk, M.bark, treeSpots.length);
     const cm = tiers.map((g) => new THREE.InstancedMesh(g, M.cedar, treeSpots.length));
+    own('cedar_foliage_far', { triplanar: true }, (m) => { m.color.set(0x8a9a8a); cm.forEach((x) => { x.material = m; }); });
     const m4 = new THREE.Matrix4();
     treeSpots.forEach(([x, z, s], i) => { m4.compose(V3(x, -0.1, z), new THREE.Quaternion().setFromAxisAngle(V3(0, 1, 0), rnd() * 6), V3(s, s * 2.6, s)); tm.setMatrixAt(i, m4); m4.compose(V3(x, -0.1, z), new THREE.Quaternion().setFromAxisAngle(V3(0, 1, 0), rnd() * 6), V3(s, s, s)); cm.forEach((c) => c.setMatrixAt(i, m4)); });
     tm.castShadow = true; cm.forEach((c) => { c.castShadow = true; G.add(c); }); G.add(tm);
@@ -135,14 +140,14 @@ export function dressVillage(ctx) {
   // ---------------------------------------------------------------- the rice field (x 6..23, z 1..25): water, rice, the levee path around it
   {
     const fx0 = 7.6, fx1 = 22.4, fz0 = 1.2, fz1 = 23.4;
-    const water = new THREE.Mesh(new THREE.PlaneGeometry(fx1 - fx0, fz1 - fz0), M.water); water.rotation.x = -Math.PI / 2; water.position.set((fx0 + fx1) / 2, 0.02, (fz0 + fz1) / 2); G.add(water);
+    const water = new THREE.Mesh(new THREE.PlaneGeometry(fx1 - fx0, fz1 - fz0), M.water); water.rotation.x = -Math.PI / 2; water.position.set((fx0 + fx1) / 2, 0.02, (fz0 + fz1) / 2); G.add(water); own('paddy_water', { size: [fx1 - fx0, fz1 - fz0] }, (m) => { m.transparent = false; m.roughness = 0.25; water.material = m; });
     const rice = new THREE.ConeGeometry(0.05, 0.62, 4); rice.translate(0, 0.31, 0);
     const pts = []; for (let x = fx0 + 0.3; x < fx1 - 0.2; x += 0.5) for (let z = fz0 + 0.3; z < fz1 - 0.2; z += 0.55) pts.push([x + (rnd() - 0.5) * 0.08, z + (rnd() - 0.5) * 0.08]);
     const im = new THREE.InstancedMesh(rice, M.rice, pts.length); const m4 = new THREE.Matrix4();
     pts.forEach(([x, z], i) => { m4.compose(V3(x, 0, z), new THREE.Quaternion().setFromEuler(new THREE.Euler((rnd() - 0.5) * 0.25, rnd() * 3, (rnd() - 0.5) * 0.25)), V3(1, 0.8 + rnd() * 0.5, 1)); im.setMatrixAt(i, m4); });
     G.add(im);
     // the levee rims (the player walks round, not through the paddy: a low collider that does not block sight)
-    for (const [x0, z0, x1, z1] of [[fx0 - 0.25, fz0 - 0.25, fx1 + 0.25, fz0], [fx0 - 0.25, fz1, fx1 + 0.25, fz1 + 0.25], [fx0 - 0.25, fz0, fx0, fz1], [fx1, fz0, fx1 + 0.25, fz1]]) box(x1 - x0, 0.16, z1 - z0, M.moss, (x0 + x1) / 2, 0.08, (z0 + z1) / 2);
+    for (const [x0, z0, x1, z1] of [[fx0 - 0.25, fz0 - 0.25, fx1 + 0.25, fz0], [fx0 - 0.25, fz1, fx1 + 0.25, fz1 + 0.25], [fx0 - 0.25, fz0, fx0, fz1], [fx1, fz0, fx1 + 0.25, fz1]]) { const lv = box(x1 - x0, 0.16, z1 - z0, M.moss, (x0 + x1) / 2, 0.08, (z0 + z1) / 2); own('aze_grass', { triplanar: true }, (m) => { lv.material = m; }); }
     addCol(fx0, fz0, fx1, fz1, 0, 0.5, { low: true });
     // a small hut for tools in the corner (a hiding place, plan.hides H_FIELDHUT)
     hut(21.6, -0.8, 2.6, 1.8, Math.PI);
@@ -201,6 +206,23 @@ export function dressVillage(ctx) {
   // interior doors: paper and wood looks on the standard door panels
   const doorLook = { D_GENKAN: 'wood_cedar_old', D_IMA: 'shoji_paper', D_DAIDOKORO: 'wood_dark', D_NANDO: 'shoji_paper', D_FUSUMA: 'fusuma_old', D_SHOP: 'wood_cedar_old' };
   texReady.then((tex) => { if (!tex) return; for (const [id, t] of Object.entries(doorLook)) { const d = world.doors.get(id); if (d) d.mesh.material = tex.material(t, { size: [1, 2.2] }); } });
+  // own textures on the doors (shoji lit from behind, the old fusuma of the north room) and the roof tiles of every roof
+  const ownDoor = { D_IMA: 'shoji_lit', D_NANDO: 'shoji_lit', D_FUSUMA: 'fusuma_old_a' };
+  Promise.all([texReady, ownReady]).then(() => {
+    for (const [id, t] of Object.entries(ownDoor)) own(t, { size: [1, 2.2] }, (m) => { const d = world.doors.get(id); if (d) d.mesh.material = m; });
+    own('roof_kawara_ibushi', { triplanar: true }, (m) => ctx.scene.traverse((o) => { if (o.isMesh && o.material === M.roof) o.material = m; }));
+    // W13: very large bare footprints, a long stride: under the north window (it stood there all night) and up the morning road.
+    // Hidden until the morning (story.js shows api.prints from L4).
+    ownReady.then((t) => {
+      if (!t || !(t.catalog.textures || []).some((e) => e.id === 'fp_bare_large')) return;
+      api.prints = new THREE.Group(); api.prints.visible = false; G.add(api.prints);
+      const walk = (path, seed) => { for (const p of trailSteps(path, { stride: 1.15, stepWidth: 0.34, seed })) api.prints.add(t.decal('fp_bare_large', { position: [p.x, 0.025, p.z], normal: [0, 1, 0], up: p.up, w: 0.24, h: 0.46, flip: !p.right })); };
+      walk([[-15, -1.6], [-10, 2.2], [-7, 2.2], [-3.6, -1.4]], 13);
+      walk([[2.3, 8], [1.5, -8], [2.4, -23]], 29);
+    });
+    // the salt goes white -> grey -> black (story.js picks the map by how dark a plate is)
+    const sm = []; ['salt_white', 'salt_grey', 'salt_black'].forEach((id, i) => own(id, { size: [0.3, 0.3] }, (m) => { sm[i] = m.map; if (sm.filter(Boolean).length === 3) api.saltMaps = sm; }));
+  });
 
   // ---- 北の座敷: four salt plates on stands, futon, the clock, the north lattice window
   const plates = {};

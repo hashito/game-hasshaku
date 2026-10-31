@@ -1,6 +1,7 @@
 [
  {
   "id": "N_LETTER",
+  "photo": "assets/photos/ph-letter.webp",
   "title": "祖母の置き手紙",
   "room": "IMA",
   "stage": "L1",
@@ -14,6 +15,7 @@
  },
  {
   "id": "N_PHOTO",
+  "photo": "assets/photos/ph-family-photo.webp",
   "title": "四人で写った写真",
   "room": "NANDO",
   "stage": "L2",
@@ -27,6 +29,7 @@
  },
  {
   "id": "N_DIARY",
+  "photo": "assets/photos/ph-diary.webp",
   "title": "道守りの覚え書き",
   "room": "O_SHRINE",
   "stage": "L1",
@@ -40,6 +43,7 @@
  },
  {
   "id": "N_NOTICE",
+  "photo": "assets/photos/ph-gate-notice.webp",
   "title": "門柱の貼り紙",
   "room": "O_ROAD",
   "stage": "L4",

@@ -1,5 +1,5 @@
-// Synthesized sounds of this game (WebAudio; no sound files, rule A3): Hasshaku's low "po… po, po", knocks on the fusuma,
-// a scrape, the salt, a short sting, and a night bed of insects and wind that is muffled behind closed doors (rule W9).
+// Sounds of this game: synthesized (WebAudio) Hasshaku "po… po, po", knocks on the fusuma,
+// a scrape, the salt, a short sting, and the stage beds: recorded loops (assets/audio, Issue #1) with a synthesized fallback, muffled behind closed doors (W9).
 // Everything plays through the standard audio's context and master gain (js/kit/audio.js), so the volume setting applies.
 export function createSound(ctx) {
   const A = () => ctx.audio && ctx.audio.ctx;
@@ -63,11 +63,34 @@ export function createSound(ctx) {
     S.bed = { g, lp, ins, wg };
     return S.bed;
   }
+  // recorded beds (Issue #1, ACE-Step loops in assets/audio/, listed in its manifest.json): one per stage, the night bed has an indoor
+  // (muffled) twin and the two cross-fade with outdoor / indoor. Until they are decoded (or if they fail) the synthesized bed plays.
+  const BEDS = [['amb-dusk-village'], ['amb-night-insects', 'amb-night-indoor'], ['amb-night-insects', 'amb-night-indoor'], ['amb-dawn-fog'], ['amb-van']];
+  const loops = {}; let loopsAsked = false;
+  function loadLoops() {
+    const ac = A(); if (!ac || loopsAsked) return; loopsAsked = true;
+    fetch('assets/audio/manifest.json').then((r) => r.json()).then((m) => Promise.all(Object.entries(m).filter(([id, v]) => v.loop).map(([id, v]) =>
+      fetch(v.file).then((r) => r.arrayBuffer()).then((b) => ac.decodeAudioData(b)).then((buf) => {
+        const g = ac.createGain(); g.gain.value = 0; g.connect(out());
+        const src = ac.createBufferSource(); src.buffer = buf; src.loop = true; src.connect(g); src.start(ac.currentTime, Math.random() * buf.duration);
+        loops[id] = g;
+      })))).catch(() => {});
+  }
   // per frame: outdoors / indoors and the time of day (insects at dusk and night, fewer at dawn)
   function update(dt, o) {
     const b = bed(); if (!b) return;
     const ac = A(); const t = ac.currentTime;
     const vol = (ctx.settings ? ctx.settings.volume : 0.8) > 0 ? 1 : 0;
+    loadLoops();
+    const want = BEDS[o.level ?? 0] || [];
+    if (want.length && want.every((id) => loops[id])) {
+      for (const [id, g] of Object.entries(loops)) {
+        const on = want[0] === id ? (want[1] && !o.outdoor ? 0 : 1) : want[1] === id && !o.outdoor ? 1 : 0;
+        g.gain.setTargetAtTime(vol * on, t, 1.2);
+      }
+      b.g.gain.setTargetAtTime(0, t, 0.4);
+      return;
+    }
     b.g.gain.setTargetAtTime(vol * (o.outdoor ? 0.9 : 0.22), t, 0.4);
     b.lp.frequency.setTargetAtTime(o.outdoor ? 9000 : 700, t, 0.4);
     b.ins.gain.setTargetAtTime(o.insects ?? 1, t, 1.5);
