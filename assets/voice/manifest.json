@@ -1,0 +1,188 @@
+{
+ "v-opening-2": {
+  "key": "opening",
+  "index": 2,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-opening-4": {
+  "key": "opening",
+  "index": 4,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-shop-0": {
+  "key": "shop",
+  "index": 0,
+  "who": "店のおばさん",
+  "preset": null
+ },
+ "v-shop-2": {
+  "key": "shop",
+  "index": 2,
+  "who": "店のおばさん",
+  "preset": null
+ },
+ "v-shop-4": {
+  "key": "shop",
+  "index": 4,
+  "who": "店のおばさん",
+  "preset": null
+ },
+ "v-report-0": {
+  "key": "report",
+  "index": 0,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-report-2": {
+  "key": "report",
+  "index": 2,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-report-4": {
+  "key": "report",
+  "index": 4,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-report-6": {
+  "key": "report",
+  "index": 6,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-report-7": {
+  "key": "report",
+  "index": 7,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-report-8": {
+  "key": "report",
+  "index": 8,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-report-10": {
+  "key": "report",
+  "index": 10,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-prepared-1": {
+  "key": "prepared",
+  "index": 1,
+  "who": "Ｋさん",
+  "preset": "wall"
+ },
+ "v-prepared-2": {
+  "key": "prepared",
+  "index": 2,
+  "who": "Ｋさん",
+  "preset": "wall"
+ },
+ "v-prepared-3": {
+  "key": "prepared",
+  "index": 3,
+  "who": "祖父",
+  "preset": "wall"
+ },
+ "v-night-0": {
+  "key": "night",
+  "index": 0,
+  "who": "戸の向こう",
+  "preset": "wall"
+ },
+ "v-night-2": {
+  "key": "night",
+  "index": 2,
+  "who": "戸の向こう",
+  "preset": "wall"
+ },
+ "v-night-4": {
+  "key": "night",
+  "index": 4,
+  "who": "窓の外",
+  "preset": "wall"
+ },
+ "v-night-6": {
+  "key": "night",
+  "index": 6,
+  "who": "戸の向こう",
+  "preset": "wall"
+ },
+ "v-dawn-0": {
+  "key": "dawn",
+  "index": 0,
+  "who": "Ｋさん",
+  "preset": "wall"
+ },
+ "v-dawn-2": {
+  "key": "dawn",
+  "index": 2,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-dawn-3": {
+  "key": "dawn",
+  "index": 3,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-dawn-4": {
+  "key": "dawn",
+  "index": 4,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-dawn-5": {
+  "key": "dawn",
+  "index": 5,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-gate-opened-1": {
+  "key": "gate_opened",
+  "index": 1,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-boarded-0": {
+  "key": "boarded",
+  "index": 0,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-boarded-2": {
+  "key": "boarded",
+  "index": 2,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-ride-0": {
+  "key": "ride",
+  "index": 0,
+  "who": "窓の外",
+  "preset": "wall"
+ },
+ "v-ride-1": {
+  "key": "ride",
+  "index": 1,
+  "who": "窓の外",
+  "preset": "wall"
+ },
+ "v-ride-2": {
+  "key": "ride",
+  "index": 2,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-door-choice": {
+  "key": "door_choice",
+  "index": 0,
+  "who": "戸の外",
+  "preset": "wall"
+ }
+}

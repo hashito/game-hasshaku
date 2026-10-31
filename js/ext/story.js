@@ -36,7 +36,20 @@ export default function story(ext) {
   const lvl = () => (ctx && ctx.prog ? ctx.prog.index : 0);
   const done = (id) => ctx.state.tasks.includes(id);
   const say = (text, sec) => ctx.monologue(text, sec ?? Math.min(9, 2.4 + String(text).length * 0.09));
-  const voice = (who, text, sec) => ctx.ui.say(`<span class="hk-who">${esc(who)}</span>${esc(text)}`, sec ?? Math.min(8, 2.6 + String(text).length * 0.1));
+  // spoken lines (Issue #1): assets/voice/manifest.json maps a voice to its line of data/talk.json; the talk window plays line.voice,
+  // the timed lines of the night and the ride play through spoken() (S15: through a door / window = the wall preset)
+  const voiced = new Map();
+  const spoken = (text) => { const v = voiced.get(text); return v && ctx.voiceLine ? ctx.voiceLine(v.src, v.vfx) : null; };
+  const voice = (who, text, sec) => { spoken(text); return ctx.ui.say(`<span class="hk-who">${esc(who)}</span>${esc(text)}`, sec ?? Math.min(8, 2.6 + String(text).length * 0.1)); };
+  async function loadVoices() {
+    let m = {}; try { m = await (await fetch('assets/voice/manifest.json')).json(); } catch (e) { return; }
+    for (const [id, v] of Object.entries(m)) {
+      const src = `assets/voice/${id}.mp3`, list = T[v.key];
+      if (v.key === 'door_choice') { voiced.set(T.door_choice.text, { src, vfx: v.preset }); continue; }
+      const L = Array.isArray(list) && list[v.index]; if (!L) continue;
+      if (Array.isArray(L)) voiced.set(L[2], { src, vfx: v.preset }); else Object.assign(L, { voice: src, vfx: v.preset });
+    }
+  }
 
   ext.registerMinigame('salt', saltGame);
   ext.registerMinigame('gate', gateGame);
@@ -126,7 +139,7 @@ export default function story(ext) {
   ext.registerInteract('hk-voice', {
     prompt: () => '[E] 戸の外の声を確かめる',
     run: async () => {
-      const c = T.door_choice, v = await choose(c);
+      const c = T.door_choice, h = spoken(c.text), v = await choose(c); h && h.stop && h.stop();
       if (v === 'open') { snd.sting(); const d = ctx.world.doors.get('D_FUSUMA'); d && (d.mesh.visible = false); setTimeout(() => ctx.die('door'), 350); }
       else if (v === 'keep') say(c.kept, 4);
     },
@@ -305,7 +318,7 @@ export default function story(ext) {
 
   // ---------------------------------------------------------------- set up once the world is built
   ext.on('game:ready', (c) => {
-    ctx = c; T = c.data.talk; snd = createSound(c);
+    ctx = c; T = c.data.talk; snd = createSound(c); loadVoices();
     c.hk = { state: st, sound: snd };
     V = dressVillage(c);
     H = makeHasshaku({ detail: 1 }); H.root.visible = false; c.scene.add(H.root);

@@ -1,4 +1,4 @@
-/* game-kit 08f1905: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit db1acab: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -248,6 +248,21 @@ export function createGame(cfg) {
   { let g = null; audio.occlusionOf = (pos) => { g = g || roomGraph(plan); return occlusion(g, state.room, roomOf(g, pos.x, pos.z, ctx.floor), (id) => { const d = world.doors && world.doors.get(id); return d ? (d.isOpen ? 1 : 0) : 1; }); }; }
   // in-world voices (rule S15): ctx.playVoice(src, 'phone' | 'pa' | 'radio' | 'wall', { pos, intensity }) -> js/voice-fx.js (manifest "voice": true)
   if (cfg.mods && cfg.mods.voice) { let vfx = null; ctx.playVoice = (src, preset, opt = {}) => { unlockAudio(); if (!vfx && audio.ctx) vfx = cfg.mods.voice.createVoiceFx(audio.ctx, { out: audio.master }); return vfx ? vfx.play(src, preset, opt) : null; }; }
+  // a spoken line (talk window, timed lines): ctx.voiceLine(src, preset | null, { volume }) -> { stop() }. A preset goes through playVoice (S15);
+  // null = a voice in the same room, played clean on the master bus. Fails silently (the subtitle carries the words).
+  ctx.voiceLine = (src, preset = null, opt = {}) => {
+    unlockAudio();
+    if (preset && ctx.playVoice) return ctx.playVoice(src, preset, opt);
+    const ac = audio.ctx; if (!ac) return null;
+    let node = null, stopped = false;
+    fetch(src).then((r) => r.arrayBuffer()).then((b) => ac.decodeAudioData(b)).then((buf) => {
+      if (stopped) return;
+      node = ac.createBufferSource(); node.buffer = buf;
+      const gain = ac.createGain(); gain.gain.value = opt.volume ?? 1;
+      node.connect(gain).connect(audio.master || ac.destination); node.start();
+    }).catch(() => {});
+    return { stop() { stopped = true; try { node && node.stop(); } catch (e) {} } };
+  };
 
   // short messages (say / toast) and progress-ui's dialogs: KitUI. Menus, tabs, docs, endings: the window manager (ONE window at a time).
   const ui = ctx.ui = new KitUI({ lane, onOpen: (n) => onUiOpen(n), onClose: (n) => onUiClose(n) });
@@ -588,7 +603,7 @@ export function createGame(cfg) {
   ctx.systems = systems;
   ctx.monologue = (text, sec = 2.2) => ui.say(esc(text), sec);   // the protagonist's thought line (U23); monster hints ("走れ") go through it
   // the conversation window and the choice (js/talk-ui.js, standard 1.7): ctx.talk(lines | 'key of data/talk.json', o), ctx.choose({ who, text, options })
-  { const T = createTalk({ wm, qa: !!ctx.qa, data: data.talk || null, log: (ctx.talkLog = []) }); ctx.talk = T.talk; ctx.choose = T.choose; }
+  { const T = createTalk({ wm, qa: !!ctx.qa, data: data.talk || null, log: (ctx.talkLog = []), voice: (L) => ctx.voiceLine(L.voice, L.vfx || null) }); ctx.talk = T.talk; ctx.choose = T.choose; }
   if (manifest.things && data.things && cfg.mods && cfg.mods.things) cfg.mods.things.installThings(ctx);   // data/things.json: [E] examine -> card + thought + journal (standard 1.5)
   if (data.terminals && cfg.mods && cfg.mods.terminals) cfg.mods.terminals.installTerminals(ctx);   // data/terminals.json: the 'terminal' screen kind (standard 1.5)
   if (data.monsters && cfg.mods && cfg.mods.monsters) { const ms = cfg.mods.monsters.installMonsters(ctx); if (ms) systems.push({ id: 'monsters', def: { update: (dt, c, active) => ms.update(dt, c, active) }, inst: ms }); }   // the default monster pack (data/monsters.json, standard 1.5)
