@@ -1,4 +1,4 @@
-> **公開予定URL：https://hasshaku.autoarticles.net/** （Firebase `hasshaku-hashito`、GA4 は未発行 → `site.json` の `gaId` に入れる）
+> **公開予定URL：https://hasshaku.autoarticles.net/** （Firebase `hasshaku-hashito`、GA4 プロパティ properties/561618049、測定 ID G-K3EE3L77BK）
 >
 > 公開の手順：`npm run build`（`dist/` を `public/` にコピーし、`site.json` から title・description・canonical・OGP/Twitter・JSON-LD・GA4・sitemap.xml・robots.txt・404 を加える）→ `firebase deploy --only hosting --project hasshaku-hashito`。
 > 共有画像は `npm run og`（タイトル画面を 1200×630 で撮影 → `assets/og-image.jpg` と、ポータル用の `assets/og-image.png`）。
