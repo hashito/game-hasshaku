@@ -1,0 +1,105 @@
+/* The look of 八尺様 ― 境の夜 (on top of the kit theme dark-industrial): deep blue-green night, aged paper, a dull amber,
+   a little vermilion. Tokens first (css/theme.css lists them), then the few parts this game adds (hk-*), in tokens only. */
+[data-theme~="hasshaku"] {
+  --gf-bg: #091416;
+  --gf-surface: #0e1d1f;
+  --gf-surface-2: #142729;
+  --gf-panel: rgba(9, 22, 24, 0.94);
+  --gf-panel-soft: rgba(9, 22, 24, 0.78);
+  --gf-text: #e8e3d4;
+  --gf-text-dim: #b4c2bb;
+  --gf-heading: #f1ecdd;
+  --gf-accent: #cabb94;
+  --gf-accent-hover: #ddd0ab;
+  --gf-accent-ink: #14100a;
+  --gf-accent-2: #c46a55;
+  --gf-accent-soft: rgba(202, 187, 148, 0.16);
+  --gf-highlight: #3a3322;   /* a surface (the current task box): light text sits on it */
+  --gf-danger: #e07a64;
+  --gf-ok: #9fc4a2;
+  --gf-border: rgba(191, 210, 194, 0.22);
+  --gf-border-strong: rgba(202, 187, 148, 0.55);
+  --gf-font: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  --hk-serif: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", serif;
+  --gf-title-text: #f1ecdd;
+  --gf-title-dim: #c9d3cc;
+}
+[data-theme~="hasshaku"] .gf-title-box h1 { font-family: var(--hk-serif); letter-spacing: 0.18em; font-weight: 500; }
+[data-theme~="hasshaku"] .gf-kicker { letter-spacing: 0.22em; }
+
+/* conversation window */
+.hk-talk { display: flex; flex-direction: column; gap: var(--gf-space-3, 12px); min-height: 100%; }
+.hk-talk-img { width: 100%; max-height: 44vh; object-fit: cover; border: 1px solid var(--gf-border); border-radius: var(--gf-radius, 4px); }
+.hk-talk-who { margin: 0; color: var(--gf-accent); font-size: var(--gf-text-sm, 13px); letter-spacing: 0.14em; }
+.hk-talk-who span { color: var(--gf-text-dim); margin-left: 0.4em; letter-spacing: 0; }
+.hk-talk-text { margin: 0; color: var(--gf-text); font-family: var(--hk-serif); font-size: 18px; line-height: 1.9; cursor: pointer; }
+.hk-talk--me .hk-talk-who { color: var(--gf-text-dim); }
+.hk-talk-foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: var(--gf-space-3, 12px); }
+.hk-talk-n { color: var(--gf-text-dim); font-size: var(--gf-text-sm, 13px); }
+.hk-talk-next, .hk-choice { min-height: var(--gf-hit, 44px); min-width: 120px; }
+.hk-choices { display: flex; flex-wrap: wrap; gap: var(--gf-space-3, 12px); justify-content: flex-end; margin-top: var(--gf-space-4, 16px); }
+.hk-who { color: var(--gf-accent); margin-right: 0.6em; }
+.hk-who::after { content: "："; }
+
+/* a found picture at the top (U14) */
+.hk-photo { position: fixed; top: calc(72px + var(--gf-safe-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 40; width: min(420px, 80vw); pointer-events: none; color: var(--gf-text);
+  background: var(--gf-panel); border: 1px solid var(--gf-border); border-radius: var(--gf-radius, 4px); padding: 8px; box-shadow: var(--gf-shadow, 0 8px 30px rgba(0,0,0,.5)); }
+.hk-photo img { display: block; width: 100%; max-height: 32vh; object-fit: cover; }
+.hk-photo p { margin: 6px 2px 0; color: var(--gf-text); font-family: var(--hk-serif); font-size: 14px; line-height: 1.7; }
+.hk-jump { /* pair-ok */ position: fixed; inset: 0; z-index: 90; background: #000; display: flex; align-items: center; justify-content: center; animation: hk-jump 0.9s ease-out both; }
+.hk-jump img { height: 100%; max-width: 100%; object-fit: cover; filter: contrast(1.25) brightness(0.9); }
+@keyframes hk-jump { 0% { opacity: 0; } 8% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
+
+/* the night panel (top right) and the van panel (bottom centre, above the thought band) */
+.hk-panel { background: var(--gf-panel-soft); border: 1px solid var(--gf-border); border-radius: var(--gf-radius, 4px); padding: 10px 12px; color: var(--gf-text); min-width: 200px; backdrop-filter: blur(4px); }
+.hk-panel-cap { margin: 0 0 4px; color: var(--gf-text-dim); font-size: 12px; letter-spacing: 0.1em; }
+.hk-clock { margin: 0 0 8px; font-family: var(--hk-serif); font-size: 24px; letter-spacing: 0.12em; color: var(--gf-heading); }
+.hk-pips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+.hk-pip { display: block; padding: 3px 6px; border: 1px solid var(--gf-border); border-radius: 3px; font-size: 12px; color: var(--gf-text); background: var(--gf-surface); }
+.hk-pip[data-state="tainted"] { border-color: var(--gf-accent); color: var(--gf-accent-hover); }
+.hk-pip[data-state="critical"] { border-color: var(--gf-danger); color: var(--gf-text); background: #3a1712; }
+.hk-panel-help { margin: 8px 0 0; font-size: 12px; color: var(--gf-text-dim); max-width: 240px; line-height: 1.6; }
+.hk-ride { position: fixed; left: 50%; bottom: calc(26% + var(--gf-safe-bottom, 0px)); transform: translateX(-50%); z-index: 30; width: min(440px, 88vw);
+  background: var(--gf-panel-soft); border: 1px solid var(--gf-border); border-radius: var(--gf-radius, 4px); padding: 10px 14px; color: var(--gf-text); text-align: center; }
+.hk-bar { /* pair-ok */ height: 6px; background: var(--gf-surface-2); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+.hk-bar i { /* pair-ok */ display: block; height: 100%; width: 0; background: var(--gf-accent); transition: width 0.2s linear; }
+.hk-bar--curse i { /* pair-ok */ background: var(--gf-danger); }
+.hk-ride-threat { min-height: 1.6em; margin: 0 0 8px; font-family: var(--hk-serif); color: var(--gf-accent-hover); }
+.hk-grip { min-height: var(--gf-hit, 44px); width: 100%; touch-action: none; user-select: none; }
+.hk-grip[data-on="1"] { background: var(--gf-accent-hover); color: var(--gf-accent-ink); }
+body:not(.touch) .hk-grip::after { content: "（Space・E）"; font-size: 12px; margin-left: 0.4em; }
+.hk-light { min-height: var(--gf-hit, 44px); min-width: var(--gf-hit, 44px); }
+
+/* death and ending */
+.hk-death, .hk-ending { display: flex; flex-direction: column; gap: var(--gf-space-3, 12px); color: var(--gf-text); }
+.hk-death-kicker { margin: 0; color: var(--gf-accent-2); letter-spacing: 0.2em; font-size: 12px; }
+.hk-death-img { width: 100%; max-height: 34vh; object-fit: cover; object-position: center 30%; filter: grayscale(0.4) contrast(1.1); border-radius: var(--gf-radius, 4px); }
+.hk-death-text, .hk-ending p { margin: 0; font-family: var(--hk-serif); line-height: 1.9; }
+.hk-ending-stats { color: var(--gf-text-dim); font-family: var(--gf-font) !important; font-size: 13px; }
+
+/* the two mini games */
+.hk-mg { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(520px, 92vw); max-height: 88vh; overflow: auto; z-index: 60;
+  background: var(--gf-panel); border: 1px solid var(--gf-border-strong); border-radius: var(--gf-radius-lg, 8px); padding: var(--gf-space-5, 24px); color: var(--gf-text); }
+.hk-mg-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.hk-mg-head b { font-family: var(--hk-serif); font-size: 18px; color: var(--gf-heading); }
+.hk-mg-help { color: var(--gf-text-dim); line-height: 1.7; }
+.hk-mg-msg { min-height: 1.7em; color: var(--gf-accent-hover); }
+.hk-salt { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.hk-salt-dish { /* pair-ok */ position: relative; width: 140px; height: 180px; border: 1px solid var(--gf-border); border-radius: 4px; background: var(--gf-surface-2); display: flex; align-items: flex-end; overflow: hidden; }
+.hk-salt-heap { /* pair-ok */ width: 100%; height: 0; background: linear-gradient(#f4f0e4, #d8d2c0); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.hk-salt-band { position: absolute; left: 0; right: 0; bottom: 62%; height: 18%; border-top: 2px dashed var(--gf-accent); border-bottom: 2px dashed var(--gf-accent); }
+.hk-salt-pour { min-height: 56px; min-width: 220px; touch-action: none; user-select: none; }
+.hk-gate { display: flex; justify-content: center; gap: 14px; margin: 8px 0 16px; }
+.hk-dial { width: 96px; height: 120px; border: 1px solid var(--gf-border-strong); border-radius: 8px; background: var(--gf-surface-2); color: var(--gf-text); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.hk-dial-arrow { width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 30px solid var(--gf-accent); transition: transform 0.2s; }
+.hk-dial-dir { font-family: var(--hk-serif); font-size: 22px; }
+.hk-dial small { color: var(--gf-text-dim); }
+.hk-gate-row { display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
+.hk-gate-row .btn, .hk-mg-close { min-height: var(--gf-hit, 44px); }
+@media (prefers-reduced-motion: reduce) { .hk-jump { animation: none; display: none; } }
+
+/* hidden parts stay hidden (their display rules above would override the attribute) */
+.hk-jump[hidden], .hk-photo[hidden], .hk-ride[hidden], .hk-panel[hidden], .hk-light[hidden] { display: none !important; }
+
+/* the first-load text sits on the title art: a dark pill under it (U30) */
+[data-theme~="hasshaku"] #boot span { color: var(--gf-text); background: rgba(9, 20, 22, 0.86); padding: 4px 10px; border-radius: 3px; }

@@ -1,24 +1,23 @@
-// Captures the title screen at 1200x630 and writes assets/og-image.jpg (site) and assets/og-image.png (portal card): node tools/make-og.mjs
-import fs from "node:fs";
-import path from "node:path";
-import { launch } from "./browser.mjs";
-import { serve } from "./serve.mjs";
+#!/usr/bin/env node
+// The share image (1200x630) and the portal card: the title screen over its key art, without the buttons.
+//   node tools/make-og.mjs   -> assets/og-image.png (site og:image and the Game-fleet portal card)
+import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { launch } from './cdp.mjs';
 
-const root = path.resolve(import.meta.dirname, "..");
-const s = await serve(0, "dist");
-const browser = await launch();
+const root = path.resolve(import.meta.dirname, '..');
+const port = 20000 + Math.floor(Math.random() * 20000);
+const server = spawn(process.execPath, [path.join(import.meta.dirname, 'serve.js'), '--port', String(port)], { stdio: 'ignore' });
+const base = `http://127.0.0.1:${port}/`;
+for (let i = 0; i < 50; i++) { if (await fetch(base).then((r) => r.ok).catch(() => false)) break; await new Promise((r) => setTimeout(r, 100)); }
+const p = await launch({ width: 1200, height: 630 });
 try {
-  const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
-  await page.goto(`http://127.0.0.1:${s.port}/`);
-  await page.waitForTimeout(6000);
-  // keep the title, subtitle and scene; drop the buttons and small links
-  await page.addStyleTag({ content: "#start-button,#title-help,#title-sources,#title-sound,.title-stage,.title-actions,.title-footer{visibility:hidden!important}" });
-  await page.waitForTimeout(300);
-  const jpg = path.join(root, "assets/og-image.jpg");
-  await page.screenshot({ path: jpg, type: "jpeg", quality: 84 });
-  await page.screenshot({ path: path.join(root, "assets/og-image.png") });
-  console.log(`assets/og-image.jpg ${Math.round(fs.statSync(jpg).size / 1024)} KB`);
-} finally {
-  await browser.close();
-  s.srv.close();
-}
+  await p.goto(base);
+  await p.waitFor("document.getElementById('start-btn') && !document.getElementById('start-btn').disabled", 90000);
+  await p.eval(`(() => { const s = document.createElement('style'); s.textContent = '.gf-title-btns, .gf-boot-status, .gf-info, .gf-note, .gf-ver, .gf-meta { display: none !important; }'; document.head.appendChild(s); })()`);
+  await p.sleep(800);
+  const out = path.join(root, 'assets/og-image.png');
+  await p.shot(out);
+  console.log(`assets/og-image.png ${Math.round(fs.statSync(out).size / 1024)} KB`);
+} finally { await p.close(); server.kill(); }

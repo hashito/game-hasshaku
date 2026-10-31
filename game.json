@@ -1,0 +1,47 @@
+{
+  "id": "hasshaku",
+  "title": "八尺様 ― 境の夜",
+  "subtitle": "朝まで、誰の声にも返事をしてはいけない",
+  "version": "1.0.0",
+  "standard": "1.5",
+  "theme": "dark-industrial hasshaku",
+  "preset": {
+    "base": "dusk",
+    "label": "夏の夕暮れの山村",
+    "toneMapping": "aces",
+    "exposure": 1.0,
+    "background": 4545367,
+    "fog": { "type": "exp2", "color": 4545367, "density": 0.022 },
+    "far": 140,
+    "env": { "kind": "sky", "top": 2768955, "horizon": 9283693, "ground": 1515039, "sun": [16758928, 2, [-0.8, 0.08, -0.4]], "intensity": 0.45 },
+    "hemi": { "sky": 6987405, "ground": 2630693, "intensity": 0.32 },
+    "key": { "type": "dir", "color": 13361100, "intensity": 1.4, "pos": [-14, 9, -8], "shadow": true, "area": 18 },
+    "fills": [],
+    "post": { "vignette": 0.45, "grain": 0.04, "bloom": { "strength": 0.3, "threshold": 0.9, "radius": 0.5 }, "tint": [0.97, 1.0, 0.99], "saturation": 0.8 }
+  },
+  "modules": [
+    "game-core", "ext", "schema-check", "game-data", "world-from-plan", "plan-check", "task-minigames", "render-presets", "frame-guard",
+    "controller", "ui", "store", "audio", "progression", "progress-ui", "inventory-ui", "release-notes", "win-manager", "tab-menu",
+    "pause-menu", "journal-ui", "map-svg", "step-guide", "analytics", "character", "motion", "env-props", "props", "prop-geo", "prop-mats",
+    "monster-looks", "texture-library"
+  ],
+  "minigames": ["salt", "gate"],
+  "entry": { "html": "index.html", "main": "js/main.js" },
+  "ext": ["js/ext/index.js"],
+  "data": {
+    "plan": "data/plan.json",
+    "items": "data/items.json",
+    "docs": "data/docs.json",
+    "tasks": "data/tasks.json",
+    "stages": "data/stages.json",
+    "endings": "data/endings.json",
+    "releaseNotes": "data/release-notes.json",
+    "monsters": "data/monsters.json",
+    "things": "data/things.json",
+    "talk": "data/talk.json"
+  },
+  "titleImage": "assets/photos/encounter.webp",
+  "media": { "dir": "assets" },
+  "recipes": { "props": true, "textures": "assets/textures/" },
+  "things": true
+}

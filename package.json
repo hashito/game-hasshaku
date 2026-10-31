@@ -1,14 +1,24 @@
 {
-  "name": "hasshaku-boundary",
-  "version": "4.0.0",
+  "name": "game-hasshaku",
+  "version": "1.0.0",
   "private": true,
-  "type": "module",
-  "description": "ネット怪談『八尺様』を題材にした一人称3D探索ホラー",
+  "description": "八尺様 ― 境の夜：ネット怪談『八尺様』を題材にした一人称3D探索ホラー（game-kit 3D 標準 1.5）",
   "scripts": {
-    "test": "node --test tests/*.test.mjs",
-    "serve": "node tools/serve.mjs dist",
-    "og": "node tools/make-og.mjs",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "check": "node tools/check-game-data.mjs . && node tools/check-plan.mjs data/plan.json --strict --ignore=no-loop && node tools/check-escape.mjs .",
+    "plan": "node tools/check-plan.mjs data/plan.json --strict --ignore=no-loop",
+    "media": "node tools/check-game-data.mjs . --media",
+    "serve": "node tools/serve.js",
+    "smoke": "node tools/smoke.mjs",
+    "smoke:mobile": "node tools/smoke.mjs --mobile",
+    "selftest": "node tools/selftest-game.mjs",
+    "check:emoji": "node tools/check-no-emoji.mjs js css data game.json index.html --skip-story",
+    "check:pairs": "node tools/check-css-pairs.mjs css/theme-game.css",
+    "check:wording": "node tools/check-wording.mjs js data --skip-story",
+    "check:contrast": "node tools/check-text-contrast.mjs index.html --hooks tools/contrast-hooks/std.mjs --viewport 390x844,1920x1080 --shots shots/contrast",
     "build": "node tools/build-site.js",
-    "smoke": "node tools/smoke.mjs public"
+    "og": "node tools/make-og.mjs",
+    "data": "python3 tools/authoring/make-plan.py && python3 tools/authoring/make-data.py",
+    "sync-kit": "node ../game-kit/tools/kit-sync.js ."
   }
 }

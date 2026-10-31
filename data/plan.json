@@ -1,0 +1,514 @@
+{
+ "rooms": [
+  {
+   "id": "NANDO",
+   "name": "納戸",
+   "x": -20,
+   "z": 3,
+   "w": 7,
+   "d": 7.4,
+   "kind": "room",
+   "floorTex": "planks_worn",
+   "wallTex": "clay_wall",
+   "safe": true
+  },
+  {
+   "id": "ZASHIKI",
+   "name": "北の座敷",
+   "x": -13,
+   "z": 3,
+   "w": 9,
+   "d": 7.4,
+   "kind": "room",
+   "floorTex": "tatami_weave_old",
+   "wallTex": "clay_wall",
+   "safe": true
+  },
+  {
+   "id": "ROUKA",
+   "name": "中廊下",
+   "x": -20,
+   "z": 10.4,
+   "w": 16,
+   "d": 2,
+   "kind": "corridor",
+   "floorTex": "engawa_boards",
+   "wallTex": "clay_wall",
+   "safe": true
+  },
+  {
+   "id": "DAIDOKORO",
+   "name": "台所",
+   "x": -20,
+   "z": 12.4,
+   "w": 7,
+   "d": 6.6,
+   "kind": "room",
+   "floorTex": "planks_dark",
+   "wallTex": "plaster_yellowed",
+   "safe": true
+  },
+  {
+   "id": "IMA",
+   "name": "居間",
+   "x": -13,
+   "z": 12.4,
+   "w": 9,
+   "d": 6.6,
+   "kind": "room",
+   "floorTex": "tatami_weave",
+   "wallTex": "clay_wall",
+   "safe": true
+  },
+  {
+   "id": "SHOP",
+   "name": "夕霧商店",
+   "x": -19,
+   "z": -18,
+   "w": 8,
+   "d": 9,
+   "kind": "room",
+   "floorTex": "planks_grey_old",
+   "wallTex": "panel_wood_wall",
+   "safe": true
+  },
+  {
+   "id": "SHOP_DOMA",
+   "name": "商店の土間",
+   "x": -11,
+   "z": -18,
+   "w": 2,
+   "d": 9,
+   "kind": "corridor",
+   "floorTex": "soil",
+   "wallTex": "panel_wood_wall",
+   "safe": true
+  },
+  {
+   "id": "O_FRONT",
+   "name": "家の前の道",
+   "x": -4,
+   "z": -2,
+   "w": 9,
+   "d": 29,
+   "kind": "outdoor",
+   "floorTex": "gravel"
+  },
+  {
+   "id": "O_GARDEN",
+   "name": "裏庭",
+   "x": -26,
+   "z": 19,
+   "w": 22,
+   "d": 8,
+   "kind": "outdoor",
+   "floorTex": "soil"
+  },
+  {
+   "id": "O_BACK",
+   "name": "家の西",
+   "x": -26,
+   "z": -2,
+   "w": 6,
+   "d": 21,
+   "kind": "outdoor",
+   "floorTex": "grass_dry"
+  },
+  {
+   "id": "O_NORTH",
+   "name": "家の北",
+   "x": -20,
+   "z": -2,
+   "w": 16,
+   "d": 5,
+   "kind": "outdoor",
+   "floorTex": "moss"
+  },
+  {
+   "id": "O_FIELD",
+   "name": "田んぼの畦",
+   "x": 5,
+   "z": -2,
+   "w": 19,
+   "d": 29,
+   "kind": "outdoor",
+   "floorTex": "mud"
+  },
+  {
+   "id": "O_ROAD",
+   "name": "村道",
+   "x": -4,
+   "z": -24,
+   "w": 9,
+   "d": 22,
+   "kind": "outdoor",
+   "floorTex": "gravel"
+  },
+  {
+   "id": "O_SHOPFRONT",
+   "name": "商店の前",
+   "x": -9,
+   "z": -18,
+   "w": 5,
+   "d": 9,
+   "kind": "outdoor",
+   "floorTex": "gravel"
+  },
+  {
+   "id": "O_SHRINE",
+   "name": "道端の社",
+   "x": 5,
+   "z": -18,
+   "w": 13,
+   "d": 16,
+   "kind": "outdoor",
+   "floorTex": "moss"
+  },
+  {
+   "id": "O_GATE",
+   "name": "農道の先",
+   "x": -6,
+   "z": -46,
+   "w": 13,
+   "d": 22,
+   "kind": "outdoor",
+   "floorTex": "gravel"
+  }
+ ],
+ "doors": [
+  {
+   "id": "D_GENKAN",
+   "a": "IMA",
+   "b": "O_FRONT",
+   "x": -4,
+   "z": 15.6,
+   "width": 1.4,
+   "label": "玄関の木戸"
+  },
+  {
+   "id": "D_IMA",
+   "a": "IMA",
+   "b": "ROUKA",
+   "x": -8.0,
+   "z": 12.4,
+   "width": 1.6,
+   "label": "居間の障子"
+  },
+  {
+   "id": "D_KATTE",
+   "a": "ROUKA",
+   "b": "O_BACK",
+   "x": -20,
+   "z": 11.4,
+   "width": 1.1,
+   "label": "勝手口",
+   "unlock": "dawn",
+   "hint": "勝手口は、外から閂が掛けてある。"
+  },
+  {
+   "id": "D_ENGAWA",
+   "a": "ROUKA",
+   "b": "O_FRONT",
+   "x": -4,
+   "z": 11.4,
+   "width": 1.2,
+   "label": "縁側の戸"
+  },
+  {
+   "id": "D_DAIDOKORO",
+   "a": "DAIDOKORO",
+   "b": "ROUKA",
+   "x": -16.5,
+   "z": 12.4,
+   "width": 1.2,
+   "label": "台所の引き戸",
+   "unlock": "prep",
+   "hint": "今は、居間の祖父に話すのが先だ。"
+  },
+  {
+   "id": "D_NANDO",
+   "a": "NANDO",
+   "b": "ROUKA",
+   "x": -16.5,
+   "z": 10.4,
+   "width": 1.2,
+   "label": "納戸の障子戸",
+   "unlock": "prep",
+   "hint": "今は、居間の祖父に話すのが先だ。"
+  },
+  {
+   "id": "D_FUSUMA",
+   "a": "ZASHIKI",
+   "b": "ROUKA",
+   "x": -8.0,
+   "z": 10.4,
+   "width": 1.8,
+   "label": "北の座敷の襖",
+   "unlock": "prep",
+   "hint": "北の座敷は閉め切ってある。今は、居間の祖父に話すのが先だ。"
+  },
+  {
+   "id": "D_SHOP",
+   "a": "SHOP_DOMA",
+   "b": "O_SHOPFRONT",
+   "x": -9,
+   "z": -13.5,
+   "width": 1.6,
+   "label": "商店の引き戸"
+  },
+  {
+   "id": "G_SHOP_DOMA",
+   "a": "SHOP",
+   "b": "SHOP_DOMA",
+   "x": -11,
+   "z": -13.5,
+   "width": 3.0,
+   "open": true
+  },
+  {
+   "id": "G_FRONT_GARDEN",
+   "a": "O_FRONT",
+   "b": "O_GARDEN",
+   "x": -4,
+   "z": 23,
+   "width": 7.6,
+   "open": true
+  },
+  {
+   "id": "G_GARDEN_BACK",
+   "a": "O_GARDEN",
+   "b": "O_BACK",
+   "x": -23,
+   "z": 19,
+   "width": 5.6,
+   "open": true
+  },
+  {
+   "id": "G_BACK_NORTH",
+   "a": "O_BACK",
+   "b": "O_NORTH",
+   "x": -20,
+   "z": 0.5,
+   "width": 4.6,
+   "open": true
+  },
+  {
+   "id": "G_NORTH_FRONT",
+   "a": "O_NORTH",
+   "b": "O_FRONT",
+   "x": -4,
+   "z": 0.5,
+   "width": 4.6,
+   "open": true
+  },
+  {
+   "id": "G_FRONT_FIELD",
+   "a": "O_FRONT",
+   "b": "O_FIELD",
+   "x": 5,
+   "z": 3.5,
+   "width": 3.0,
+   "open": true
+  },
+  {
+   "id": "G_FRONT_FIELD2",
+   "a": "O_FRONT",
+   "b": "O_FIELD",
+   "x": 5,
+   "z": 24.5,
+   "width": 3.0,
+   "open": true
+  },
+  {
+   "id": "G_FRONT_ROAD",
+   "a": "O_FRONT",
+   "b": "O_ROAD",
+   "x": 0.5,
+   "z": -2,
+   "width": 8.6,
+   "open": true
+  },
+  {
+   "id": "G_ROAD_SHOPFRONT",
+   "a": "O_ROAD",
+   "b": "O_SHOPFRONT",
+   "x": -4,
+   "z": -13.5,
+   "width": 8.6,
+   "open": true
+  },
+  {
+   "id": "G_ROAD_SHRINE",
+   "a": "O_ROAD",
+   "b": "O_SHRINE",
+   "x": 5,
+   "z": -12,
+   "width": 4.0,
+   "open": true
+  },
+  {
+   "id": "G_SHRINE_FIELD",
+   "a": "O_SHRINE",
+   "b": "O_FIELD",
+   "x": 15.5,
+   "z": -2,
+   "width": 4.0,
+   "open": true
+  },
+  {
+   "id": "D_GATE",
+   "a": "O_ROAD",
+   "b": "O_GATE",
+   "x": 0.5,
+   "z": -24,
+   "width": 6.2,
+   "label": "農道の車止め",
+   "hint": "車止めの回し金が掛かっている。三つの印を合わせれば開くはずだ。"
+  }
+ ],
+ "stations": [
+  {
+   "id": "S_COUNTER",
+   "room": "SHOP",
+   "x": -15.6,
+   "z": -13.5,
+   "label": "帳場"
+  },
+  {
+   "id": "S_GRANDPA",
+   "room": "IMA",
+   "x": -6.4,
+   "z": 16.4,
+   "label": "祖父"
+  },
+  {
+   "id": "S_BOWL_NW",
+   "room": "ZASHIKI",
+   "x": -11.9,
+   "z": 4.1,
+   "label": "北西の皿"
+  },
+  {
+   "id": "S_BOWL_NE",
+   "room": "ZASHIKI",
+   "x": -5.1,
+   "z": 4.1,
+   "label": "北東の皿"
+  },
+  {
+   "id": "S_BOWL_SW",
+   "room": "ZASHIKI",
+   "x": -11.9,
+   "z": 9.3,
+   "label": "南西の皿"
+  },
+  {
+   "id": "S_BOWL_SE",
+   "room": "ZASHIKI",
+   "x": -5.1,
+   "z": 9.3,
+   "label": "南東の皿"
+  },
+  {
+   "id": "S_WINDOW",
+   "room": "ZASHIKI",
+   "x": -8.5,
+   "z": 3.5,
+   "label": "北の格子窓"
+  },
+  {
+   "id": "S_SEAL",
+   "room": "ZASHIKI",
+   "x": -8.0,
+   "z": 9.95,
+   "label": "襖の内側"
+  },
+  {
+   "id": "S_CLOCK",
+   "room": "ZASHIKI",
+   "x": -4.5,
+   "z": 6.6,
+   "label": "柱時計"
+  },
+  {
+   "id": "S_GATE",
+   "room": "O_ROAD",
+   "x": -1.6,
+   "z": -23.2,
+   "label": "車止めの回し金"
+  },
+  {
+   "id": "S_CAR",
+   "room": "O_GATE",
+   "x": 2.0,
+   "z": -33.5,
+   "label": "迎えの車"
+  }
+ ],
+ "hides": [
+  {
+   "id": "H_SHED",
+   "room": "O_GARDEN",
+   "x": -23.6,
+   "z": 23.4,
+   "label": "物置小屋の陰"
+  },
+  {
+   "id": "H_SHRINE",
+   "room": "O_SHRINE",
+   "x": 15.8,
+   "z": -15.6,
+   "label": "社の裏"
+  },
+  {
+   "id": "H_SHOPSIDE",
+   "room": "O_SHOPFRONT",
+   "x": -6.3,
+   "z": -16.9,
+   "label": "商店の軒下の樽の陰"
+  },
+  {
+   "id": "H_BUSSTOP",
+   "room": "O_ROAD",
+   "x": -3.0,
+   "z": -6.5,
+   "label": "バス停の待合小屋"
+  },
+  {
+   "id": "H_GATESHED",
+   "room": "O_ROAD",
+   "x": -3.0,
+   "z": -20.6,
+   "label": "車止めの脇の藁小屋"
+  },
+  {
+   "id": "H_FIELDHUT",
+   "room": "O_FIELD",
+   "x": 21.5,
+   "z": -0.6,
+   "label": "農具小屋"
+  }
+ ],
+ "routes": [
+  {
+   "id": "village_loop",
+   "path": [
+    "O_ROAD",
+    "O_SHRINE",
+    "O_FIELD",
+    "O_FRONT",
+    "O_ROAD"
+   ]
+  }
+ ],
+ "start": "O_FRONT",
+ "spawn": {
+  "x": -1.75,
+  "z": 18.9,
+  "yaw": 0
+ },
+ "exits": [
+  "O_GATE",
+  "O_GARDEN"
+ ]
+}

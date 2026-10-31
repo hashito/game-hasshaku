@@ -5,10 +5,16 @@ on:
     branches: [main]
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   game:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
+    env:
+      BROWSER: /usr/bin/google-chrome
+      GF_SOFTWARE_GL: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,12 +22,17 @@ jobs:
           node-version: '22'
       - name: Japanese fonts for readable screenshots
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends fonts-noto-cjk
-      - name: Playwright and Chromium
-        run: npm install -g playwright@1 && npx -y playwright install --with-deps chromium
       - run: npm test
+      - run: npm run check
+      - run: npm run check:emoji
+      - run: npm run check:pairs
       - run: npm run build
-      - name: Desktop and phone start, walk and page errors
+      - name: Desktop smoke (title to an ending)
         run: npm run smoke
+      - name: Phone smoke (touch)
+        run: npm run smoke:mobile
+      - name: Deaths, retries and both endings
+        run: node tools/playthrough.mjs --shots shots/playthrough
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -1,0 +1,40 @@
+{
+ "early": {
+  "stages": 4
+ },
+ "hints": {
+  "run": "走れ。",
+  "turn": "曲がって、生垣の陰へ。",
+  "hide": "隠れろ。"
+ },
+ "monsters": [
+  {
+   "id": "hasshaku",
+   "look": "dark-red-mist",
+   "phases": [
+    {
+     "preset": "early"
+    }
+   ],
+   "activeFrom": {
+    "stage": "L4"
+   },
+   "spawn": {
+    "room": "O_SHRINE"
+   },
+   "route": "village_loop",
+   "nearAttack": {
+    "room": "O_ROAD",
+    "from": {
+     "room": "O_SHRINE"
+    },
+    "target": {
+     "room": "O_ROAD"
+    }
+   },
+   "params": {
+    "sight": 14
+   }
+  }
+ ]
+}

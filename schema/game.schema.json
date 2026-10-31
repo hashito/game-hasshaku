@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "game.json - the manifest of a standard 3D first-person game",
+  "type": "object",
+  "required": ["id", "title", "version", "theme", "data"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$", "description": "short key; also the storage key prefix and the GA4 game name" },
+    "title": { "type": "string", "minLength": 1 },
+    "subtitle": { "type": "string" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$", "description": "semver of the game; equals the newest release-notes entry" },
+    "standard": { "type": "string", "description": "the game-kit standard it was built on, e.g. 1.0" },
+    "theme": { "type": "string", "minLength": 1, "description": "data-theme value: dark-industrial | paper-light | retro-crt | a game theme" },
+    "preset": { "type": ["string", "object"], "description": "render-presets preset: horror | dusk | office | zoo ... Or { base, ...overrides } (extendPreset; colours as numbers).", "properties": { "base": { "type": "string" } } },
+    "modules": { "type": "array", "items": { "type": "string" }, "description": "kit modules the game uses (kit.json modules is derived from it)" },
+    "titleImage": { "type": "string", "description": "title screen background image (relative to the game root)" },
+    "controls": { "type": "object", "description": "fov, near, far, eye, touch: [{ k: key code, label, id?, cls? }] (the on-screen buttons of the touch UI)" },
+    "renderWhileBooting": { "type": "boolean", "description": "true = the 3D view is drawn every frame while the boot steps run (default: not drawn until booted)" },
+    "quality": { "type": "boolean", "description": "false = no quality tier (default: a tier is chosen once from the device)" },
+    "fx": { "type": ["string", "boolean", "object"], "description": "screen effects (js/fx-std.js): a preset name (old-tv | clean | horror | retro-crt) or { preset, noise, scanlines, vignette, saturation, glitch, dangerTint, mist, exposure }" },
+    "voice": { "type": "boolean", "description": "true = ctx.playVoice(src, 'phone' | 'pa' | 'radio' | 'wall') is available (js/voice-fx.js, rule S15)" },
+    "recipes": { "type": "object", "description": "content recipes switched on: props (plan.furniture kinds), openables, textures (folder of the catalog), ambience { beds } (js/recipes.js)", "properties": { "props": { "type": "boolean" }, "openables": { "type": "boolean" }, "textures": { "type": ["string", "boolean"] }, "ambience": { "type": "object", "properties": { "beds": { "type": "array" } } } } },
+    "minigames": { "type": "array", "items": { "type": "string" }, "description": "extra mini game types registered by js/ext (not kit task-minigames types)" },
+    "entry": { "type": "object", "properties": { "html": { "type": "string" }, "main": { "type": "string" } }, "additionalProperties": false },
+    "ext": { "type": "array", "items": { "type": "string" }, "description": "game-specific extension modules, loaded in order; each default-exports (ext, ctx) => void" },
+    "data": {
+      "type": "object",
+      "required": ["plan", "items", "tasks", "stages", "endings", "releaseNotes"],
+      "properties": {
+        "plan": { "type": "string" }, "items": { "type": "string" }, "docs": { "type": "string" }, "tasks": { "type": "string" },
+        "stages": { "type": "string" }, "endings": { "type": "string" }, "releaseNotes": { "type": "string" }
+      },
+      "additionalProperties": { "type": "string" }
+    },
+    "media": { "type": "object", "properties": { "dir": { "type": "string" }, "catalog": { "type": "string" } }, "additionalProperties": false }
+  },
+  "additionalProperties": true
+}
