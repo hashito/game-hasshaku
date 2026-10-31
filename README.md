@@ -2,6 +2,7 @@
 >
 > 公開の手順：`npm run build`（`dist/` を `public/` にコピーし、`site.json` から title・description・canonical・OGP/Twitter・JSON-LD・GA4・sitemap.xml・robots.txt・404 を加える）→ `firebase deploy --only hosting --project hasshaku-hashito`。
 > 共有画像は `npm run og`（タイトル画面を 1200×630 で撮影 → `assets/og-image.jpg` と、ポータル用の `assets/og-image.png`）。
+> 進行の確認は `npm test`（全段階の必須操作を通しで実行）。`?qa=1` を付けて開いたときだけ、確認用の `window.__hasshakuQA` が使える。
 > 表示確認は `npm run smoke`（ヘッドレス Chromium、1280×720 と 390×844。開始・歩行・ページエラーを確認し、`shots/` に保存）。
 > Three.js r160 は MIT（`THREE-LICENSE.txt`）。Game-fleet の `projects/hasshaku` に登録。
 
@@ -30,7 +31,8 @@
 | `assets/favicon.svg` | ゲーム内のアイコンと同じ図柄 |
 | `tools/build-site.js` | `public/` を作る（SEO・GA4・sitemap・robots・404、参照の検査） |
 | `tools/smoke.mjs` | ブラウザでの起動・開始・歩行の確認 |
-| `tests/` | `site.json` とビルド結果の検査（`npm test`） |
+| `tools/route.mjs` / `tools/cdp.mjs` | 段階 I〜V と二つの結末までを、ヘッドレス Edge / Chrome で実際のキー入力により通しで確認する（`npm run route`）。地図の道順どおりに歩いて商店の戸まで届くかも見る |
+| `tests/` | `site.json` とビルド結果の検査、および上の通し確認（`npm test`。Edge / Chrome が無ければ通し確認は省略） |
 
 ## 公開（初回）
 

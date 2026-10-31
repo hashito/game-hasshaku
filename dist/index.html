@@ -203,6 +203,9 @@ body[data-starting="1"] #title-screen{opacity:0;pointer-events:none;}
 .v4-map-svg{display:block;width:min(100%,520px);max-width:520px;height:auto;max-height:none;border:1px solid rgba(221,199,144,.3);background:#172222;}
 .v4-map-legend{display:flex;flex-wrap:wrap;gap:12px;padding:10px;font-size:11px;color:#b2bda9;}
 @media(max-width:650px){#subtitle{bottom:calc(135px + var(--safe-bottom));max-height:42vh;padding:11px 15px 9px;}#v4-dialogue-art{height:90px;}#dialogue-next{min-height:44px;min-width:105px;}#subtitle-text{font-size:15px;line-height:1.65;}.v4-dialogue-hint{font-size:9px;}#v4-errand-status{left:12px;bottom:calc(15px + var(--safe-bottom));max-width:200px;padding:6px 10px;}}
+/* 4.0.1: keep 「買い物に出る」 together; on wide screens the menu grows to fit the label instead of orphaning 「る」 */
+.primary-button .nowrap{white-space:nowrap}
+@media(min-width:651px){.title-actions{width:auto;min-width:264px;max-width:360px}.title-actions .primary-button{gap:18px}#start-button>span{white-space:nowrap}}
 </style>
 <!-- Three.js license:
 The MIT License
@@ -268,7 +271,7 @@ THE SOFTWARE.
         </section>
         <nav class="title-actions" aria-label="ゲームメニュー">
           <button id="continue-button" class="primary-button" type="button" hidden><span>つづきから</span><svg class="icon"><use href="#icon-arrow"/></svg></button>
-          <button id="start-button" class="primary-button" type="button"><span>はじめから ― 買い物に出る</span><svg class="icon"><use href="#icon-arrow"/></svg></button>
+          <button id="start-button" class="primary-button" type="button"><span>はじめから ― <span class="nowrap">買い物に出る</span></span><svg class="icon"><use href="#icon-arrow"/></svg></button>
           <div class="title-secondary"><button id="title-help" class="text-button" type="button">操作方法</button><span></span><button id="title-sources" class="text-button" type="button">原典について</button></div>
         </nav>
       </div>
@@ -4351,7 +4354,7 @@ T(`bowl${V}`, R, .65, L, me, ["\u5317\u897F\u306E\u76DB\u308A\u5869", "\u5317\u6
     for (let me = R; me <= L; me += 1.8)
         y(.13, 1.55, .13, _.darkWood, me, .775, -26);
     g(O, -26, V, .2, "low");
-} let Xs = y(.62, .58, .08, _.brass, 1.2, 1.3, .14, ci), Qc = M(.54, .47, N("\u5883", ["\u6771\u30FB\u897F\u30FB\u5317"], { width: 256, height: 256 }), 1.2, 1.3, .188, ci); T("gatePuzzle", -2, 1.3, -25.79, Xs, "\u6728\u6238\u306E\u7D44\u307F\u5408\u308F\u305B\u9320"); let qs = !1, Ys = 0; function Zr(R, L, V, O = 1.2, me = 0) { let fe = new s.Group; fe.position.set(R, 0, L), fe.rotation.y = me, t.add(fe), y(.09, 1.3, .09, _.darkWood, 0, .65, 0, fe), y(O, .42, .075, _.darkWood, 0, 1.16, 0, fe), M(O - .06, .34, N(V, [], { dark: !0, width: 768, height: 192 }), 0, 1.16, .042, fe); } Zr(-1.8, 19.7, "\u2190 \u7956\u7236\u306E\u5BB6", 1.65), Zr(2.3, -9.6, "\u793E \u2192", 1.15), Zr(2.5, -23.8, "\u6751\u5883", 1.05); for (let [R, L, V] of [[-6, -23, -3], [6, -23, -16], [6, 22, 31]]) {
+} let Xs = y(.62, .58, .08, _.brass, 1.2, 1.3, .14, ci), Qc = M(.54, .47, N("\u5883", ["\u6771\u30FB\u897F\u30FB\u5317"], { width: 256, height: 256 }), 1.2, 1.3, .188, ci); T("gatePuzzle", -2, 1.3, -25.79, Xs, "\u6728\u6238\u306E\u7D44\u307F\u5408\u308F\u305B\u9320"); let qs = !1, Ys = 0; function Zr(R, L, V, O = 1.2, me = 0) { let fe = new s.Group; fe.position.set(R, 0, L), fe.rotation.y = me, t.add(fe), y(.09, 1.3, .09, _.darkWood, 0, .65, 0, fe), y(O, .42, .075, _.darkWood, 0, 1.16, 0, fe), M(O - .06, .34, N(V, [], { dark: !0, width: 768, height: 192 }), 0, 1.16, .042, fe); } Zr(-1.8, 19.7, "\u2190 \u7956\u7236\u306E\u5BB6", 1.65), Zr(2.3, -9.6, "\u793E \u2192", 1.15), Zr(2.5, -23.8, "\u6751\u5883", 1.05); for (let [R, L, V] of [[-6, -23, -15.4], [-6, -11.8, -3], [6, -23, -16], [6, 22, 31]]) {
     for (let O = L; O <= V; O += 2)
         y(.09, 1.05, .09, _.wood, R, .525, O);
     for (let O of [.35, .8])
@@ -4424,7 +4427,40 @@ T('shopDoor',shopEast,1.16,sd,shopDoorObject,'商店の引き戸');
 z(sx,sz,11.1,9.95,3.15);
 y(1.25,.12,6.45,_.roof,shopEast+.68,2.68,sd);
 for(let zz of [sd-2.7,sd+2.7])y(.10,2.62,.10,_.darkWood,shopEast+1.1,1.32,zz);
-M(3.25,.82,N('夕霧商店',['酒・醤油・日用品'],{width:640,height:192,dark:true}),shopEast+.22,3.05,sd,t).rotation.y=Math.PI/2;
+// Lit shop front (4.0.1): the old fascia sign sat under the roof eave and read as a blank board at dusk.
+// A self-lit signboard on the awning, a standing sign by the door and a paper lantern make the destination readable without the flashlight.
+function v4ShopSignTexture(vertical){
+ const cv=document.createElement('canvas');cv.width=vertical?256:1024;cv.height=vertical?768:256;
+ const g2=cv.getContext('2d'),W=cv.width,H=cv.height;let seed=911;const rnd=()=>(seed=seed*1664525+1013904223>>>0)/4294967296;
+ g2.fillStyle='#2f2216';g2.fillRect(0,0,W,H);
+ for(let i=0;i<90;i++){g2.globalAlpha=.10;g2.fillStyle=i%2?'#6e5236':'#120b06';vertical?g2.fillRect(rnd()*W,0,1+rnd()*3,H):g2.fillRect(0,rnd()*H,W,1+rnd()*3);}
+ g2.globalAlpha=1;g2.strokeStyle='#a98a55';g2.lineWidth=8;g2.strokeRect(10,10,W-20,H-20);
+ g2.fillStyle='#f4e6bd';g2.textAlign='center';g2.textBaseline='middle';
+ const font=px=>`bold ${px}px "Yu Mincho","Hiragino Mincho ProN","Noto Serif JP","Noto Serif CJK JP",serif`;
+ if(vertical){g2.font=font(150);[...'夕霧商店'].forEach((ch,i)=>g2.fillText(ch,W/2,105+i*168));}
+ else{g2.font=font(142);g2.fillText('夕霧商店',W/2,H*.44);g2.font=font(40);g2.fillStyle='#d9c48e';g2.fillText('酒・醤油・日用品',W/2,H*.83);}
+ const tex=new s.CanvasTexture(cv);tex.colorSpace=s.SRGBColorSpace;tex.anisotropy=e?2:8;return tex;
+}
+function v4LitSign(tex,w,h,px,py,pz){
+ const sign=P(w,h,new s.MeshStandardMaterial({map:tex,emissive:0xffffff,emissiveMap:tex,emissiveIntensity:.5,roughness:.9,side:s.DoubleSide}),px,py,pz,t);
+ sign.rotation.y=Math.PI/2;return sign;
+}
+y(.08,.86,3.16,_.darkWood,shopEast+1.27,3.07,sd);
+const shopSign=v4LitSign(v4ShopSignTexture(false),3.0,.75,shopEast+1.32,3.07,sd);shopSign.name='shop-sign';
+for(let zz of [sd-1.25,sd+1.25])y(.06,.42,.06,_.darkWood,shopEast+1.27,2.86,zz);
+// standing sign beside the door, readable from the walkway
+y(.16,1.72,.62,_.darkWood,shopEast+1.0,.86,sd+2.0);
+v4LitSign(v4ShopSignTexture(true),.5,1.5,shopEast+1.09,.95,sd+2.0);
+g(shopEast+1.0,sd+2.0,.3,.66,'low');
+// paper lantern over the door
+const shopLantern=new s.Group();shopLantern.position.set(shopEast+.95,2.22,sd-1.72);t.add(shopLantern);
+const lanternMat=new s.MeshStandardMaterial({color:0xf4d29a,emissive:0xffa64d,emissiveIntensity:1.5,roughness:1});
+v(.2,lanternMat,0,0,0,shopLantern,1,1.35,1);
+for(let yy of [-.26,.26])x(.12,.12,.05,_.black,0,yy,0,shopLantern,10);
+y(.03,.36,.03,_.black,0,.46,0,shopLantern);
+const lanternLight=new s.PointLight(0xffb067,10,10,1.6);lanternLight.position.set(shopEast+1.25,2.0,sd-1.2);t.add(lanternLight);
+// gate posts where the roadside fence opens onto the shop walkway
+for(let zz of [-15.4,-11.8])y(.16,1.3,.16,_.darkWood,-6,.65,zz);
 // Shelves, cash register, groceries, a human shopkeeper at the far side.
 for(let zz of [-16.8,-13.7,-10.9]){
  w(shopWest+1.35,zz,2.25,.64,.78);
@@ -4470,6 +4506,7 @@ function updateVillage(dt,phase){
  shopDoorObject.position.z += ((v4Shop.open?sd-2.58:sd)-shopDoorObject.position.z)*(1-Math.exp(-dt*6));
  shopDoorBlock.enabled=!v4Shop.open;
  shopLight.intensity=phase===3?8:16+Math.sin(oi*.4)*2;
+ lanternLight.intensity=9.5+Math.sin(oi*2.3)*.6+Math.sin(oi*5.1)*.3;
  shopPerson.visible=phase!==3;
 }
 let zt = new s.Group; zt.position.set(8, 0, 15), t.add(zt); let E = u(14013633, { map: m.cloth, roughness: 1, side: s.DoubleSide }), B = u(11711649, { roughness: .91 }), W = new s.CylinderGeometry(.205, .44, 1.4, 40, 8, !0), X = W.attributes.position; for (let R = 0; R < X.count; R++) {
@@ -4760,6 +4797,12 @@ function wg(s, e) { D && (D.log ?? (D.log = []), D.log.at(-1)?.text !== e && D.l
 function li(s, e, t = 7) { Ve("speaker", s), Ve("subtitle-text", e), Se("subtitle"), Se("dialogue-controls", !1), Hc = t, wg(s, e); }
 function Kc() { Nt.clear(), vn.forward = 0, vn.strafe = 0, vn.action = !1, vn.run = !1, vn.grip = !1, df = !1, $c = !1, ff = !1, ks = 0, Vs = !1, oo = null, lo = null, ao = !1, De("joystick-knob") && (De("joystick-knob").style.transform = "translate(0px,0px)"); }
 function Eg() { document.pointerLockElement && document.exitPointerLock(), Ui = !1; }
+function relock(retry=true){
+ if(Dn||Fe!=="play")return;
+ const el=an.domElement;
+ const fail=()=>{ if(document.pointerLockElement===el)return; if(retry){setTimeout(()=>relock(false),1100);return;} setTimeout(()=>Se("resume-hint",Fe==="play"&&!Dn&&document.pointerLockElement!==el),80); yn("もう一度クリックすると視点操作に戻ります。ドラッグでも見回せます。",3); };
+ try{ const r=el.requestPointerLock(); if(r&&r.then)r.then(()=>Se("resume-hint",false),fail); else setTimeout(()=>{document.pointerLockElement===el?Se("resume-hint",false):fail();},250);}catch{fail();}
+}
 function ss(force=false) { if(!force){Se("resume-hint",Fe==="play"&&!Dn);return;} if (!(Dn || Fe !== "play"))
     try {
         let s = an.domElement.requestPointerLock();
@@ -4871,6 +4914,7 @@ if(D.phase === 2) {
 } if ([1, 2, 4].includes(D.phase))
     for (let t of ["letter", "photo", "diary"])
         D.collected.includes(t) || e(t, { letter: "\u7956\u7236\u306E\u66F8\u304D\u7F6E\u304D", photo: "\u53E4\u3044\u5BB6\u65CF\u5199\u771F", diary: "\u5730\u8535\u306E\u5F53\u756A\u5E33" }[t], 0, .8); return D.phase === 4 && (D.flags.gate ? e("vanDoor", "\u8FCE\u3048\u306E\u8ECA\u306B\u4E57\u308B", 0, 4) : e("gatePuzzle", "\u9580\u306E\u7559\u3081\u5177\u3092\u8ABF\u3079\u308B", 0, 4)), s; }
+const DOOR_IDS=["genkanDoor","kitchenDoor","storeDoor","roomDoor","shopDoor"];
 function B1() { if (!D || Fe !== "play")
     return null; Dt.getWorldDirection(qc); let s = null, e = -1; for (let t of O1()) {
     Xr.copy(t.position).sub(Dt.position);
@@ -4878,7 +4922,9 @@ function B1() { if (!D || Fe !== "play")
     if (n > 2.9 || n < .05)
         continue;
     let i = Xr.normalize().dot(qc);
-    if (i < (Dn ? .55 : .64) || (!["genkanDoor","kitchenDoor","storeDoor","roomDoor"].includes(t.id) && Rg(Rt, t.position)))
+    // Doors are tall: standing right in front of one, judge the aim horizontally so a low handle point never hides the prompt.
+    if (DOOR_IDS.includes(t.id)) { let hx = t.position.x - Dt.position.x, hz = t.position.z - Dt.position.z, hl = Math.hypot(hx, hz), fl = Math.hypot(qc.x, qc.z); hl > .05 && fl > .3 && (i = Math.max(i, (hx * qc.x + hz * qc.z) / (hl * fl))); }
+    if (i < (Dn ? .55 : .64) || (!DOOR_IDS.includes(t.id) && Rg(Rt, t.position)))
         continue;
     let r = (i * .8 + t.priority * .08) / (n + .65);
     r > e && (e = r, s = t);
@@ -5044,7 +5090,9 @@ catch { } }
 
 function X1(){
  const mx=x=>260+x*7.85,my=z=>(z+79)*8.25;
- const marker=(x,z,icon,label,color='#ddc892')=>`<g transform="translate(${mx(x)} ${my(z)})"><circle r="14" fill="#1c2a27" stroke="${color}" stroke-width="1.3"/><text y="5" font-size="13" text-anchor="middle" fill="#f0e5bf">${icon}</text><text x="19" y="5" font-size="12" fill="#efe4cb" paint-order="stroke" stroke="#182322" stroke-width="4">${label}</text></g>`;
+ const lfs=Dn?15:12, left=new Set(['夕霧商店']);
+ // Labels are drawn after (above) the player arrow; the shop label sits left of its icon so the arrow at the door never covers it.
+ const marker=(x,z,icon,label,color='#ddc892')=>`<g transform="translate(${mx(x)} ${my(z)})"><circle r="14" fill="#1c2a27" stroke="${color}" stroke-width="1.3"/><text y="5" font-size="13" text-anchor="middle" fill="#f0e5bf">${icon}</text><text x="${left.has(label)?-19:19}" y="${lfs/2-1}" font-size="${lfs}" text-anchor="${left.has(label)?'end':'start'}" fill="#efe4cb" paint-order="stroke" stroke="#182322" stroke-width="4">${label}</text></g>`;
  const cx=mx(Rt.x),cy=my(Rt.z), angle=-Lt*180/Math.PI;
  const waypoint=Cg();
  return `<div class="v4-map-help">北は上。<strong>橙色の点線が買い物の道</strong>。店は家の北西にあります。現在地は青い矢印、目的地は点線の先です。地図は下にスクロールして全域を確認できます。</div>
@@ -5067,6 +5115,8 @@ function X1(){
  </g>
  <path d="M${mx(-3.2)} ${my(-26)}H${mx(3.2)}" stroke="#b55f4a" stroke-width="10"/>
  <path d="M${mx(-3.2)} ${my(-68)}H${mx(3.2)}" stroke="#d5c798" stroke-width="7"/>
+${waypoint?`<circle cx="${mx(waypoint.x)}" cy="${my(waypoint.z)}" r="20" fill="none" stroke="#e3aa6c" stroke-dasharray="3 5" stroke-width="3"/>`:''}
+ <g transform="translate(${cx} ${cy}) rotate(${angle})" opacity=".92"><circle r="12" fill="#304e58" stroke="#a8e8f0" stroke-width="3"/><path d="M0 -15L-7 9L0 5L7 9Z" fill="#c2f1f7"/></g>
  ${marker(-13,12,'家','祖父の家')}
  ${marker(-14,-14,'店','夕霧商店','#e3b77c')}
  ${marker(-24.6,23.6,'小','物置小屋')}
@@ -5077,9 +5127,7 @@ function X1(){
  ${marker(0,-26,'門','農道の門','#b98675')}
  ${marker(0,-68,'境','村境')}
  ${D?.phase>=4?marker(0,-34,'車','迎えの車','#7ccebc'):''}
- ${waypoint?`<circle cx="${mx(waypoint.x)}" cy="${my(waypoint.z)}" r="20" fill="none" stroke="#e3aa6c" stroke-dasharray="3 5" stroke-width="3"/>`:''}
- <g transform="translate(${cx} ${cy}) rotate(${angle})"><circle r="12" fill="#304e58" stroke="#a8e8f0" stroke-width="3"/><path d="M0 -15L-7 9L0 5L7 9Z" fill="#c2f1f7"/></g>
- <rect x="12" y="12" width="70" height="30" rx="3" fill="#142420" stroke="#b4aa8b"/><text x="47" y="33" text-anchor="middle" fill="#e0d5ba" font-size="17">北 ↑</text>
+  <rect x="12" y="12" width="70" height="30" rx="3" fill="#142420" stroke="#b4aa8b"/><text x="47" y="33" text-anchor="middle" fill="#e0d5ba" font-size="17">北 ↑</text>
  </svg>
  <div class="v4-map-legend"><span>▲ 現在地</span><span>橙の点線：買い物ルート</span><span>橙の輪：次の目的地</span></div>
  <figure class="v4-map-hero"><img src="${V4_ASSET.route}" alt="祖父が書いた、家から夕霧商店へ続く山村の絵地図"><figcaption>祖父の絵地図：畑、橋、家の小屋、道端の地蔵が描かれている。</figcaption></figure>`;
@@ -5137,7 +5185,7 @@ function q1() { De("start-button").onclick = () => sf(!1), De("continue-button")
  De('subtitle').addEventListener('click',event=>{
   if(Fe==='dialogue'&&!event.target.closest('button'))_g();
  });
- De('v4-auto-toggle').onclick=(event)=>{event.stopPropagation();v4AutoEnabled=!v4AutoEnabled;v4AutoElapsed=0;Ve('v4-auto-toggle',v4AutoEnabled?'自動送り ON':'自動送り OFF');De('v4-auto-toggle').setAttribute('aria-pressed',String(v4AutoEnabled));}, De("dialogue-choice-1").onclick = () => xg(0), De("dialogue-choice-2").onclick = () => xg(1), De("retry-button").onclick = G1, De("death-menu-button").onclick = Zc, De("replay-button").onclick = () => sf(!1), De("ending-menu-button").onclick = Zc, De("resume-hint").onclick = () => { ss(true), Se("resume-hint", !1); }, De("fullscreen-button").onclick = async () => { try {
+ De('v4-auto-toggle').onclick=(event)=>{event.stopPropagation();v4AutoEnabled=!v4AutoEnabled;v4AutoElapsed=0;Ve('v4-auto-toggle',v4AutoEnabled?'自動送り ON':'自動送り OFF');De('v4-auto-toggle').setAttribute('aria-pressed',String(v4AutoEnabled));}, De("dialogue-choice-1").onclick = () => xg(0), De("dialogue-choice-2").onclick = () => xg(1), De("retry-button").onclick = G1, De("death-menu-button").onclick = Zc, De("replay-button").onclick = () => sf(!1), De("ending-menu-button").onclick = Zc, De("resume-hint").onclick = () => { relock(); }, De("fullscreen-button").onclick = async () => { try {
     document.fullscreenElement ? await document.exitFullscreen() : await document.documentElement.requestFullscreen();
 }
 catch {
@@ -5244,6 +5292,8 @@ function $1() { try {
 catch (s) {
     console.error("Game initialization failed:", s), Ve("loading", "3D\u753B\u9762\u3092\u8D77\u52D5\u3067\u304D\u307E\u305B\u3093\u3067\u3057\u305F\u3002WebGL\u304C\u4F7F\u3048\u308BChrome / Safari / Edge\u3067\u958B\u3044\u3066\u304F\u3060\u3055\u3044\u3002"), De("loading")?.classList.add("load-error"), Se("loading"), Ve("start-button", "\u30DA\u30FC\u30B8\u3092\u518D\u8AAD\u307F\u8FBC\u307F"), De("start-button").onclick = () => location.reload();
 } }
+// QA hook (only with ?qa=1): lets tests/stage-route.test.mjs check that every stage's required interactions are reachable.
+if(/[?&]qa=1(&|$)/.test(location.search))window.__hasshakuQA={get D(){return D},get Le(){return Le},get mode(){return Fe},get pos(){return {x:Rt.x,z:Rt.z,yaw:Lt,pitch:tn}},get focus(){return wn&&wn.id},get target(){let p=Cg();return p&&{x:p.x,y:p.y,z:p.z}},candidates:()=>O1().map(c=>({id:c.id,x:c.position.x,y:c.position.y,z:c.position.z})),prompt:()=>{let c=B1();return c&&c.id},blocked:(x,z)=>of(x,z),occluded:(ax,az,bx,bz)=>Rg({x:ax,z:az},{x:bx,z:bz}),place:(x,z,yaw=0,pitch=0)=>ro(x,z,yaw,pitch),use:id=>yg(id),phase:p=>qr(p,{silent:true}),calm:()=>{st.invuln=1e9;po=1e9}};
 $1();
 
 })();
