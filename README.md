@@ -1,4 +1,4 @@
-> **公開予定URL：https://hasshaku.autoarticles.net/** （Firebase `hasshaku-hashito`、GA4 は未発行 → `site.json` の `gaId` に入れる）
+> **公開予定URL：https://hasshaku.autoarticles.net/** （Firebase `hasshaku-hashito`、GA4 `G-K3EE3L77BK`）
 >
 > game-kit の **3D一人称標準（standard 1.5）** で作っています。骨組み（`js/kit/`）は game-kit から `kit-sync` で同期し、直接変更しません。作品固有のコードは `js/ext/` だけです。
 > Game-fleet の `projects/hasshaku` に登録。
@@ -53,7 +53,7 @@ npm run check:contrast   # 文字と背景のコントラスト（U30）
 
 1. Firebase プロジェクト `hasshaku-hashito` を作り、Hosting を有効にする。
 2. 独自ドメイン `hasshaku.autoarticles.net` を登録し、Cloud DNS に CNAME（→ `hasshaku-hashito.web.app`）を足す。
-3. GA4 のストリームを作り、測定 ID を `site.json` の `gaId` に入れる。
+3. GA4 の測定 ID は `site.json` の `gaId`（`G-K3EE3L77BK`）。
 4. `npm test && npm run check && npm run build` → `firebase deploy --only hosting --project hasshaku-hashito`。
 5. Game-fleet の `portal/overrides.json` から `hasshaku` の `"status": "wip"` を外す。
 

@@ -266,12 +266,18 @@ export function dressVillage(ctx) {
 
   // ---------------------------------------------------------------- 夕霧商店
   {
-    const S0 = rooms.get('SHOP');
-    const ridge = 4.3, half = S0.d / 2 + 0.8, len = Math.hypot(half, 1.4), sl = Math.atan2(1.4, half);
+    // the shop and its earth-floored entrance hall (SHOP + SHOP_DOMA) under one roof; the front faces the road at x = -9
+    const S0 = { x: -19, z: -18, w: 10, d: 9 }, FX = S0.x + S0.w;
+    const half = S0.d / 2 + 0.8, len = Math.hypot(half, 1.4), sl = Math.atan2(1.4, half);
     for (const s of [-1, 1]) { const r = box(S0.w + 1.4, 0.14, len, M.roof, S0.x + S0.w / 2, 3.6, S0.z + S0.d / 2 + s * half / 2); r.rotation.x = s * sl; }
-    const board = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.8), new THREE.MeshStandardMaterial({ map: canvasTexture(['夕霧商店', '酒・醤油・日用品'], { w: 640, h: 160, bg: '#7a2a20', fg: '#f1e4c4', head: true }), roughness: 0.8 }));
-    board.position.set(S0.x + S0.w + 0.12, 2.75, -13.5); board.rotation.y = Math.PI / 2; G.add(board);
-    box(1.2, 0.08, 4.4, M.roof, S0.x + S0.w + 0.6, 2.45, -13.5);
+    // a self-lit signboard on the awning (it reads from the road at dusk), an awning, a standing sign and a paper lantern by the door
+    const board = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.8), new THREE.MeshStandardMaterial({ map: canvasTexture(['夕霧商店', '酒・醤油・日用品'], { w: 640, h: 160, bg: '#7a2a20', fg: '#f1e4c4', head: true }), emissive: 0xffffff, emissiveIntensity: 0.55, roughness: 0.8 }));
+    board.material.emissiveMap = board.material.map;
+    board.position.set(FX + 1.21, 2.62, -13.5); board.rotation.y = Math.PI / 2; G.add(board);
+    box(1.2, 0.08, 4.4, M.roof, FX + 0.6, 2.45, -13.5);
+    for (const z of [-15.6, -11.4]) { cyl(0.05, 0.05, 2.45, M.darkWood, FX + 1.15, 1.22, z, 6); addCol(FX + 1.05, z - 0.1, FX + 1.25, z + 0.1); }
+    { const st = new THREE.Group(); box(0.5, 1.0, 0.06, M.darkWood, 0, 0.6, 0, st); const sp = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.85), new THREE.MeshStandardMaterial({ map: canvasTexture(['醤油', 'あります'], { w: 160, h: 320, bg: '#e8dcc0', fg: '#6a2018', vertical: true, size: 56 }) })); sp.position.set(0, 0.6, 0.035); st.add(sp); at(st, FX + 2.2, 0, -15.9, Math.PI / 2); addCol(FX + 2.0, -16.2, FX + 2.4, -15.6, 0, 1.1, { low: true }); }
+    { const ch = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.42, 14), M.lampGlow); ch.position.set(FX + 1.15, 2.05, -11.75); G.add(ch); const l = new THREE.PointLight(0xffc27a, 8, 9, 1.6); l.position.set(FX + 1.4, 2.0, -12.2); G.add(l); }
     const counter = P.table({}, 2.4, 0.7, 0.92, 0x5a4330); at(counter, -15.9, 0, -13.5, Math.PI / 2); addCol(-16.25, -14.7, -15.55, -12.3, 0, 1.0);
     for (const z of [-17.4, -9.6]) { const s = P.shelf({}, 3.2, 1.9, 0.45, z < -13 ? 11 : 12, 'boxes'); at(s, -13.4, 0, z, z < -13 ? 0 : Math.PI); addCol(-15.0, z - 0.25, -11.8, z + 0.25, 0, 1.9); }
     cyl(0.04, 0.06, 0.28, M.cloth, -15.85, 1.06, -13.2, 8); box(0.12, 0.06, 0.08, M.brass, -15.8, 0.97, -13.8);

@@ -46,6 +46,14 @@ async function start() {
 try {
   await start();
   await shot('01_start');
+  // ---- L1: walk (real W key) from the road to the shop door along the map's route (the 4.0.1 blocker of the old version)
+  await run(`g.teleport({ x: 0.5, z: -13.5, yaw: Math.PI / 2 }); g.fp.pitch = 0;`); await frames(4);
+  const steer = () => run(`const p = g.camera.position, d = g.world.doors.get('D_SHOP').mesh.position; g.fp.yaw = Math.atan2(-(d.x + 0.6 - p.x), -(d.z - p.z));`);
+  await p.key('KeyW', 'down');
+  for (let i = 0; i < 150; i++) { await steer(); if (await G("g.target && g.target.kind === 'door' && g.target.id === 'D_SHOP'")) break; await sleep(200); }
+  await p.key('KeyW', 'up');
+  expect(await G("g.target && g.target.id === 'D_SHOP'"), 'walking from the road reaches the shop door and it can be used');
+  await shot('01b_shop_front');
   // ---- L3: the night
   await toStage(L3); await closeUi();
   expect((await G('g.prog.index')) === 2, 'the night (L3) begins after the room is sealed');
