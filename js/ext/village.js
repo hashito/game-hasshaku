@@ -13,6 +13,7 @@ import * as P from '../kit/props.js';
 import { makeCharacter } from '../kit/character.js';
 import { TextureLibrary, trailSteps } from '../kit/texture-library.js';
 import { finishInterior } from '../kit/interior-finish.js';
+import { mergePlaced } from '../kit/prop-batch.js';
 
 const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
 const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.9, ...o });
@@ -311,10 +312,86 @@ export function dressVillage(ctx) {
     for (const z of [-15.6, -11.4]) { cyl(0.05, 0.05, 2.45, M.darkWood, FX + 1.15, 1.22, z, 6); addCol(FX + 1.05, z - 0.1, FX + 1.25, z + 0.1); }
     { const st = new THREE.Group(); box(0.5, 1.0, 0.06, M.darkWood, 0, 0.6, 0, st); const sp = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.85), new THREE.MeshStandardMaterial({ map: canvasTexture(['醤油', 'あります'], { w: 160, h: 320, bg: '#e8dcc0', fg: '#6a2018', vertical: true, size: 56 }) })); sp.position.set(0, 0.6, 0.035); st.add(sp); at(st, FX + 2.2, 0, -15.9, Math.PI / 2); addCol(FX + 2.0, -16.2, FX + 2.4, -15.6, 0, 1.1, { low: true }); }
     { const ch = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.42, 14), M.lampGlow); ch.position.set(FX + 1.15, 2.05, -11.75); G.add(ch); const l = new THREE.PointLight(0xffc27a, 8, 9, 1.6); l.position.set(FX + 1.4, 2.0, -12.2); G.add(l); }
-    const counter = table(2.4, 0.7, 0.92, 0x5a4330); at(counter, -15.9, 0, -13.5, Math.PI / 2); addCol(-16.25, -14.7, -15.55, -12.3, 0, 1.0);
-    for (const z of [-17.4, -9.6]) { const s = shelf(3.2, 1.9, 0.45, z < -13 ? 11 : 12, 'boxes'); at(s, -13.4, 0, z, z < -13 ? 0 : Math.PI); addCol(-15.0, z - 0.25, -11.8, z + 0.25, 0, 1.9); }
-    cyl(0.04, 0.06, 0.28, M.cloth, -15.85, 1.06, -13.2, 8); box(0.12, 0.06, 0.08, M.brass, -15.8, 0.97, -13.8);
+    // ---- inside: a village general store (Issue #4: "it did not look like a shop"). Wooden wall shelves full of goods (bottles,
+    // cans, packets, boxes) with price strips, a glass showcase counter with the till, a lit drinks cooler by the door, an ice
+    // chest, a low display of crates in the middle, things hanging from the beam, posters. The goods are merged into a few
+    // meshes (js/kit/prop-batch.js); the labels with words are canvas textures (never inside a generated picture).
+    {
+      const R = (() => { let q = 9177; return () => ((q = (q * 1664525 + 1013904223) >>> 0) / 4294967296); })();
+      const pick = (a) => a[Math.floor(R() * a.length)];
+      const GM = [0x6a2a20, 0x2c3f5a, 0x3f5a33, 0xb08a3a, 0x8a7a60, 0x5a3a5a, 0xd8cfb8, 0xa04a2a, 0x2a5a5a].map((c) => mat(c, { roughness: 0.6 }));
+      const glassG = mat(0x24361f, { roughness: 0.2, metalness: 0.1 }), glassB = mat(0x4a2a14, { roughness: 0.2, metalness: 0.1 }), tin = mat(0xa8a8a0, { metalness: 0.6, roughness: 0.35 });
+      const goods = new THREE.Group();
+      // one shelf board (width w, depth d) at local y: runs of one kind of thing, then the next
+      const fillBoard = (g, w, d, y) => {
+        let x = -w / 2 + 0.04;
+        while (x < w / 2 - 0.12) {
+          const kind = R(), n = 2 + Math.floor(R() * 4), m = pick(GM);
+          for (let i = 0; i < n && x < w / 2 - 0.1; i++) {
+            if (kind < 0.25) { const gl = R() < 0.5 ? glassG : glassB; cyl(0.045, 0.045, 0.26, gl, x + 0.05, y + 0.13, 0, 8, g); cyl(0.015, 0.025, 0.1, gl, x + 0.05, y + 0.31, 0, 6, g); box(0.07, 0.08, 0.005, M.paper, x + 0.05, y + 0.12, 0.046, g); x += 0.11; }
+            else if (kind < 0.5) { for (let k = 0; k < 2; k++) cyl(0.034, 0.034, 0.12, R() < 0.3 ? tin : m, x + 0.04, y + 0.06 + k * 0.121, 0, 10, g); x += 0.08; }
+            else if (kind < 0.75) { const pw = 0.13 + R() * 0.05; box(pw, 0.2 + R() * 0.06, 0.05, m, x + pw / 2, y + 0.12, d / 2 - 0.08, g).rotation.x = -0.12; x += pw + 0.02; }
+            else { const bw = 0.16 + R() * 0.08, bh = 0.1 + R() * 0.1; box(bw, bh, d * 0.7, m, x + bw / 2, y + bh / 2, 0, g); x += bw + 0.02; }
+          }
+          x += 0.04;
+        }
+      };
+      const priceTex = canvasTexture([''], { w: 512, h: 32, bg: '#ece6d4' });
+      { const c2 = priceTex.image.getContext('2d'); c2.fillStyle = '#7a2a20'; c2.font = '600 20px serif'; for (let i = 0; i < 7; i++) c2.fillText(`${pick([98, 128, 150, 198, 240, 380, 680])}円`, 12 + i * 72, 23); priceTex.needsUpdate = true; }
+      const priceM = new THREE.MeshStandardMaterial({ map: priceTex, roughness: 1 });
+      const goodsShelf = (w, h, d, levels, x, z, ry) => {
+        const g = new THREE.Group(); at(g, x, 0, z, ry, goods);
+        box(w, h, 0.03, M.darkWood, 0, h / 2, -d / 2, g); for (const sx of [-1, 1]) box(0.04, h, d, M.darkWood, sx * (w / 2 - 0.02), h / 2, 0, g);
+        for (let i = 0; i < levels; i++) { const y = 0.1 + i * (h - 0.15) / (levels - 1); box(w, 0.03, d, M.wood, 0, y, 0, g); if (i < levels - 1) fillBoard(g, w - 0.08, d, y + 0.015); }
+        const tags = new THREE.Group(); at(tags, x, 0, z, ry);
+        for (let i = 0; i < levels - 1; i++) { const pm = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.1, 0.04), priceM); pm.position.set(0, 0.1 + i * (h - 0.15) / (levels - 1), d / 2 + 0.002); tags.add(pm); }
+      };
+      goodsShelf(3.2, 1.9, 0.45, 5, -13.4, -17.5, 0); addCol(-15.0, -17.75, -11.8, -17.25, 0, 1.9);
+      goodsShelf(3.2, 1.9, 0.45, 5, -13.4, -9.5, Math.PI); addCol(-15.0, -9.75, -11.8, -9.25, 0, 1.9);
+      goodsShelf(4.6, 2.1, 0.4, 6, -18.75, -13.5, Math.PI / 2); addCol(-19.0, -15.8, -18.5, -11.2, 0, 2.1);   // behind the counter: sake and soy sauce
+      // the showcase counter: a wooden base, small goods under a glass top, the till, the soy sauce and batteries put out
+      { const g = new THREE.Group(); at(g, -15.9, 0, -13.5, Math.PI / 2, goods);
+        box(2.4, 0.62, 0.62, M.darkWood, 0, 0.31, 0, g); box(2.4, 0.04, 0.66, M.wood, 0, 0.64, 0, g);
+        for (let i = 0; i < 8; i++) box(0.18, 0.06, 0.12, pick(GM), -1.0 + i * 0.28, 0.69, 0.05, g);
+        box(2.4, 0.04, 0.66, M.wood, 0, 0.98, 0, g);
+        box(0.34, 0.14, 0.3, M.beam, 0.7, 1.07, 0, g); box(0.3, 0.1, 0.16, M.darkWood, 0.7, 1.18, 0.04, g).rotation.x = -0.5;
+        cyl(0.04, 0.06, 0.28, M.cloth, -0.3, 1.14, 0.1, 8, g); box(0.12, 0.06, 0.08, M.brass, 0.3, 1.03, 0.1, g); }
+      const glass = box(2.4, 0.28, 0.02, new THREE.MeshStandardMaterial({ color: 0x9fb6b2, transparent: true, opacity: 0.22, roughness: 0.05 }), -15.57, 0.82, -13.5); glass.rotation.y = Math.PI / 2; glass.castShadow = false;
+      addCol(-16.25, -14.7, -15.55, -12.3, 0, 1.0);
+      // a low display of crates in the middle (vegetables) and a sack of rice
+      { const g = new THREE.Group(); at(g, -13.2, 0, -15.6, 0, goods);
+        box(1.9, 0.3, 0.5, M.darkWood, 0, 0.15, 0, g);
+        for (let i = 0; i < 3; i++) { box(0.55, 0.3, 0.4, M.wood, -0.6 + i * 0.6, 0.45, 0, g); for (let k = 0; k < 5; k++) { const v = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), pick([GM[0], GM[2], GM[3], GM[7]])); v.position.set(-0.6 + i * 0.6 + (R() - 0.5) * 0.36, 0.63, (R() - 0.5) * 0.24); g.add(v); } }
+        box(0.45, 0.6, 0.3, M.straw, 1.3, 0.3, 0.05, g); }
+      addCol(-14.25, -15.9, -11.75, -15.3, 0, 0.7, { low: true });
+      // the ice chest by the entrance
+      { const g = new THREE.Group(); at(g, -12.0, 0, -10.6, 0, goods); box(1.1, 0.8, 0.6, mat(0xd8d6cc, { roughness: 0.5 }), 0, 0.4, 0, g); box(1.0, 0.03, 0.5, mat(0x9fb6b2, { roughness: 0.1 }), 0, 0.81, 0, g); }
+      addCol(-12.6, -10.95, -11.4, -10.25, 0, 0.85, { low: true });
+      goods.removeFromParent(); G.add(mergePlaced([goods], { remove: true }));
+      // the drinks cooler: a lit glass front with rows of bottles (kept apart: its glow is emissive)
+      { const g = new THREE.Group(); at(g, -11.6, 0, -17.35, 0);
+        box(0.8, 1.95, 0.6, mat(0xc8c4b8, { roughness: 0.5 }), 0, 0.975, 0, g);
+        const glow = new THREE.Mesh(new THREE.PlaneGeometry(0.66, 1.4), new THREE.MeshStandardMaterial({ color: 0xdfe8e6, emissive: 0xcfe0e0, emissiveIntensity: 0.55, roughness: 0.2 })); glow.position.set(0, 1.05, 0.301); g.add(glow);
+        for (let r = 0; r < 4; r++) for (let i = 0; i < 6; i++) cyl(0.035, 0.035, 0.22, pick([GM[0], GM[1], GM[2], GM[3], glassG]), -0.25 + i * 0.1, 0.5 + r * 0.33, 0.27, 8, g).castShadow = false;
+        const top = new THREE.Mesh(new THREE.PlaneGeometry(0.66, 0.2), new THREE.MeshStandardMaterial({ map: canvasTexture(['冷たい飲みもの'], { w: 320, h: 96, bg: '#2a4a6a', fg: '#f1e4c4', size: 40 }), emissive: 0xffffff, emissiveIntensity: 0.35 })); top.material.emissiveMap = top.material.map; top.position.set(0, 1.82, 0.302); g.add(top);
+        addCol(-12.0, -17.65, -11.2, -17.05, 0, 2.0); }
+      // hanging from the beam: brooms, a straw hat, a strip of flypaper; posters on the walls
+      for (const [x, z, k] of [[-14.6, -11.0, 'broom'], [-14.2, -11.0, 'broom'], [-13.4, -11.1, 'hat'], [-12.6, -12.8, 'paper']]) {
+        if (k === 'broom') { cyl(0.015, 0.015, 1.1, M.wood, x, 2.15, z, 6); cyl(0.1, 0.03, 0.35, M.straw, x, 1.45, z, 8); }
+        else if (k === 'hat') { const h = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.14, 14), M.straw); h.position.set(x, 2.35, z); G.add(h); }
+        else box(0.04, 0.5, 0.005, mat(0xb8a050), x, 2.5, z);
+      }
+      const poster = (lines, o, x, y, z, ry, w, h) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: canvasTexture(lines, o), roughness: 1 })); m.position.set(x, y, z); m.rotation.y = ry; G.add(m); };
+      poster(['たばこ'], { w: 128, h: 320, bg: '#b8302a', fg: '#f4ecdc', vertical: true, size: 80 }, -18.9, 2.5, -15.95, Math.PI / 2, 0.22, 0.55);
+      poster(['氷'], { w: 256, h: 256, bg: '#f2efe6', fg: '#2a4a8a', size: 170 }, -12.0, 2.15, -9.27, Math.PI, 0.45, 0.45);
+      poster(['お酒', '一升瓶', 'あります'], { w: 256, h: 340, bg: '#e8dcc0', fg: '#2a2018', head: true }, -17.4, 2.45, -17.9, 0, 0.4, 0.53);
+    }
     const l = new THREE.PointLight(0xffc57a, 10, 12, 1.5); l.position.set(-14.5, 2.6, -13.5); G.add(l); api.parts.shopLight = l;
+    // outside: a noren over the door and a drinks vending machine against the front wall (it glows at dusk)
+    { const nm = new THREE.MeshStandardMaterial({ map: canvasTexture(['商'], { w: 256, h: 160, bg: '#26324a', fg: '#efe6d2', size: 110 }), side: THREE.DoubleSide, roughness: 1 });
+      const plain = new THREE.MeshStandardMaterial({ color: 0x26324a, side: THREE.DoubleSide, roughness: 1 });
+      for (let i = 0; i < 3; i++) { const n = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.55), i === 1 ? nm : plain); n.position.set(FX + 0.06, 1.95, -14.04 + i * 0.54); n.rotation.y = Math.PI / 2; G.add(n); } }
+    { const vm = E.vendingMachine({}); at(vm, FX + 0.42, 0, -10.6, Math.PI / 2); addCol(FX + 0.05, -11.05, FX + 0.8, -10.15, 0, 1.9); }
     // barrels by the wall outside (a hiding place, plan.hides H_SHOPSIDE)
     for (const [x, z] of [[-6.9, -17.5], [-6.2, -17.6]]) { cyl(0.32, 0.3, 0.9, M.wood, x, 0.45, z, 12); }
     addCol(-7.25, -17.95, -5.85, -17.25, 0, 0.95, { low: true });
