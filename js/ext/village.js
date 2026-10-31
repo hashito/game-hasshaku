@@ -225,7 +225,7 @@ export function dressVillage(ctx) {
   // the bus stop shelter on the road (a hiding place, plan.hides H_BUSSTOP): open towards the road
   { const g = hut(-3.25, -6.5, 2.2, 1.3, -Math.PI / 2); box(1.6, 0.08, 0.4, M.wood, 0, 0.45, -0.3, g); addCol(-4.0, -7.7, -3.85, -5.3); const bs = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), new THREE.MeshStandardMaterial({ map: canvasTexture(['バス', '村口'], { w: 256, h: 256, bg: '#e8e2d0', fg: '#2a3a6a', head: true }) })); cyl(0.03, 0.03, 2.1, M.pole, -2.0, 1.05, -8.1, 6); bs.position.set(-2.0, 1.95, -8.07); G.add(bs); }
   // the straw shed by the gate (a hiding place, plan.hides H_GATESHED)
-  { const g = hut(-3.3, -19.4, 2.0, 1.2, -Math.PI / 2); for (let i = 0; i < 3; i++) cyl(0.3, 0.32, 0.7, M.straw, 0, 0.35, -0.2 + i * 0.01, 8, g).position.x = -0.6 + i * 0.6; }
+  { const g = hut(-3.3, -20.6, 2.0, 1.2, -Math.PI / 2); for (let i = 0; i < 3; i++) cyl(0.3, 0.32, 0.7, M.straw, 0, 0.35, -0.2 + i * 0.01, 8, g).position.x = -0.6 + i * 0.6; }
   // signs on the road (text is HTML-free canvas, never inside generated pictures)
   const sign = (lines, x, z, ry, w = 1.1) => { const g = new THREE.Group(); cyl(0.04, 0.04, 1.6, M.darkWood, 0, 0.8, 0, 6, g); const p = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 0.45), new THREE.MeshStandardMaterial({ map: canvasTexture(lines, { w: 512, h: 230, bg: '#2c2621', fg: '#e8e0c8', border: '#55493c' }), roughness: 0.9, side: THREE.DoubleSide })); p.position.set(0, 1.5, 0.03); g.add(p); return at(g, x, 0, z, ry); };
   sign(['← 祖父の家'], 3.6, 18.5, -Math.PI / 2);

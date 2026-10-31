@@ -1,7 +1,8 @@
-/* game-kit 3f1a7d2: js/win-manager.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 98e1e92: js/win-manager.js — edit in game-kit and run tools/kit-sync.js */
 // The window manager of the standard UI shell (rules U12 / U14 / U21): ONE window at a time, a fixed size per breakpoint
-// (never changed by tabs or content: the content scrolls inside), centred and larger on big screens (>= 900 x 700),
-// top-anchored on small ones, generous margins incl. the safe-area insets, a header bar (title + ⓘ + ×), Esc closes,
+// (never changed by tabs or content: the content scrolls inside), larger on big screens (>= 900 x 700), ALWAYS top-anchored
+// (windows shown one after another keep their top edge in one place: a size s window after a size m one does not jump down),
+// a text-only window (no picture, table, input, tabs) shrinks to its text (fit: true / false forces it), generous margins incl. the safe-area insets, a header bar (title + ⓘ + ×), Esc closes,
 // the focus is trapped inside, mouse + touch (buttons >= 44px). 'open' / 'close' events let the game pause.
 // The inner-voice (thought) line is a separate bottom band (U14): the window layer sits ABOVE it in z-order but its area ends
 // where the band starts, so the two never overlap. Style: css/kit.css wm-* (theme tokens --gf-*, with fallbacks).
@@ -42,6 +43,9 @@ export function windowSize(vw, vh, { size = "m", band = 0 } = {}) {
   return { mode: large ? "large" : "small", margin, w: large ? Math.min(preset.w, freeW) : freeW, h: large ? Math.min(preset.h, freeH) : freeH, band: bandKept };
 }
 // the next focus target for a Tab press inside a trap of `n` focusable elements (pure; -1 = none focused)
+// a window body that holds only text and buttons (no picture, canvas, video, table, form field or tab menu) fits its height to the text
+const MEDIA = "img, canvas, video, iframe, table, textarea, select, input:not([type=button]):not([type=submit]), .tm, .wm-flush, :not(button) > svg";
+export const textOnly = (body) => !!body && !body.querySelector(MEDIA);
 export const trapIndex = (cur, n, shift) => (n <= 0 ? -1 : shift ? (cur <= 0 ? n - 1 : cur - 1) : cur < 0 || cur >= n - 1 ? 0 : cur + 1);
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -82,6 +86,12 @@ export function createWindowManager(o = {}) {
     st.setProperty("--wm-m", `${z.margin}px`);
     st.setProperty("--wm-band", `${z.band}px`);
     cur.layer.dataset.mode = z.mode;
+    refit();
+  }
+  function refit() {
+    if (!cur || !cur.layer || !cur.body) return;
+    const f = cur.opts.fit;
+    cur.layer.classList.toggle("wm-fit", f === true || (f !== false && !cur.body.classList.contains("wm-flush") && textOnly(cur.body)));
   }
   const onResize = () => layout();
 
@@ -194,6 +204,10 @@ export function createWindowManager(o = {}) {
       if (!warming) emit("open", id);
       if (merged.render && cur.body) merged.render(cur.body, ctx);
       else if (merged.render) merged.render(null, ctx);
+      if (dom() && cur && cur.body) {
+        refit();
+        if (typeof MutationObserver === "function") (cur.mo = new MutationObserver(refit)).observe(cur.body, { childList: true, subtree: true });
+      }
       if (dom() && cur && !cur.win.contains(document.activeElement)) {
         const first = cur.body.querySelector("[autofocus]") || cur.win.querySelector(".wm-x:not([hidden])") || cur.win;
         if (!first.hasAttribute("tabindex") && first === cur.win) first.setAttribute("tabindex", "-1");
@@ -234,6 +248,7 @@ export function createWindowManager(o = {}) {
     if (!cur) return;
     const w = cur;
     cur = null;
+    if (w.mo) w.mo.disconnect();
     if (w.layer) {
       removeEventListener("resize", onResize);
       document.removeEventListener("keydown", onKey, true);

@@ -1,5 +1,5 @@
 {
-  "kit": "6e00550",
+  "kit": "98e1e92",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -147,7 +147,7 @@
     "js/kit/prop-batch.js": "abd03dfc3b79",
     "js/kit/env-props.js": "8173704023b6",
     "js/kit/text-contrast.js": "7fee755af57a",
-    "css/kit.css": "e5c115b0fc27",
+    "css/kit.css": "5231bda597c5",
     "css/theme.css": "ebaca1cab248",
     "css/shell.css": "69c16bee0f93",
     "schema/chat-story.schema.json": "e24a86e49bb9",
@@ -218,7 +218,7 @@
     "js\\kit\\audio-at.js": "f573fa6e4e01",
     "js\\kit\\world-from-plan.js": "8adea0bf9588",
     "js\\kit\\room-types.js": "a2993c599dea",
-    "js\\kit\\win-manager.js": "2bc6525d36c8",
+    "js\\kit\\win-manager.js": "e4be6f8184e9",
     "js\\kit\\tab-menu.js": "27550d2cd73b",
     "js\\kit\\pause-menu.js": "9e9b552865d2",
     "js\\kit\\journal-ui.js": "745459106a61",

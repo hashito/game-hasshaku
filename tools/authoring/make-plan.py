@@ -76,7 +76,7 @@ hides = [
     dict(id='H_SHRINE', room='O_SHRINE', x=15.8, z=-15.6, label='社の裏'),
     dict(id='H_SHOPSIDE', room='O_SHOPFRONT', x=-6.3, z=-16.9, label='商店の軒下の樽の陰'),
     dict(id='H_BUSSTOP', room='O_ROAD', x=-3.0, z=-6.5, label='バス停の待合小屋'),
-    dict(id='H_GATESHED', room='O_ROAD', x=-3.0, z=-19.4, label='車止めの脇の藁小屋'),
+    dict(id='H_GATESHED', room='O_ROAD', x=-3.0, z=-20.6, label='車止めの脇の藁小屋'),
     dict(id='H_FIELDHUT', room='O_FIELD', x=16.4, z=25.6, label='農具小屋'),
     # Issue #4: more places to hide
     dict(id='H_WOODPILE', room='O_BACK', x=-24.4, z=7.0, label='薪の山の陰'),
