@@ -222,7 +222,7 @@ export default function story(ext) {
     V.parts.windowPapers.visible = done('T_WINDOW');
     V.parts.sealPaper.visible = done('T_SEAL');
     const fus = ctx.world.doors.get('D_FUSUMA');
-    if (fus) { if (i === 2) { fus.close(); fus.def.hint = '七時までは、開けない。'; } else fus.def.hint = '北の座敷は閉め切ってある。今は、居間の祖父に話すのが先だ。'; fus.mesh.visible = !fus.isOpen; }
+    if (fus) { if (i === 2) { fus.close(); fus.def.hint = '七時までは、開けない。'; } else fus.def.hint = '北の座敷は閉め切ってある。今は、居間の祖父に話すのが先だ。'; if (i >= 3) fus.open(); fus.mesh.visible = !fus.isOpen; }   // in the morning the grandfather opens it from the living room
     if (i >= 1 && light) light.userData.auto && (light.visible = true);
     for (const k of BOWLS) nightMarks[k].visible = i === 2;
     voiceMark.visible = i === 2;
@@ -371,7 +371,7 @@ export default function story(ext) {
     // night-only things to use: the four plates and the voice at the fusuma
     const mk = (name, x, y, z, s = [0.5, 0.5, 0.5]) => { const m = new THREE.Mesh(new THREE.BoxGeometry(...s), new THREE.MeshBasicMaterial({ visible: false })); m.position.set(x, y, z); m.name = name; c.world.group.add(m); return m; };
     for (const k of BOWLS) { const p = V.parts.plates[k].group.position; const m = mk(`hk-salt:${k}`, p.x, 0.6, p.z); m.userData.interact = { kind: 'hk-salt', id: k }; c.world.interactables.push(m); nightMarks[k] = m; m.visible = false; }
-    voiceMark = mk('hk-voice', -8.0, 1.3, 10.15, [1.6, 1.6, 0.3]); voiceMark.userData.interact = { kind: 'hk-voice', id: 'door' }; c.world.interactables.push(voiceMark); voiceMark.visible = false;
+    voiceMark = mk('hk-voice', -8.0, 1.3, 10.75, [1.6, 1.6, 0.3]); voiceMark.userData.interact = { kind: 'hk-voice', id: 'door' }; c.world.interactables.push(voiceMark); voiceMark.visible = false;
     // the flashlight (rule S3: the tool is in hand from the start; [F] or the touch button)
     light = new THREE.SpotLight(0xffefc7, 26, 22, Math.PI / 6.5, 0.7, 1.3); light.visible = false; light.userData.auto = true; c.scene.add(light, light.target);
     // HUD parts of this game
