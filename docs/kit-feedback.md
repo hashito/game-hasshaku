@@ -1,5 +1,7 @@
 # game-kit への要望（八尺様の載せ替えで見つけたこと）
 
+> 2026-10-31：標準 1.7（game-kit `claude/standard-1.6` ブランチ、Game-fleet#44）で 1〜7 を標準に入れ、作品側の回避を外した（`ext.registerLook`、屋外の縁と開口・二重の壁、`plan-check` の屋外の輪、`ctx.talk` / `ctx.choose`、`timer`、`car({ interior: true })`）。夜（L3）と車（L5）は死に方などの作品のルールがあるため、時間の進め方は作品側に残している。
+
 game-kit には書き込めなかったので、作品側で吸収した点を残します。game-kit を直したら、作品側の回避を消してください。
 
 1. **怪物の見た目を作品が登録する API がない。** `monsters.schema.json` の `look` は `windmill | dark-red-mist` だけ。八尺様は `LOOKS['dark-red-mist']` を差し替えている（`js/ext/hasshaku.js`）。`ext.registerLook(name, fn)` と、スキーマの `look` に作品の名前を許すことを提案。

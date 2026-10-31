@@ -1,11 +1,13 @@
-/* game-kit 3f1a7d2: js/recipes.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 08f1905: js/recipes.js — edit in game-kit and run tools/kit-sync.js */
 // The recipes of the standard, switched on from game.json "recipes" (standard 1.5; pure side + docs in js/recipes-data.js):
 //   props       plan.furniture[] { kind, x, z, rot, args, opts } -> js/props.js / js/env-props.js objects in the world, with colliders
 //   openables   props with userData.drawers (lockers, fridges, cabinets): [E] opens / closes, the state is saved (ext.openables)
-//   textures    js/texture-library.js: plan.rooms[].floorTex / wallTex dress the floors and walls
+//   textures    js/texture-library.js: plan.rooms[].floorTex / wallTex dress the floors and walls (or the room type's, js/room-types.js)
+//   (1.7) a room with a `type` also gets furniture against its free walls (autoFurniture) unless "furnish": false
 //   ambience    js/ambience.js: outdoor beds that go quiet and muffled behind doors (model from the plan), started with the first sound
 // game-core imports this module only when game.json has "recipes" (loadGame), kit-sync copies what each switch needs (tools/kit-features.cjs).
 import { PROP_KINDS, furnitureOf, ambienceModelFromPlan } from './recipes-data.js';
+import { autoFurniture, roomLook } from './room-types.js';
 
 export async function installRecipes(ctx, cfg = {}) {
   const mods = {};   // the parts are imported only for the switches that are on
@@ -24,7 +26,7 @@ export async function installRecipes(ctx, cfg = {}) {
     const T = {};
     let op = null;
     if (cfg.openables && mods.Openables) op = api.openables = ctx.openables = new mods.Openables({ onChange: (id, open) => { const o = api.props.get(id); const pos = o && o.position; ctx.audio && ctx.audio.at && ctx.sound && ctx.audio.at(pos).lockerDoor && ctx.audio.at(pos).lockerDoor(pos, open); bus.emit('openable:change', { id, open }); } });
-    for (const f of furnitureOf(plan)) {
+    for (const f of [...furnitureOf(plan), ...(cfg.props ? autoFurniture(plan) : [])]) {
       const k = PROP_KINDS[f.kind];
       if (!k) { console.warn(`recipes.props: unknown kind "${f.kind}" (${f.id})`); continue; }
       const fn = (k.from === 'P' ? P : E)[f.kind];
@@ -52,9 +54,11 @@ export async function installRecipes(ctx, cfg = {}) {
     const base = typeof cfg.textures === 'string' ? cfg.textures : 'assets/textures/';
     try {
       const tex = api.textures = ctx.textures = await mods.TextureLibrary.load(base, { renderer: ctx.renderer });
+      const has = (id) => { try { return !!tex.entry(id); } catch { return false; } };   // a texture the game did not copy is skipped (the others still apply)
       for (const r of plan.rooms || []) {
-        if (r.floorTex) { const m = world.group.getObjectByName(`floor:${r.id}`); if (m) m.material = tex.material(r.floorTex, { size: [r.w, r.d] }); }
-        if (r.wallTex) world.group.traverse((o) => { if (o.name && o.name.startsWith(`wall:${r.id}:`)) o.material = tex.material(r.wallTex, { triplanar: true }); });
+        const L = roomLook(r);
+        if (L.floorTex && has(L.floorTex)) { const m = world.group.getObjectByName(`floor:${r.id}`); if (m) m.material = tex.material(L.floorTex, { size: [r.w, r.d] }); }
+        if (L.wallTex && has(L.wallTex) && r.kind !== 'outdoor') world.group.traverse((o) => { if (o.name && o.name.startsWith(`wall:${r.id}:`)) o.material = tex.material(L.wallTex, { triplanar: true }); });
       }
     } catch (e) { console.warn(`recipes.textures: ${e.message}`); }
   }

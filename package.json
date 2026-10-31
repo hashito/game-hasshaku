@@ -5,8 +5,8 @@
   "description": "八尺様 ― 境の夜：ネット怪談『八尺様』を題材にした一人称3D探索ホラー（game-kit 3D 標準 1.5）",
   "scripts": {
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
-    "check": "node tools/check-game-data.mjs . && node tools/check-plan.mjs data/plan.json --strict --ignore=no-loop && node tools/check-escape.mjs .",
-    "plan": "node tools/check-plan.mjs data/plan.json --strict --ignore=no-loop",
+    "check": "node tools/check-game-data.mjs . && node tools/check-plan.mjs data/plan.json --strict && node tools/check-escape.mjs .",
+    "plan": "node tools/check-plan.mjs data/plan.json --strict",
     "media": "node tools/check-game-data.mjs . --media",
     "serve": "node tools/serve.js",
     "smoke": "node tools/smoke.mjs",

@@ -92,7 +92,8 @@
    "w": 9,
    "d": 29,
    "kind": "outdoor",
-   "floorTex": "gravel"
+   "floorTex": "gravel",
+   "edge": "none"
   },
   {
    "id": "O_GARDEN",
@@ -102,7 +103,8 @@
    "w": 22,
    "d": 8,
    "kind": "outdoor",
-   "floorTex": "soil"
+   "floorTex": "soil",
+   "edge": "none"
   },
   {
    "id": "O_BACK",
@@ -112,7 +114,8 @@
    "w": 6,
    "d": 21,
    "kind": "outdoor",
-   "floorTex": "grass_dry"
+   "floorTex": "grass_dry",
+   "edge": "none"
   },
   {
    "id": "O_NORTH",
@@ -122,7 +125,8 @@
    "w": 16,
    "d": 5,
    "kind": "outdoor",
-   "floorTex": "moss"
+   "floorTex": "moss",
+   "edge": "none"
   },
   {
    "id": "O_FIELD",
@@ -132,7 +136,8 @@
    "w": 19,
    "d": 29,
    "kind": "outdoor",
-   "floorTex": "mud"
+   "floorTex": "mud",
+   "edge": "none"
   },
   {
    "id": "O_ROAD",
@@ -142,7 +147,8 @@
    "w": 9,
    "d": 22,
    "kind": "outdoor",
-   "floorTex": "gravel"
+   "floorTex": "gravel",
+   "edge": "none"
   },
   {
    "id": "O_SHOPFRONT",
@@ -152,7 +158,8 @@
    "w": 5,
    "d": 9,
    "kind": "outdoor",
-   "floorTex": "gravel"
+   "floorTex": "gravel",
+   "edge": "none"
   },
   {
    "id": "O_SHRINE",
@@ -162,7 +169,8 @@
    "w": 13,
    "d": 16,
    "kind": "outdoor",
-   "floorTex": "moss"
+   "floorTex": "moss",
+   "edge": "none"
   },
   {
    "id": "O_GATE",
@@ -172,7 +180,8 @@
    "w": 13,
    "d": 22,
    "kind": "outdoor",
-   "floorTex": "gravel"
+   "floorTex": "gravel",
+   "edge": "none"
   }
  ],
  "doors": [

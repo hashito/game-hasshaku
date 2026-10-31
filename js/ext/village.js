@@ -84,7 +84,7 @@ export function dressVillage(ctx) {
   // openings between outdoor rooms: no panel, always open, not something to interact with
   for (const d of plan.doors) {
     const api0 = world.doors.get(d.id); if (!api0) continue;
-    if (d.open) { api0.open(); api0.mesh.visible = false; const i = world.interactables.indexOf(api0.mesh); if (i >= 0) world.interactables.splice(i, 1); }
+    if (d.open && api0.mesh) { api0.open(); api0.mesh.visible = false; const i = world.interactables.indexOf(api0.mesh); if (i >= 0) world.interactables.splice(i, 1); }   // older kits built a panel for openings
   }
 
   // ---------------------------------------------------------------- textures (loaded once; the recipes paint floors and walls)
@@ -316,24 +316,13 @@ export function dressVillage(ctx) {
   // fences along the far road (seen from the van) and the van itself
   for (const s of [-1, 1]) for (let z = -48; z > -78; z -= 6) { const f = E.fence({ kind: 'rail', len: 6, h: 0.8 }); at(f, 0.5 + s * 3.8, 0, z - 3, Math.PI / 2); }
   {
-    const van = E.car({ kind: 'van', color: 0x3a514a }); van.name = 'van'; at(van, 0.5, 0, -34.6, 0); api.parts.van = van;
+    // the kit's van with its inside for the ride (standard 1.7); turned to face north (-z), so its right-hand seats are on +x
+    const van = E.car({ kind: 'van', color: 0x3a514a, interior: true }); van.name = 'van'; at(van, 0.5, 0, -34.6, Math.PI); api.parts.van = van;
+    api.parts.vanInside = van.userData.interior; api.parts.vanShell = van.userData.shell; api.parts.vanSeats = van.userData.seats;
     addCol(-0.45, -37.0, 1.45, -32.2, 0, 2.0);
     const hl = new THREE.SpotLight(0xffe2a4, 30, 30, 0.5, 0.6, 1.2); hl.position.set(0.5, 0.8, -37); hl.target.position.set(0.5, 0, -52); G.add(hl, hl.target); api.parts.vanLight = hl;
   }
 
-  // the van's inside for the ride (the standard car is a closed shell): roof, floor, pillars, side glass, the seat in front, the dashboard
-  {
-    const I = new THREE.Group(); I.name = 'van-inside'; I.visible = false; at(I, 0.5, 0, -34.6);
-    const trim = mat(0x2a2c2a), seat = mat(0x3a3f44), glass = new THREE.MeshStandardMaterial({ color: 0x9fb6b2, transparent: true, opacity: 0.12, roughness: 0.1, depthWrite: false });
-    box(1.8, 0.05, 3.6, trim, 0, 1.95, 0, I); box(1.8, 0.05, 3.6, mat(0x1e1f1e), 0, 0.42, 0, I);
-    for (const sx of [-0.9, 0.9]) { box(0.06, 0.6, 3.6, trim, sx, 0.75, 0, I); for (const z of [-1.7, -0.4, 0.9, 1.75]) box(0.07, 0.9, 0.12, trim, sx, 1.5, z, I); const g = box(0.01, 0.85, 3.4, glass, sx, 1.5, 0, I); g.castShadow = false; }
-    box(1.8, 0.5, 0.6, trim, 0, 0.95, -1.75, I); box(1.8, 0.07, 0.07, trim, 0, 1.92, -1.95, I);
-    const ws = box(1.7, 0.8, 0.01, glass, 0, 1.55, -2.0, I); ws.castShadow = false;
-    for (const x of [-0.42, 0.42]) { box(0.55, 0.6, 0.12, seat, x, 1.0, -0.65, I); box(0.55, 0.12, 0.5, seat, x, 0.66, -0.95, I); }
-    box(1.5, 0.12, 0.55, seat, 0, 0.66, 0.55, I); box(1.5, 0.6, 0.12, seat, 0, 1.0, 0.85, I);
-    const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.025, 6, 20), trim); wheel.position.set(-0.42, 1.15, -1.45); wheel.rotation.x = -0.9; I.add(wheel);
-    api.parts.vanInside = I;
-  }
   // the map board by the entrance (TH_MAPBOARD) and the shop's notice (TH_SHOPNOTE)
   { const g = new THREE.Group(); for (const dz of [-0.6, 0.6]) cyl(0.04, 0.04, 1.6, M.darkWood, 0, 0.8, dz, 6, g); const mp = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.86), new THREE.MeshStandardMaterial({ map: new THREE.TextureLoader().load('assets/photos/route-map.webp', (t) => { t.colorSpace = THREE.SRGBColorSpace; }), roughness: 0.9 })); mp.position.set(0.03, 1.25, 0); mp.rotation.y = Math.PI / 2; g.add(mp); box(0.05, 0.95, 1.3, M.darkWood, -0.01, 1.25, 0, g); at(g, -2.45, 0, 17.6); addCol(-2.55, 16.9, -2.35, 18.3, 0, 1.7); }
   { const n = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.56), new THREE.MeshStandardMaterial({ map: canvasTexture(['お知らせ', '夕方以降、畑の先で', '妙な声を聞いた方は', '真似をせず、まっすぐ', '帰宅してください', '区長'], { w: 300, h: 400, bg: '#e2d9bd', fg: '#2e2820', head: true }), roughness: 1 })); n.position.set(-9.1, 1.35, -11.0); n.rotation.y = -Math.PI / 2; G.add(n); }
@@ -351,23 +340,10 @@ export function dressVillage(ctx) {
 
   // ---------------------------------------------------------------- stations and pickups: the console boxes become the things themselves
   for (const s of plan.stations) { const m = world.group.getObjectByName(`station:${s.id}`); if (!m) continue; const c = colOf(m); if (c) c.off = true; m.material = M.hidden; }
-  const pickupLook = {
-    I_SALT: () => { const g = new THREE.Group(); box(0.32, 0.4, 0.2, mat(0xe8e2d0), 0, 0.2, 0, g); const l = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.2), new THREE.MeshStandardMaterial({ map: canvasTexture(['塩'], { w: 128, h: 128, bg: '#e8e2d0', fg: '#7a2b20', size: 90 }) })); l.position.set(0, 0.22, 0.101); g.add(l); return g; },
-    I_PAPER: () => { const g = new THREE.Group(); for (let i = 0; i < 4; i++) box(0.5, 0.012, 0.36, M.paper, (rnd() - 0.5) * 0.04, 0.006 + i * 0.012, (rnd() - 0.5) * 0.04, g); return g; },
-    I_OFUDA: () => { const g = new THREE.Group(); for (let i = 0; i < 2; i++) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.004, 0.34), new THREE.MeshStandardMaterial({ map: canvasTexture(['身代守'], { w: 96, h: 272, bg: '#ddd0a8', fg: '#4b3025', vertical: true, size: 64 }) })); p.position.set(i * 0.15 - 0.07, 0.003 + i * 0.004, 0); g.add(p); } return g; },
-    N_LETTER: () => { const g = new THREE.Group(); box(0.24, 0.004, 0.17, M.paper, 0, 0.002, 0, g); return g; },
-    N_PHOTO: () => { const g = new THREE.Group(); const f = box(0.26, 0.2, 0.03, M.darkWood, 0, 0.11, 0, g); f.rotation.x = -0.2; return g; },
-    N_DIARY: () => { const g = new THREE.Group(); box(0.26, 0.03, 0.34, mat(0x4a3a30), 0, 0.015, 0, g); return g; },
-    N_NOTICE: () => new THREE.Group(),
-  };
-  const ySupport = { I_SALT: 0.86, I_PAPER: 0.76, I_OFUDA: 0.4, N_LETTER: 0.34, N_PHOTO: 0.76, N_DIARY: 0.8, N_NOTICE: 1.5 };
-  for (const o of [...world.interactables]) {
-    const ui = o.userData && o.userData.interact; if (!ui || (ui.kind !== 'item' && ui.kind !== 'doc')) continue;
-    const mk = pickupLook[ui.id]; if (!mk) continue;
-    o.material = M.hidden;
-    const look = mk(); o.add(look);
-    const y = ySupport[ui.id]; if (y != null) o.position.y = y;
-    if (ui.id === 'N_NOTICE') { o.rotation.x = Math.PI / 2; o.scale.set(2.2, 1, 2.6); o.position.z = -23.7; }   // the look's origin is its bottom: it rests on the support (W3)
+  // pickups are the kit's item models (items / docs "kind", resting on their "y"); the gate notice stands upright on its post
+  for (const o of world.interactables) {
+    const ui = o.userData && o.userData.interact;
+    if (ui && ui.kind === 'doc' && ui.id === 'N_NOTICE') { o.rotation.x = Math.PI / 2; o.scale.setScalar(1.6); o.position.z = -23.72; }
   }
   return api;
 }

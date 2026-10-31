@@ -10,7 +10,7 @@
  "monsters": [
   {
    "id": "hasshaku",
-   "look": "dark-red-mist",
+   "look": "hasshaku",
    "phases": [
     {
      "preset": "early"

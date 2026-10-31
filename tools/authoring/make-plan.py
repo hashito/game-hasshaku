@@ -16,16 +16,16 @@ rooms = [
     # 夕霧商店
     room('SHOP', '夕霧商店', -19, -18, 8, 9, floorTex='planks_grey_old', wallTex='panel_wood_wall', safe=True),
     room('SHOP_DOMA', '商店の土間', -11, -18, 2, 9, kind='corridor', floorTex='soil', wallTex='panel_wood_wall', safe=True),
-    # outdoors (no walls: the extension turns the plan's outer edges into hedges, trees and fences)
-    room('O_FRONT', '家の前の道', -4, -2, 9, 29, kind='outdoor', floorTex='gravel'),
-    room('O_GARDEN', '裏庭', -26, 19, 22, 8, kind='outdoor', floorTex='soil'),
-    room('O_BACK', '家の西', -26, -2, 6, 21, kind='outdoor', floorTex='grass_dry'),
-    room('O_NORTH', '家の北', -20, -2, 16, 5, kind='outdoor', floorTex='moss'),
-    room('O_FIELD', '田んぼの畦', 5, -2, 19, 29, kind='outdoor', floorTex='mud'),
-    room('O_ROAD', '村道', -4, -24, 9, 22, kind='outdoor', floorTex='gravel'),
-    room('O_SHOPFRONT', '商店の前', -9, -18, 5, 9, kind='outdoor', floorTex='gravel'),
-    room('O_SHRINE', '道端の社', 5, -18, 13, 16, kind='outdoor', floorTex='moss'),
-    room('O_GATE', '農道の先', -6, -46, 13, 22, kind='outdoor', floorTex='gravel'),
+    # outdoors: the kit keeps the wall colliders invisible; edge 'none' because js/ext/village.js dresses the edges itself (hedges, cedars, stone)
+    room('O_FRONT', '家の前の道', -4, -2, 9, 29, kind='outdoor', floorTex='gravel', edge='none'),
+    room('O_GARDEN', '裏庭', -26, 19, 22, 8, kind='outdoor', floorTex='soil', edge='none'),
+    room('O_BACK', '家の西', -26, -2, 6, 21, kind='outdoor', floorTex='grass_dry', edge='none'),
+    room('O_NORTH', '家の北', -20, -2, 16, 5, kind='outdoor', floorTex='moss', edge='none'),
+    room('O_FIELD', '田んぼの畦', 5, -2, 19, 29, kind='outdoor', floorTex='mud', edge='none'),
+    room('O_ROAD', '村道', -4, -24, 9, 22, kind='outdoor', floorTex='gravel', edge='none'),
+    room('O_SHOPFRONT', '商店の前', -9, -18, 5, 9, kind='outdoor', floorTex='gravel', edge='none'),
+    room('O_SHRINE', '道端の社', 5, -18, 13, 16, kind='outdoor', floorTex='moss', edge='none'),
+    room('O_GATE', '農道の先', -6, -46, 13, 22, kind='outdoor', floorTex='gravel', edge='none'),
 ]
 
 def door(id, a, b, x, z, width=1.0, **k):

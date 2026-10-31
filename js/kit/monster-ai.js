@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/monster-ai.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 08f1905: js/monster-ai.js — edit in game-kit and run tools/kit-sync.js */
 // The standard monster's behaviour (rules S12, S20). Pure: no DOM, no THREE, runs in Node (tests, tools/check-escape.mjs).
 // The 3D body, the sounds and the screen effects are in js/monster-std.js; it feeds this class the player and reads { pos, yaw, state, visible }.
 //
@@ -87,8 +87,8 @@ export class MonsterAI {
   // ---- perception ----
   canSee(P, d = dist2(this.pos, P)) {
     if (P.hidden && !this.witnessed) return false;
-    if ((P.floor || 0) !== (this.pos.floor || 0) || d > this.p.sight) return false;
-    if (d > this.p.near + 1.2) {
+    if ((P.floor || 0) !== (this.pos.floor || 0) || d > this.p.sight * (P.visibility ?? 1)) return false;   // P.visibility (standard 1.7): crouching / a light change how far it notices you
+    if (d > this.p.near * (P.visibility ?? 1) + 1.2) {
       const dx = P.x - this.pos.x, dz = P.z - this.pos.z, l = d || 1;
       const fx = Math.sin(this.yaw), fz = Math.cos(this.yaw);
       if ((dx * fx + dz * fz) / l < Math.cos(rad(this.p.fov / 2))) return false;
@@ -98,7 +98,7 @@ export class MonsterAI {
   // chasing it sees all around (it has already got you)
   seesAround(P, d = dist2(this.pos, P)) {
     if (P.hidden && !this.witnessed) return false;
-    return (P.floor || 0) === (this.pos.floor || 0) && d <= this.p.sight * 1.4 && this.nav.los(this.pos, P);
+    return (P.floor || 0) === (this.pos.floor || 0) && d <= this.p.sight * 1.4 * (P.visibility ?? 1) && this.nav.los(this.pos, P);
   }
 
   // ---- movement ----
@@ -205,7 +205,7 @@ export class MonsterAI {
   }
 
   noticeCheck(dt, P, d) {
-    const close = d < this.p.near && this.nav.los(this.pos, P) && !(P.hidden && !this.witnessed);
+    const close = d < this.p.near * (P.visibility ?? 1) && this.nav.los(this.pos, P) && !(P.hidden && !this.witnessed);
     const sees = this.canSee(P, d);
     if (sees && this.blockNotice <= 0) this.seen += dt; else this.seen = Math.max(0, this.seen - dt * 0.5);
     if ((close && this.blockNotice <= 0) || this.seen >= this.p.notice) { this.startChase(P, true); return true; }

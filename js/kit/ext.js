@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/ext.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 08f1905: js/ext.js — edit in game-kit and run tools/kit-sync.js */
 // Extension points of the standard 3D first-person game (docs/standard-3d.md). Pure (no DOM, no THREE): runs in Node.
 // One events bus + small registries. Game-specific code lives in js/ext/*.js of the game and ONLY talks to the standard
 // through these (module-boundary rule: no module touches another module's DOM; use the bus and the data schemas).
@@ -20,6 +20,7 @@
 //   ext.registerTitleButton('chapters', { label, order?, when?(ctx), run(ctx) })        // extra buttons on the title (chapter select, gallery, credits)
 //   ext.registerUi('inventory', { tabs, labels, decorate(item, ctx), actions, onUse, onExamine, onPick })   // 'inventory' | 'journal' | 'progress' | 'map' | 'guide' | 'title'
 //   ext.registerDeath({ run(ctx, reason) })                                            // replaces the default die() (camera back to the checkpoint)
+//   ext.registerLook('hasshaku', (o) => ({ root, update(dt, st, cam), respawn(), dispose() }))   // a monster look of the game; monsters.json "look": "hasshaku" (standard 1.7)
 //   ctx.syncOwned({ items, docs, tasks, flags, visited })                               // an external rules engine pushes its state; core emits the diff events
 //
 // TASK def: { run?(ctx, task) -> Promise<boolean>|boolean   // replaces the default "play the mini game, then done"
@@ -102,6 +103,7 @@ export function createExtensions() {
     title: createRegistry('title', (d) => (!d.label ? 'needs a label' : fn(d, 'run'))),
     ui: createRegistry('ui', () => null),
     death: createRegistry('death', (d) => fn(d, 'run')),
+    look: createRegistry('look', (d) => fn(d, 'create')),
   };
   return {
     bus, reg, ...bus,
@@ -119,6 +121,7 @@ export function createExtensions() {
     registerTitleButton: (id, d) => reg.title.register(id, { order: 100, ...d }),
     registerUi: (section, d) => reg.ui.register(section, d),
     registerDeath: (d) => reg.death.register('death', d),
+    registerLook: (name, d) => reg.look.register(name, typeof d === 'function' ? { create: d } : d),
     titleButtons: () => reg.title.list().sort((a, b) => a.order - b.order),
     uiOf: (section) => reg.ui.get(section) || {},
     tabs: () => reg.tab.list().sort((a, b) => a.order - b.order),

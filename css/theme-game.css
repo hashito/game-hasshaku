@@ -27,7 +27,8 @@
 [data-theme~="hasshaku"] .gf-title-box h1 { font-family: var(--hk-serif); letter-spacing: 0.18em; font-weight: 500; }
 [data-theme~="hasshaku"] .gf-kicker { letter-spacing: 0.22em; }
 
-/* conversation window */
+/* conversation window: the kit's .gf-talk (standard 1.7) in this game's serif; .hk-talk-img is still used by the ending */
+[data-theme~="hasshaku"] .gf-talk-text { font-family: var(--hk-serif); }
 .hk-talk { display: flex; flex-direction: column; gap: var(--gf-space-3, 12px); min-height: 100%; }
 .hk-talk-img { width: 100%; max-height: 44vh; object-fit: cover; border: 1px solid var(--gf-border); border-radius: var(--gf-radius, 4px); }
 .hk-talk-who { margin: 0; color: var(--gf-accent); font-size: var(--gf-text-sm, 13px); letter-spacing: 0.14em; }

@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/monster-std.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 08f1905: js/monster-std.js — edit in game-kit and run tools/kit-sync.js */
 // The default monster pack (standard 1.5; rules S12 / S20). Driven by DATA: manifest data.monsters = data/monsters.json (schema/monsters.schema.json).
 //   { "early": { "stages": 2 },
 //     "monsters": [ { "id": "windmill", "look": "windmill", "phases": [ { "preset": "early", "untilStage": "L3" }, { "preset": "normal" } ],
@@ -28,7 +28,8 @@ const DEF_LOOK = 'dark-red-mist';
 // ---- pure helpers (tests) ----
 export function defaultMonsterDef(def = {}) {
   const look = def.look || DEF_LOOK;
-  return { id: def.id || look, look, phases: def.phases || [{ preset: def.preset || 'early' }], spawn: def.spawn || null, route: def.route === undefined ? 'auto' : def.route, activeFrom: def.activeFrom || null, nearAttack: def.nearAttack || null, params: def.params || {}, respawn: def.respawn ?? 14, assets: def.assets || null };
+  // afterNear (standard 1.7): with a nearAttack, the monster does not patrol before the scripted first encounter has happened (S8 comes first)
+  return { id: def.id || look, look, phases: def.phases || [{ preset: def.preset || 'early' }], spawn: def.spawn || null, route: def.route === undefined ? 'auto' : def.route, activeFrom: def.activeFrom || null, nearAttack: def.nearAttack || null, afterNear: def.afterNear ?? !!def.nearAttack, nearRespawn: def.nearRespawn ?? 6, params: def.params || {}, respawn: def.respawn ?? 14, assets: def.assets || null };
 }
 // which phase (preset) applies now: phases are tried in order; { untilStage } holds while the player's level is below that stage
 export function phaseFor(def, levelOf, levelIndex) {
@@ -88,12 +89,14 @@ export function installMonsters(ctx) {
     const hintText = cfg.hints ? Object.fromEntries(Object.entries(cfg.hints).filter(([, v]) => v)) : {};
     const params = { ...def.params, hintText: { ...hintText, ...((def.params || {}).hintText || {}) } };
     const ai = new MonsterAI(nav, { preset: ph0.preset, params, route: routeOf(def), rand: rng });
-    const look = createLook(def.look, { assets: def.assets || cfg.assets || undefined });
+    // a look the game registered (ext.registerLook, standard 1.7) wins over the kit's built-in looks of the same name
+    const custom = ctx.ext && ctx.ext.reg && ctx.ext.reg.look && ctx.ext.reg.look.get(def.look);
+    const look = custom ? custom.create({ assets: def.assets || cfg.assets || undefined, def, ctx }) : createLook(def.look, { assets: def.assets || cfg.assets || undefined });
     scene.add(look.root);
     list.push({ def, ai, look, phase: ph0, active: false, spawned: false, wait: 0, hbT: 0, nearDone: false, near: null, fx: { danger: 0, mist: 0, chasing: false } });
   }
 
-  const P = () => ({ x: camera.position.x, z: camera.position.z, floor: ctx.floor, hidden: !!ctx.hidden || nav.safe.has(ctx.state.room) });   // hiding places (ctx.hidden) and safe rooms (plan.rooms[].safe): it cannot see or touch you
+  const P = () => ({ x: camera.position.x, z: camera.position.z, floor: ctx.floor, hidden: !!ctx.hidden || nav.safe.has(ctx.state.room), visibility: ctx.visibility ? ctx.visibility() : 1 });   // visibility: standard 1.7 (crouch / light)   // hiding places (ctx.hidden) and safe rooms (plan.rooms[].safe): it cannot see or touch you
   const farSpawn = (m) => {
     const p = P();
     const sp = pointOf(m.def.spawn);
@@ -154,10 +157,11 @@ export function installMonsters(ctx) {
         if (m.near) {
           if (active) for (const e of m.near.update(dt, p)) { bus.emit('monster:near', { id: m.def.id, type: e.type }); if (e.type === 'near') { ctx.sound && ctx.sound('stinger'); (ctx.fx || {}).spook && ctx.fx.spook(0.8); } if (e.type === 'gone') { const f = ctx.fx; f && f.blackout && f.blackout(0.5); } }
           m.look.update(dt, { state: 'near', pos: m.near.pos, yaw: m.near.yaw, moving: m.near.state === 'walk' || m.near.state === 'approach', visible: m.near.visible, dist: Math.hypot(m.near.pos.x - p.x, m.near.pos.z - p.z), floorY: fy }, camera.position);
-          if (m.near.done) { m.near = null; m.look.root.visible = false; }
+          if (m.near.done) { m.near = null; m.look.root.visible = false; m.spawned = false; m.wait = m.def.nearRespawn; }   // after the scripted encounter it comes back (standard 1.7)
           continue;
         }
-        if (on && !m.spawned && active) { if (m.wait > 0) m.wait -= dt; else place(m); }
+        const waitsForNear = m.def.afterNear && m.def.nearAttack && !m.nearDone;   // S8: the scripted encounter comes first
+        if (on && !m.spawned && active && !waitsForNear) { if (m.wait > 0) m.wait -= dt; else place(m); }
         if (on && m.spawned && active) {
           for (const e of m.ai.update(dt, p)) onEvent(m, e);
           if (m.ai.state === 'chase' && (m.hbT -= dt) <= 0) { m.hbT = 0.8; ctx.sound && ctx.sound('heartbeat', 0.5); }

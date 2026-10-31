@@ -70,7 +70,7 @@ try {
     return prompt;
   };
 
-  const items = await G('g.data.items.filter((i) => !i.start).map((i) => i.id)');
+  const items = await G('g.data.items.filter((i) => !i.start && !i.given).map((i) => i.id)');   // given items come from their task
   for (const id of items) { await press(`item:${id}`, '拾う'); expect(await G(`g.state.inv.includes(${JSON.stringify(id)})`), `item ${id} picked up`); }
   const docs = await G('g.data.docs.map((d) => d.id)');
   for (const id of docs) { await press(`doc:${id}`, '読む'); expect(await G(`g.state.docsRead.includes(${JSON.stringify(id)})`), `doc ${id} read`); }
@@ -104,6 +104,7 @@ try {
       if (unlocked) await p.waitFor(`__game.world.doors.get(${JSON.stringify(d)}).isOpen`, 15000);
     }
     for (const t of tasks) {
+      if (await G('!!g.state.ended')) break;   // an ending was reached: optional tasks left over are not pressed
       if ((await G(`g.state.tasks.includes(${JSON.stringify(t.id)})`)) || (await G(`g.canStart(g.data.tasks.find((x) => x.id === ${JSON.stringify(t.id)}))`)) !== true) continue;
       await press(`station:${t.station}`, t.title);
       await p.waitFor(`__game.state.tasks.includes(${JSON.stringify(t.id)})`, 15000);

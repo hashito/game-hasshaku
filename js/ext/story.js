@@ -52,38 +52,15 @@ export default function story(ext) {
   });
   function resetStageLocal() { st.night = 0; st.dark = { NW: 0, NE: 0, SW: 0, SE: 0 }; st.warned = false; st.fired = []; st.ride = 0; st.curse = 0; }
 
-  // ---------------------------------------------------------------- conversation window (one window, tap / Enter to go on: S11)
-  function talk(lines, o = {}) {
-    st.talkLog = [...(st.talkLog || []), o.title || '会話'];
-    if (ctx.qa) return Promise.resolve(true);   // ?qa (the tests): no conversation window, like the kit's mini games
-    return new Promise((resolve) => {
-      let i = 0;
-      const render = (el) => {
-        const L = lines[i], last = i === lines.length - 1;
-        const me = L.who === '私';
-        el.innerHTML = `<div class="hk-talk${me ? ' hk-talk--me' : ''}">${L.img ? `<img class="hk-talk-img" src="${esc(L.img)}" alt="">` : ''}<p class="hk-talk-who">${esc(L.who)}${L.where ? `<span>（${esc(L.where)}）</span>` : ''}</p><p class="hk-talk-text">${esc(L.text)}</p><div class="hk-talk-foot"><span class="hk-talk-n">${i + 1} / ${lines.length}</span><button type="button" class="btn primary hk-talk-next">${last ? esc(o.last || '閉じる') : '次へ'}</button></div></div>`;
-        const b = el.querySelector('.hk-talk-next'); b.onclick = () => { if (last) { ctx.wm.close(); } else { i++; render(el); } }; setTimeout(() => b.focus(), 30);
-        el.querySelector('.hk-talk-text').onclick = () => b.click();
-      };
-      ctx.wm.open('talk', { title: o.title || '会話', size: lines.some((l) => l.img) ? 'm' : 's', locked: true, render, onClose: () => resolve(true) });
-    });
-  }
+  // ---------------------------------------------------------------- conversations: the standard window (ctx.talk / ctx.choose, standard 1.7)
+  const talk = (lines, o = {}) => ctx.talk(lines, o);
   // a found picture at the top of the screen (U14: things above, thoughts below)
   function flashPhoto(src, caption, sec = 2.2) {
     const el = document.getElementById('hk-photo'); if (!el) return;
     el.innerHTML = `<img src="${esc(src)}" alt="">${caption ? `<p>${esc(caption)}</p>` : ''}`;
     el.hidden = false; clearTimeout(flashPhoto.t); flashPhoto.t = setTimeout(() => { el.hidden = true; }, sec * 1000);
   }
-  function choose(c) {
-    if (ctx.qa && window.__hkChoice) return Promise.resolve(window.__hkChoice);
-    return new Promise((resolve) => {
-      ctx.wm.open('choice', { title: c.who, size: 's', locked: true, render: (el) => {
-        el.innerHTML = `<div class="hk-talk"><p class="hk-talk-text">${esc(c.text).replace(/\n/g, '<br>')}</p><div class="hk-choices"><button type="button" class="btn hk-choice" data-v="open">${esc(c.open)}</button><button type="button" class="btn primary hk-choice" data-v="keep">${esc(c.keep)}</button></div></div>`;
-        el.querySelectorAll('.hk-choice').forEach((b) => { b.onclick = () => { ctx.wm.close(); resolve(b.dataset.v); }; });
-        setTimeout(() => el.querySelector('[data-v="keep"]').focus(), 30);
-      }, onClose: () => resolve(null) });
-    });
-  }
+  const choose = (c) => ctx.choose({ who: c.who, title: c.who, text: c.text, options: [{ id: 'open', label: c.open }, { id: 'keep', label: c.keep, primary: true }] });
   // a kit mini game (align / wipe ...) or one of ours, inside a task's own run()
   async function playMG(task) {
     const mg = task.minigame; if (!mg) return true;
@@ -203,7 +180,7 @@ export default function story(ext) {
     P.k.root.visible = i === 1;
     P.lady.root.visible = i <= 1;
     P.driver.root.visible = i >= 3;
-    V.parts.van.visible = i === 3; V.parts.vanLight.visible = i >= 3; V.parts.vanInside.visible = i === 4;   // in the van: the inside instead of the shell
+    V.parts.van.visible = i >= 3; V.parts.vanLight.visible = i >= 3; V.parts.vanInside.visible = i === 4; for (const m of V.parts.vanShell) m.visible = i !== 4;   // in the van: the inside instead of the shell
     V.parts.shopLight.intensity = i === 2 ? 4 : 10;
     for (const k of BOWLS) V.parts.plates[k].salt.visible = done(`T_SALT_${k}`);
     V.parts.windowPapers.visible = done('T_WINDOW');
@@ -302,12 +279,14 @@ export default function story(ext) {
     if (lvl() !== 4 || dying || done('T_RIDE')) return;
     st.ride = Math.min(RIDE_SEC, st.ride + dt);
     const k = st.ride / RIDE_SEC, vz = RIDE_Z0 + (RIDE_Z1 - RIDE_Z0) * k;
-    V.parts.van.position.z = vz; V.parts.vanInside.position.z = vz; V.parts.vanLight.position.z = vz - 2.4; V.parts.vanLight.target.position.z = vz - 18;
-    const D = V.people.driver.root; D.position.set(0.08, 0.2, vz - 0.85);
+    V.parts.van.position.z = vz; V.parts.vanLight.position.z = vz - 2.4; V.parts.vanLight.target.position.z = vz - 18;
+    const seat = (id) => { const s0 = V.parts.vanSeats.find((x) => x.id === id) || V.parts.vanSeats[0]; return V.parts.van.localToWorld(new THREE.Vector3(s0.x, s0.y, s0.z)); };
+    V.parts.van.updateMatrixWorld();
+    const D = V.people.driver.root, ds = seat('driver'); D.position.set(ds.x, 0.25, ds.z - 0.2); D.rotation.y = Math.PI;
     const fp = ctx.fp, cam = ctx.camera, grip = gripKey || gripTouch;
     if (grip) { fp.yaw += (0 - fp.yaw) * Math.min(1, dt * 5); fp.pitch += (-0.62 - fp.pitch) * Math.min(1, dt * 5); }
     fp.yaw = clamp(fp.yaw, -1.35, 1.35);
-    cam.position.set(0.92, 1.45, vz + 0.45 + Math.sin(st.ride * 9) * 0.004);
+    const me = seat('rear1-right'); cam.position.set(me.x, me.y + 0.25, me.z + Math.sin(st.ride * 9) * 0.004);
     st.curse = curseStep(st.curse, { grip, yaw: fp.yaw, pitch: fp.pitch }, dt);
     if (H) { H.root.visible = k < 0.87; H.root.position.set(3.3 + Math.sin(st.ride * 2) * 0.12, 0, vz - 0.3 - Math.sin(st.ride * 1.3) * 1.2); H.root.rotation.y = Math.PI / 2; H.character.lookAt(cam); H.character.setSpeed(0); H.character.update(dt); }
     for (const [t, who, text, fx] of T.ride) if (st.ride >= t && !st.fired.includes(`r${t}`)) { st.fired.push(`r${t}`); if (who === '私') say(text, 5); else voice(who, text, 5); if (fx === 'po') snd.po({ vol: 0.5, pan: 0.9 }); if (fx === 'knock') snd.knock({ pan: 0.9, vol: 0.6 }); }

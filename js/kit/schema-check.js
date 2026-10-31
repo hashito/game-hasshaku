@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/schema-check.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 08f1905: js/schema-check.js — edit in game-kit and run tools/kit-sync.js */
 // A small JSON Schema checker (no dependencies, no DOM; Node and browser) + the cross-file checks of a game's data.
 // Supported keywords: $ref ("#/$defs/x"), type (string | array), enum, const, required, properties, additionalProperties
 // (bool | schema), items, minItems, maxItems, minLength, maxLength, pattern, minimum, maximum, oneOf, anyOf, uniqueBy (own).
@@ -6,6 +6,9 @@
 // checkGameData({ game, plan, items, docs, tasks, stages, endings, notes }, { minigameTypes }) -> { errors, warns }
 //   cross-references between the files (room / stage / task / unlock ids), reachability by stage (a room behind a door that a
 //   later stage unlocks cannot hold an earlier task or item), endings that can be reached, the progression definition.
+// names of the kinds / room types (kept in sync with js/item-kinds.js ITEM_KINDS and js/room-types.js ROOM_TYPES; test/standard-1.7.test.mjs checks)
+export const ITEM_KIND_NAMES = ['key', 'card', 'paper', 'clipboard', 'book', 'photo', 'tag', 'tape', 'talisman', 'bag', 'bottle', 'box', 'phone', 'flashlight', 'tool', 'cloth', 'jar', 'battery'];
+export const ROOM_TYPE_NAMES = ['washitsu', 'kitchen', 'storage', 'office', 'shop', 'classroom', 'hospital', 'bathroom', 'workshop', 'corridor', 'engawa', 'doma', 'road', 'yard', 'field', 'forest', 'grounds', 'street'];
 // The schemas live in schema/*.schema.json; tools/check-game-data.mjs loads and runs everything. docs/standard-3d.md "Data".
 import { resolveParams, earlyOk, PLAYER } from './monster-ai.js';
 import { checkThings } from './things-data.js';
@@ -96,10 +99,14 @@ export function checkGameData(d, opts = {}) {
   for (const t of tasks) {
     if (t.station && stations.size && !stations.has(t.station)) E(`task "${t.id}": station "${t.station}" is not in plan.json stations`);
     if (t.station && stations.has(t.station) && t.room && stations.get(t.station).room !== t.room) E(`task "${t.id}": station "${t.station}" is in room "${stations.get(t.station).room}", not "${t.room}"`);
-    if (!t.station) W(`task "${t.id}": no station (the world puts it in the middle of room "${t.room}")`);
+    if (!t.station && !t.timer) W(`task "${t.id}": no station (the world puts it in the middle of room "${t.room}")`);
     for (const n of t.needs || []) if (!taskIds.has(n)) E(`task "${t.id}": needs unknown task "${n}"`);
     if (t.minigame && types.size && !types.has(t.minigame.type)) E(`task "${t.id}": mini game type "${t.minigame.type}" is not a kit type nor listed in game.json "minigames"`);
   }
+  // standard 1.7: item / doc kinds, items given by a task, room types
+  for (const x of [...items, ...docs]) if (x.kind && !ITEM_KIND_NAMES.includes(x.kind)) E(`${items.includes(x) ? 'item' : 'doc'} "${x.id}": kind "${x.kind}" is not one of ${ITEM_KIND_NAMES.join(', ')} (js/item-kinds.js)`);
+  for (const x of items) if (x.given && !taskIds.has(x.given)) E(`item "${x.id}": given by unknown task "${x.given}"`);
+  for (const r of (plan && plan.rooms) || []) if (r.type && !ROOM_TYPE_NAMES.includes(r.type)) E(`room "${r.id}": type "${r.type}" is not one of ${ROOM_TYPE_NAMES.join(', ')} (js/room-types.js)`);
   for (const dr of (plan && plan.doors) || []) if (dr.unlock && !unlockLevel.has(dr.unlock)) E(`door "${dr.id}": unlock "${dr.unlock}" is not unlocked by any level in stages.json`);
   for (const l of (stages && stages.levels) || []) for (const k of l.unlocks || []) if (!((stages.unlocks || {})[k])) E(`level "${l.id}": unlock "${k}" is not defined in stages.unlocks`);
 

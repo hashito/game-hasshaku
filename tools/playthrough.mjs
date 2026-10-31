@@ -61,12 +61,12 @@ try {
   expect(await G("g.world.doors.get('D_FUSUMA').locked() && !g.world.doors.get('D_FUSUMA').isOpen"), 'the fusuma is shut and cannot be opened in the night');
   await shot('02_night');
   // keep it shut: safe
-  await run(`window.__hkChoice = 'keep'; g.teleport({ x: -8.0, z: 9.0, yaw: Math.PI }); g.fp.pitch = -0.1;`); await frames(6);
+  await run(`window.__gfChoice = 'keep'; g.teleport({ x: -8.0, z: 9.0, yaw: Math.PI }); g.fp.pitch = -0.1;`); await frames(6);
   expect((await G('g.target && g.target.kind')) === 'hk-voice', 'the voice behind the fusuma can be examined');
   await p.key('KeyE'); await sleep(500);
   expect(!(await deathText()), '"約束を守り、開けない" is safe');
   // answer and open: death
-  await run(`window.__hkChoice = 'open';`); await frames(4); await p.key('KeyE'); await sleep(1600);
+  await run(`window.__gfChoice = 'open';`); await frames(4); await p.key('KeyE'); await sleep(1600);
   expect((await deathText()).includes('戸を開けた'), 'opening the door to the voice before seven kills (S12)');
   await shot('03_death_door');
   await retry(); await frames(4);

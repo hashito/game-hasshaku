@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: css/kit.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 08f1905: css/kit.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: shared styles for first-person browser games (windows, HUD, buttons, touch controls,
    status chips, steppers, kanban, app-like software screens, tabs, stamps, share buttons; at the end
    progression pg-*, sim UI nt-/tb-/dl-/ch-*, journal jr-* / stream veil st-* / hiding hd-*, chat cx-*).
@@ -3013,6 +3013,18 @@ html[data-gf-no-flash="1"] .wm-layer { animation: none; }
 /* the title's buttons stay in view while the page scrolls */
 .cxt-actions { position: sticky; bottom: 0; padding: 10px 0 4px; background: linear-gradient(transparent, var(--cx-text-screen, #0c0e11) 28%); }
 /*@end*/
+
+/* ---- the 3D conversation window and choice (js/talk-ui.js, standard 1.7) ---- */
+.gf-talk { display: flex; flex-direction: column; gap: var(--gf-space-3, 12px); min-height: 100%; color: var(--gf-text, #e8e6df); }
+.gf-talk-img { width: 100%; max-height: 44vh; object-fit: cover; border: 1px solid var(--gf-border, rgba(255,255,255,.2)); border-radius: var(--gf-radius, 4px); }
+.gf-talk-who { margin: 0; color: var(--gf-accent, #d9b46a); font-size: var(--gf-text-sm, 13px); letter-spacing: 0.12em; }
+.gf-talk-who span { color: var(--gf-text-dim, #b8b4a8); margin-left: 0.4em; letter-spacing: 0; }
+.gf-talk--me .gf-talk-who { color: var(--gf-text-dim, #b8b4a8); }
+.gf-talk-text { margin: 0; color: var(--gf-text, #e8e6df); font-size: 18px; line-height: 1.9; cursor: pointer; }
+.gf-talk-foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: var(--gf-space-3, 12px); }
+.gf-talk-n { color: var(--gf-text-dim, #b8b4a8); font-size: var(--gf-text-sm, 13px); }
+.gf-talk-next, .gf-talk-choice { min-height: var(--gf-hit, 44px); min-width: 120px; }
+.gf-talk-choices { display: flex; flex-wrap: wrap; gap: var(--gf-space-3, 12px); justify-content: flex-end; margin-top: var(--gf-space-4, 16px); }
 
 /* ---- pre-paint of the standard windows (js/ui-warm.js): really laid out and painted, but invisible and inert. opacity .001 (not 0: Chrome skips painting at 0) ---- */
 body.gf-warming .wm-layer, body.gf-warming .rn-wrap, body.gf-warming #mg, body.gf-warming .gf-overlay { opacity: 0.001 !important; pointer-events: none !important; animation: none !important; transition: none !important; }

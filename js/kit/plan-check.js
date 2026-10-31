@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/plan-check.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 08f1905: js/plan-check.js — edit in game-kit and run tools/kit-sync.js */
 // Floor-plan checks (W16/W17), pure data in -> findings out. No DOM, runs in Node and in the browser.
 // plan = { rooms:[{id,name,x,z,w,d,floor?,kind:'room'|'corridor'|'outdoor'|'stairs'}],
 //          doors:[{id,a,b,x?,z?,width,kind?:'door'|'stairs'|'lift'|'exit',reason?}],
@@ -20,6 +20,8 @@ export const CODES = {
 };
 const EPS = 0.31;
 const isHall = (r) => r.kind === 'corridor' || r.kind === 'stairs';
+// a way through for the loop and corridor-access checks: corridors, stairs and outdoor areas (a village's loop runs along its roads; standard 1.7)
+const isWay = (r) => isHall(r) || r.kind === 'outdoor';
 
 export function checkPlan(plan, opts = {}) {
   const o = { corridorMin: 1.2, doorMin: 0.9, corridorMaxWidth: 4, corridorAspect: 3, maxDirectPerRoom: 2, asError: [], ignore: [], ...opts };
@@ -107,14 +109,14 @@ export function checkPlan(plan, opts = {}) {
   const pairSet = new Set(pairs.map((d) => [d.a, d.b].sort().join('|')));
   if (pairSet.size > nRooms / 3) W('direct-total', `${pairSet.size} direct room-to-room links among ${nRooms} rooms (limit ${(nRooms / 3).toFixed(1)} = rooms/3)`);
   for (const r of rooms.filter(plain)) {
-    if (!(adj.get(r.id) || []).some((n) => isHall(byId.get(n)))) W('no-corridor', `room ${name(r)} has no door to a corridor`);
+    if (!(adj.get(r.id) || []).some((n) => isWay(byId.get(n)))) W('no-corridor', `room ${name(r)} has no door to a corridor`);
   }
   for (const r of rooms.filter(isHall)) {
     const deg = new Set(adj.get(r.id)).size;
     if (deg <= 1 && !exits.includes(r.id) && r.id !== start) W('dead-end', `${r.kind} ${name(r)} is a dead end (${deg} connection); add a loop, an exit or a stair`);
   }
   // loop: corridors/stairs network must contain a cycle
-  const halls = rooms.filter(isHall);
+  const halls = rooms.filter(isWay);
   if (halls.length > 1) {
     const hs = new Set(halls.map((h) => h.id));
     const edges = new Set(validDoors.filter((d) => hs.has(d.a) && hs.has(d.b)).map((d) => d.id));

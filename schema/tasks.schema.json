@@ -97,6 +97,22 @@
             }
           }
         }
+      },
+      "timer": {
+        "type": "object",
+        "required": [
+          "seconds"
+        ],
+        "properties": {
+          "seconds": {
+            "type": "number",
+            "minimum": 0.1
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "description": "a timed task (standard 1.7): it completes by itself after this much play once its stage is current and its needs are done"
       }
     }
   }

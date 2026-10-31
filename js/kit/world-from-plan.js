@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 08f1905: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
 // The standard world builder (docs/standard-3d.md, layer "world"): plan.json (rooms, corridors, doors, stations) -> THREE objects,
 // colliders, doors that open and a room lookup. Boxes only: floors, ceilings, walls with door gaps and lintels, door panels, task
 // stations. The look is a flat palette per room kind + the preset lighting; richer looks (texture-library, props, env-props) are added
@@ -13,9 +13,14 @@
 //   world.roomAt(x, z) -> room id | null      world.spawn -> { x, z, yaw }      world.doors.get(id).open()
 //   world.place(mesh, roomId, x?, z?)         puts a pickup / station mesh in a room (default: spread around the middle)
 //   world.interactables                        meshes with userData.interact = { kind, id } (the raycast targets)
-// Pure geometry helpers (wallSpans, doorEdge) are exported and tested in Node; buildWorld needs THREE (import map or test/three-hook.mjs).
+// Pure geometry helpers (wallSpans, doorEdge, sharedCuts, wallOwner) are exported and tested in Node; buildWorld needs THREE (import map or test/three-hook.mjs).
+// Standard 1.7: a wall shared by two rooms is built once (an indoor room's wall wins over an outdoor one, then the lower id; W6);
+// an outdoor room has no plaster walls: its edges keep their colliders and get a light look (rooms[].edge: 'trees' | 'hedge' |
+// 'fence' | 'stone' | 'none'; default trees on the outer edge, hedge between two outdoor rooms) - world.edges lists them for a game
+// that dresses them itself (edge 'none'); a door with "open": true is an opening (no panel, always open); lamps hang below the ceiling with a shade.
 import * as THREE from 'three';
 import { selectInteractable, selectAtScreen, rayBox } from './interact-select.js';
+import { roomLook } from './room-types.js';
 
 export const DEFAULTS = { wallH: 3, wallT: 0.16, floorH: 3.4, doorH: 2.2, doorW: 1.0, roomLights: true };
 export const PALETTE = {
@@ -39,6 +44,35 @@ export function wallSpans(t0, t1, gaps) {
   return out;
 }
 
+// who builds a wall two rooms share: an indoor room over an outdoor one, otherwise the lower id (pure)
+export function wallOwner(a, b) {
+  const out = (r) => (r.kind || 'room') === 'outdoor';
+  if (out(a) !== out(b)) return out(a) ? b : a;
+  return a.id < b.id ? a : b;
+}
+// the stretches of room r's edge that another room builds instead: [{ c, w }] gaps along the edge (pure)
+export function sharedCuts(r, edge, rooms) {
+  const cuts = [], f = r.floor || 0, eps = 0.02;
+  const line = { n: r.z, s: r.z + r.d, w: r.x, e: r.x + r.w }[edge];
+  const along = edge === 'n' || edge === 's';
+  const t0 = along ? r.x : r.z, t1 = along ? r.x + r.w : r.z + r.d;
+  const opposite = { n: 's', s: 'n', w: 'e', e: 'w' }[edge];
+  for (const o of rooms) {
+    if (o === r || (o.floor || 0) !== f) continue;
+    const oline = { n: o.z, s: o.z + o.d, w: o.x, e: o.x + o.w }[opposite];
+    if (Math.abs(oline - line) > eps) continue;
+    const a = Math.max(t0, along ? o.x : o.z), b = Math.min(t1, along ? o.x + o.w : o.z + o.d);
+    if (b - a <= eps) continue;
+    if (wallOwner(r, o) !== r) cuts.push({ c: (a + b) / 2, w: b - a, by: o.id });
+  }
+  return cuts;
+}
+// the other room just across an edge at position t (for the edge look: shared or outer) (pure)
+export function neighbourAt(r, edge, t, rooms) {
+  const off = 0.3, f = r.floor || 0;
+  const [x, z] = edge === 'n' ? [t, r.z - off] : edge === 's' ? [t, r.z + r.d + off] : edge === 'w' ? [r.x - off, t] : [r.x + r.w + off, t];
+  return rooms.find((o) => o !== r && (o.floor || 0) === f && x > o.x && x < o.x + o.w && z > o.z && z < o.z + o.d) || null;
+}
 const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.9, metalness: 0, ...o });
 
 export function buildWorld(plan, o = {}) {
@@ -69,38 +103,56 @@ export function buildWorld(plan, o = {}) {
     for (const r of [a, b]) { const e = doorEdge(r, d.x, d.z); gapsOf.get(r.id).push({ ...e, w: d.width ?? K.doorW, id: d.id }); }
   }
 
+  const edges = [];   // outdoor edges: { room, edge, from: [x, z], to: [x, z], shared, look }
+  const hidden = new THREE.MeshBasicMaterial({ visible: false });
   for (const r of rooms) {
     const pal = PALETTE[r.kind || 'room'] || PALETTE.room, y0 = yOf(r), H = K.wallH, T = K.wallT;
+    const outdoor = (r.kind || 'room') === 'outdoor';
     const tint = (c) => { const k = 1 + ((r.id.split('').reduce((s, ch) => s + ch.charCodeAt(0), 0) % 7) - 3) * 0.03; return new THREE.Color(c).multiplyScalar(k).getHex(); };
     const cx = r.x + r.w / 2, cz = r.z + r.d / 2;
     box(r.w, 0.1, r.d, m('f' + r.kind, tint(pal.floor)), cx, y0 - 0.05, cz, false, `floor:${r.id}`);
     if (pal.ceil != null) box(r.w, 0.1, r.d, m('c' + r.kind, pal.ceil), cx, y0 + H + 0.05, cz, false, `ceil:${r.id}`);
-    const wallM = m('w' + r.kind, tint(pal.wall));
-    const edges = { n: [r.x, r.x + r.w, r.z, 'x'], s: [r.x, r.x + r.w, r.z + r.d, 'x'], w: [r.z, r.z + r.d, r.x, 'z'], e: [r.z, r.z + r.d, r.x + r.w, 'z'] };
-    for (const [edge, [t0, t1, fixed, axis]] of Object.entries(edges)) {
-      const gaps = gapsOf.get(r.id).filter((g) => g.edge === edge).map((g) => ({ c: g.t, w: g.w }));
-      for (const [a, b] of wallSpans(t0, t1, gaps)) {
+    const wallM = outdoor ? hidden : m('w' + r.kind, tint(pal.wall));
+    const edgesOf = { n: [r.x, r.x + r.w, r.z, 'x'], s: [r.x, r.x + r.w, r.z + r.d, 'x'], w: [r.z, r.z + r.d, r.x, 'z'], e: [r.z, r.z + r.d, r.x + r.w, 'z'] };
+    for (const [edge, [t0, t1, fixed, axis]] of Object.entries(edgesOf)) {
+      const doorGaps = gapsOf.get(r.id).filter((g) => g.edge === edge).map((g) => ({ c: g.t, w: g.w }));
+      const cuts = K.dedupe === false ? [] : sharedCuts(r, edge, rooms);
+      for (const [a, b] of wallSpans(t0, t1, [...doorGaps, ...cuts])) {
         const len = b - a, mid = (a + b) / 2;
         if (axis === 'x') box(len, H, T, wallM, mid, y0 + H / 2, fixed, true, `wall:${r.id}:${edge}`);
         else box(T, H, len, wallM, fixed, y0 + H / 2, mid, true, `wall:${r.id}:${edge}`);
+        if (outdoor) {
+          const nb = neighbourAt(r, edge, mid, rooms);
+          const look = r.edge || (nb ? 'hedge' : roomLook(r).edge || 'trees');   // rooms[].edge; between two rooms a hedge; outside: the room type's look, else trees
+          edges.push({ room: r.id, edge, from: axis === 'x' ? [a, fixed] : [fixed, a], to: axis === 'x' ? [b, fixed] : [fixed, b], shared: !!nb, look, y: y0 });
+        }
       }
-      for (const g of gaps) { // lintel above each opening
+      if (outdoor) continue;   // no lintels over outdoor openings
+      for (const g of doorGaps) { // lintel above each opening (not where another room builds the wall)
+        if (cuts.some((c) => Math.abs(c.c - g.c) < c.w / 2)) continue;
         const lh = H - K.doorH;
         if (lh > 0.05) { if (axis === 'x') box(g.w, lh, T, wallM, g.c, y0 + K.doorH + lh / 2, fixed, false); else box(T, lh, g.w, wallM, fixed, y0 + K.doorH + lh / 2, g.c, false); }
       }
     }
     if (K.roomLights && pal.ceil != null && rooms.length <= 16) {
+      // a pendant below the ceiling (a ceiling-high light washes the ceiling out) with a small shade and a glowing bulb
+      const ly = y0 + H - 0.6;
       const l = new THREE.PointLight(0xfff1d6, Math.min(30, 4 + r.w * r.d * 0.12), Math.max(r.w, r.d) * 1.8, 1.6);
-      l.position.set(cx, y0 + H - 0.4, cz); l.name = `lamp:${r.id}`; group.add(l);
+      l.position.set(cx, ly, cz); l.name = `lamp:${r.id}`; group.add(l);
+      const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.28, 0.18, 16, 1, true), m('shade', 0x3a3530)); shade.material.side = THREE.DoubleSide; shade.position.set(cx, ly + 0.12, cz); shade.name = `lampshade:${r.id}`; group.add(shade);
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), mats.bulb ||= new THREE.MeshStandardMaterial({ color: 0xfff4dc, emissive: 0xffe0a8, emissiveIntensity: 2 })); bulb.position.set(cx, ly + 0.04, cz); group.add(bulb);
+      const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, H - 0.6 - 0.2 + 0.1, 4), m('cord', 0x1a1a1a)); cord.position.set(cx, (ly + 0.2 + y0 + H) / 2, cz); group.add(cord);
     }
     roomsById.set(r.id, { room: r, y: y0, cx, cz, slots: 0 });
   }
+  if (K.edgeLooks !== false) dressEdges(group, edges, colliders);
 
   // door panels (one per door, in the gap of room a); a locked door stays shut until its unlock key is unlocked
   const doorM = m('door', 0x6a4b32);
   for (const d of plan.doors || []) {
     const a = byId.get(d.a);
     if (!a || d.x == null || d.kind === 'stairs' || d.kind === 'lift') continue;
+    if (d.open) { doors.set(d.id, { def: d, mesh: null, col: null, isOpen: true, locked: () => false, open() { return false; }, close() {} }); continue; }   // an opening: no panel
     const { edge } = doorEdge(a, d.x, d.z), w = d.width ?? K.doorW, y0 = yOf(a), alongX = edge === 'n' || edge === 's';
     const fixed = alongX ? (edge === 'n' ? a.z : a.z + a.d) : edge === 'w' ? a.x : a.x + a.w;
     const { mesh, col } = alongX ? box(w, K.doorH, 0.08, doorM, d.x, y0 + K.doorH / 2, fixed, true, `door:${d.id}`) : box(0.08, K.doorH, w, doorM, fixed, y0 + K.doorH / 2, d.z, true, `door:${d.id}`);
@@ -173,7 +225,7 @@ export function buildWorld(plan, o = {}) {
   }
   const spawnRoom = S && S.room;
   if (spawn && spawn.floor == null && spawnRoom) spawn.floor = spawnRoom.floor || 0;
-  return { group, colliders, interactables, rooms: roomsById, doors, stairs, roomAt, place, bounds, spawn, floorY, yOf: (id) => roomsById.get(id)?.y || 0, K };
+  return { group, colliders, interactables, rooms: roomsById, doors, stairs, roomAt, place, bounds, spawn, floorY, yOf: (id) => roomsById.get(id)?.y || 0, K, edges };
 }
 
 // the interaction pick (rule W18, js/interact-select.js): the thing the camera looks at, with a cone assist, a 15 cm margin around the
@@ -234,4 +286,38 @@ export function pickInteractableAt(camera, interactables, x, y, w, h, reach = 2.
   const eye = camera.position;
   const sel = selectAtScreen({ x, y, w, h, fovDeg: camera.fov || 70, eye: [eye.x, eye.y, eye.z], basis, candidates: cands, blocked: opts.colliders ? blockedBy(opts.colliders, eye) : null, opts: { reach } });
   return sel ? { object: sel.cand.obj, ...sel.cand.obj.userData.interact, distance: sel.dist, via: sel.via } : null;
+}
+
+// the standard look of outdoor edges (the colliders are the plan's walls; this only draws): trees = a row of cedars outside the edge,
+// hedge = a clipped hedge on the line, fence = posts and two rails, stone = a low stone wall, none = nothing (the game dresses world.edges)
+const EDGE_MATS = {};
+const edgeMat = (k, c) => (EDGE_MATS[k] ||= new THREE.MeshStandardMaterial({ color: c, roughness: 0.95 }));
+export function dressEdges(group, edges, colliders = []) {
+  const trees = [];
+  for (const e of edges) {
+    const [x0, z0] = e.from, [x1, z1] = e.to, len = Math.hypot(x1 - x0, z1 - z0), alongX = Math.abs(x1 - x0) > Math.abs(z1 - z0);
+    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, y = e.y || 0;
+    const out = { n: [0, -1], s: [0, 1], w: [-1, 0], e: [1, 0] }[e.edge];
+    const add = (w, h, d, mt, px, py, pz) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mt); b.position.set(px, py, pz); b.castShadow = true; b.receiveShadow = true; b.name = `edge:${e.room}:${e.edge}`; group.add(b); return b; };
+    if (e.look === 'hedge') add(alongX ? len : 0.8, 1.8, alongX ? 0.8 : len, edgeMat('hedge', 0x2c4428), cx, y + 0.9, cz);
+    else if (e.look === 'stone') add(alongX ? len : 0.6, 1.1, alongX ? 0.6 : len, edgeMat('stone', 0x6f7368), cx, y + 0.55, cz);
+    else if (e.look === 'fence') {
+      const n = Math.max(1, Math.round(len / 2));
+      for (let i = 0; i <= n; i++) { const t = i / n; add(0.1, 1.1, 0.1, edgeMat('post', 0x4a3a2a), x0 + (x1 - x0) * t, y + 0.55, z0 + (z1 - z0) * t); }
+      for (const hy of [0.45, 0.95]) add(alongX ? len : 0.05, 0.06, alongX ? 0.05 : len, edgeMat('post', 0x4a3a2a), cx, y + hy, cz);
+    } else if (e.look === 'trees') {
+      const n = Math.max(1, Math.round(len / 2.4));
+      for (let i = 0; i < n; i++) { const t = (i + 0.5) / n, k = ((i * 7919 + Math.round(cx * 13 + cz * 7)) % 100) / 100; trees.push([x0 + (x1 - x0) * t + out[0] * (1.3 + k), y, z0 + (z1 - z0) * t + out[1] * (1.3 + k), 0.8 + k * 0.5]); }
+    }
+  }
+  if (trees.length) {
+    const trunk = new THREE.CylinderGeometry(0.12, 0.2, 1, 6); trunk.translate(0, 0.5, 0);
+    const crown = new THREE.ConeGeometry(1.4, 4.6, 7); crown.translate(0, 4.2, 0);
+    const tm = new THREE.InstancedMesh(trunk, edgeMat('bark', 0x3a2f26), trees.length), cm = new THREE.InstancedMesh(crown, edgeMat('cedar', 0x1f3326), trees.length);
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
+    trees.forEach(([x, y, z, s], i) => { m4.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(s, s * 2.4, s)); tm.setMatrixAt(i, m4); m4.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(s, s, s)); cm.setMatrixAt(i, m4); });
+    tm.name = 'edge:trees'; cm.name = 'edge:trees'; tm.castShadow = cm.castShadow = true; group.add(tm, cm);
+  }
+  void colliders;
+  return trees.length;
 }

@@ -1,10 +1,7 @@
 // 八尺様 built from the standard character (js/kit/character.js): a woman about 2.7 m tall in a long off-white dress,
-// long black hair and a wide straw hat with a pale ribbon. The monster pack (js/kit/monster-std.js) creates its look by name;
-// the plan's monster uses "dark-red-mist" (the only person look the schema allows), which this game replaces with this one.
-// Kit feedback: a registerLook(name, fn) API so a game can add a look without replacing a built-in one (docs/kit-feedback.md).
+// long black hair and a wide straw hat with a pale ribbon. Registered as the monster look "hasshaku" (ext.registerLook, standard 1.7).
 import * as THREE from 'three';
 import { makeCharacter } from '../kit/character.js';
-import { LOOKS } from '../kit/monster-looks.js';
 
 export const HEIGHT = 2.72;   // metres to the top of the head (the hat adds ~0.12)
 
@@ -71,4 +68,3 @@ export function hasshakuLook() {
   };
 }
 
-export function installLook() { LOOKS['dark-red-mist'] = hasshakuLook; }

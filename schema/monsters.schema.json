@@ -13,7 +13,9 @@
         "type": "object", "required": ["id"],
         "properties": {
           "id": { "type": "string" },
-          "look": { "enum": ["windmill", "dark-red-mist"], "description": "windmill = the original みる風車 look (no red / black); dark-red-mist = near-black body, thin deep-red rim, with the red-black mist" },
+          "look": { "type": "string", "minLength": 1, "description": "windmill = the original みる風車 look (no red / black); dark-red-mist = near-black body, thin deep-red rim, with the red-black mist; any other name = a look the game registers with ext.registerLook (standard 1.7)" },
+          "afterNear": { "type": "boolean", "description": "with a nearAttack: do not patrol before the scripted encounter (default true)" },
+          "nearRespawn": { "type": "number", "minimum": 0, "description": "seconds after the scripted encounter before it patrols (default 6)" },
           "preset": { "enum": ["early", "normal", "hunter"] },
           "phases": { "type": "array", "minItems": 1, "items": { "type": "object", "required": ["preset"], "properties": { "preset": { "enum": ["early", "normal", "hunter"] }, "untilStage": { "type": "string", "description": "this phase holds while the player's level is before this stage" } } } },
           "spawn": { "type": "object", "properties": { "room": { "type": "string" }, "x": { "type": "number" }, "z": { "type": "number" } } },

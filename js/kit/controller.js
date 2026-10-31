@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/controller.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 08f1905: js/controller.js — edit in game-kit and run tools/kit-sync.js */
 // First-person controller: pointer lock + mouse look, WASD / arrows + Shift to run, a touch stick and
 // swipe-to-look for phones, circle-vs-box collisions, footstep callbacks.
 // Extracted from ひだまり薬局 (game-yakkyoku, js/game.js); the same scheme runs 未然調書 and the police game.
@@ -15,6 +15,7 @@
 //     externalLook: true,           // (standard 1.5) the mouse / pointer lock is handled by js/look-input.js (game-core wires it); call fp.look(dx, dy) from it
 //   });
 //   fp.update(dt) every frame; fp.lock() after a window closes; fp.release() before one opens.
+//   fp.crouching = true (standard 1.7): the eye drops to crouchEye (0.6) of the height and the walk to crouchSpeed (0.5); no running.
 import * as THREE from "three";
 
 export class FirstPersonController {
@@ -70,7 +71,7 @@ export class FirstPersonController {
   }
 
   running() {
-    return this.keys.has("ShiftLeft") || this.keys.has("ShiftRight") || this.runToggle;
+    return !this.crouching && (this.keys.has("ShiftLeft") || this.keys.has("ShiftRight") || this.runToggle);
   }
 
   bind() {
@@ -187,7 +188,7 @@ export class FirstPersonController {
         fx /= l;
         fz /= l;
       }
-      const v = new THREE.Vector3(fx, 0, fz).applyAxisAngle(THREE.Object3D.DEFAULT_UP, this.yaw).multiplyScalar((this.running() ? this.o.run : this.o.speed) * dt);
+      const v = new THREE.Vector3(fx, 0, fz).applyAxisAngle(THREE.Object3D.DEFAULT_UP, this.yaw).multiplyScalar((this.crouching ? this.o.speed * (this.o.crouchSpeed ?? 0.5) : this.running() ? this.o.run : this.o.speed) * dt);
       const before = p.clone();
       p.add(v);
       this.collide(p);
@@ -205,7 +206,7 @@ export class FirstPersonController {
         this.o.onStep && this.o.onStep(this.running());
       }
     }
-    const ty = this.floorY + this.o.eye;
+    const ty = this.floorY + this.o.eye * (this.crouching ? this.o.crouchEye ?? 0.6 : 1);   // standard 1.7: crouching lowers the eye and slows the walk
     if (this.o.smoothY === false || this._y == null || Math.abs(ty - this._y) > 0.8) this._y = ty;
     else this._y += (ty - this._y) * (1 - Math.exp(-Math.min(dt, 0.1) * 16));
     p.y = this._y;

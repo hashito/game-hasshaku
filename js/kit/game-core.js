@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 08f1905: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -19,6 +19,8 @@
 //
 // Known coupling left: progress-ui's level-up / briefing dialogs still open as KitUI windows (TODO: move them to win-manager).
 import * as THREE from 'three';
+import { makeItemModel, supportY, topsIn, DOC_KIND } from './item-kinds.js';
+import { createTalk } from './talk-ui.js';
 import { createRenderer, applyPreset, extendPreset, QualityTier } from './render-presets.js';
 import { browserEnv } from './render-budget.js';
 import { FirstPersonController } from './controller.js';
@@ -52,7 +54,7 @@ import { gfRegister, gfOk, gfFail, gfUnknown } from './gf-test.js';
 import { createExtensions } from './ext.js';
 import { buildProgressionDef, taskAtStation, pickEnding } from './game-data.js';
 
-export const CORE_VERSION = '1.5.0';
+export const CORE_VERSION = '1.7.0';
 const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(typeof location !== 'undefined' ? location.search : '');
 const safe = (fn, d = null) => { try { return fn(); } catch { return d; } };
@@ -78,7 +80,8 @@ export async function loadGame(manifestUrl = 'game.json', o = {}) {
   if (data.terminals && !mods.terminals) mods.terminals = await import('./terminal-screen.js');
   if (manifest.voice && !mods.voice) mods.voice = await import('./voice-fx.js');
   const ctx = createGame({ manifest, data, ext, ...o, mods });
-  if (manifest.recipes) await (await import('./recipes.js')).installRecipes(ctx, manifest.recipes);   // props / openables / textures / ambience, switched on from game.json (standard 1.5)
+  if (manifest.recipes) await (await import('./recipes.js')).installRecipes(ctx, manifest.recipes);
+  ctx.seatPickups && ctx.seatPickups();   // the furniture is in: put the pickups on it (standard 1.7)   // props / openables / textures / ambience, switched on from game.json (standard 1.5)
   await Promise.race([ctx.titleShown, new Promise((r) => setTimeout(r, 1500))]);   // never start the heavy boot steps in the middle of the first crossfade (but never wait more than 1.5 s)
   await ctx.boot();
   return ctx;
@@ -155,7 +158,8 @@ export function createGame(cfg) {
   const inputMode = ctx.inputMode = new InputMode({ mode: Q.has('touch') || cfg.touch ? 'touch' : undefined, pin: Q.has('touch') || !!cfg.touch })   // ?touch=1 pins touch (tests);
   const touchCapable = matchMedia('(pointer: coarse)').matches || matchMedia('(any-pointer: coarse)').matches || (navigator.maxTouchPoints || 0) > 0 || Q.has('touch') || cfg.touch;
   if (touchCapable) {
-    const btns = (controls.touch || DEFAULT_TOUCH).map((b) => `<button data-k="${b.k}"${b.id ? ` id="${b.id}"` : ''} class="${b.cls || ''}">${esc(b.label)}</button>`).join('');
+    const extraTouch = [...(controls.crouch && !(controls.touch || []).some((b) => b.k === 'KeyC') ? [{ k: 'KeyC', label: 'しゃがむ' }] : []), ...(controls.flashlight && !(controls.touch || []).some((b) => b.k === 'KeyF') ? [{ k: 'KeyF', label: '灯り' }] : [])];   // standard 1.7
+    const btns = [...(controls.touch || DEFAULT_TOUCH), ...extraTouch].map((b) => `<button data-k="${b.k}"${b.id ? ` id="${b.id}"` : ''} class="${b.cls || ''}">${esc(b.label)}</button>`).join('');
     mk('div', 'touch', `<div id="t-look"></div><div id="t-stick"><div id="t-knob"></div></div><div id="t-right"><div id="t-buttons">${btns}</div></div><button id="t-menu" aria-label="メニュー">${icon("menu", { size: 24 })}</button>`).classList.add('hidden');
   }
   body.classList.toggle('touch', inputMode.touch);
@@ -197,14 +201,41 @@ export function createGame(cfg) {
   const EYE = controls.eye || 1.65;
   ctx.eyeY = (floor = ctx.floor) => world.floorY(floor) + EYE;
 
-  // pickups (items, docs): the standard puts a coloured box in the room; a world that places its own pickups says so (registerWorld({ pickups: 'self' }))
+  // pickups (items, docs): a model of the item's `kind` (js/item-kinds.js; docs default to paper) resting on what is under it, or a coloured box
+  // for an item without a kind; a world that places its own pickups says so (registerWorld({ pickups: 'self' })). Items with "given": <task id>
+  // are not placed: the task gives them (standard 1.7).
   const pickups = new Map();
+  const hidden = new THREE.MeshBasicMaterial({ visible: false });
   const addPickup = (kind, x) => {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(kind === 'doc' ? 0.32 : 0.26, kind === 'doc' ? 0.02 : 0.2, kind === 'doc' ? 0.24 : 0.26), new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(hue(x.id) / 360, 0.35, kind === 'doc' ? 0.8 : 0.45), emissive: new THREE.Color().setHSL(hue(x.id) / 360, 0.5, 0.18), roughness: 0.7 }));
-    mesh.position.y = 0.85; mesh.name = `${kind}:${x.id}`; mesh.userData.interact = { kind, id: x.id };
+    const k = x.kind || (kind === 'doc' ? DOC_KIND : null);
+    const model = k ? makeItemModel(k, { scale: x.scale }) : null;
+    let mesh;
+    if (model) {
+      const b = new THREE.Box3().setFromObject(model), sz = b.getSize(new THREE.Vector3());
+      mesh = new THREE.Mesh(new THREE.BoxGeometry(Math.max(0.12, sz.x + 0.06), Math.max(0.06, sz.y + 0.04), Math.max(0.12, sz.z + 0.06)), hidden);
+      model.position.y = -mesh.geometry.parameters.height / 2; mesh.add(model); mesh.userData.model = model;
+    } else mesh = new THREE.Mesh(new THREE.BoxGeometry(kind === 'doc' ? 0.32 : 0.26, kind === 'doc' ? 0.02 : 0.2, kind === 'doc' ? 0.24 : 0.26), new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(hue(x.id) / 360, 0.35, kind === 'doc' ? 0.8 : 0.45), emissive: new THREE.Color().setHSL(hue(x.id) / 360, 0.5, 0.18), roughness: 0.7 }));
+    mesh.position.y = 0.85; mesh.name = `${kind}:${x.id}`; mesh.userData.interact = { kind, id: x.id }; mesh.userData.def = x;
     world.place(mesh, x.room, x.x, x.z); world.interactables.push(mesh); pickups.set(`${kind}:${x.id}`, mesh);
   };
-  if (!(wdef && wdef.pickups === 'self')) { items.filter((i) => !i.start).forEach((i) => addPickup('item', i)); docs.forEach((d) => addPickup('doc', d)); }
+  if (!(wdef && wdef.pickups === 'self')) { items.filter((i) => !i.start && !i.given).forEach((i) => addPickup('item', i)); docs.forEach((d) => addPickup('doc', d)); }
+  // put each pickup on its support (a desk top, a shelf board, the floor): x.y wins; run again after the recipes have placed the furniture
+  ctx.seatPickups = () => {
+    const usedTops = new Map();
+    for (const mesh of pickups.values()) {
+      const x = mesh.userData.def || {}, R = world.rooms && world.rooms.get && world.rooms.get(x.room), fy = R ? R.y || 0 : 0;
+      // no x / z in the data: put it on a desk or table top of its room when there is one (one thing per top), else where the world placed it
+      if ((x.x == null || x.z == null) && x.y == null && R && R.room) {
+        const r = R.room, n = usedTops.get(x.room) || 0;
+        const tops = topsIn(world.colliders, r, fy);
+        if (tops.length) { const t = tops[n % tops.length]; mesh.position.x = t.x + (n >= tops.length ? 0.2 : 0); mesh.position.z = t.z; usedTops.set(x.room, n + 1); }
+      }
+      const h = mesh.geometry.parameters.height || 0.2;
+      const y = x.y != null ? fy + x.y : supportY(world.colliders, mesh.position.x, mesh.position.z, fy);
+      mesh.position.y = y + h / 2;
+    }
+  };
+  ctx.seatPickups();
 
   // ---- audio / input / UI ----
   const audioDef = uiDef('audio');
@@ -311,6 +342,7 @@ export function createGame(cfg) {
     const pending = (task.needs || []).filter((n) => !state.tasks.includes(n));
     if (pending.length) return `先に済ませることがある：${pending.map((n) => (taskById.get(n) || {}).title || n).join('、')}`;
     const reg = ext.reg.task.get(task.id);
+    if (task.timer && !(reg && reg.canStart)) return `時間が来るまで待つ（あと ${Math.ceil(Math.max(0, task.timer.seconds - ((state.timers || {})[task.id] || 0)))} 秒）`;   // a timed task finishes by itself (standard 1.7)
     if (reg && reg.canStart) { const r = reg.canStart(ctx, task); if (r !== true) return r || 'いまは、まだできません。条件がそろうと進められます。'; }
     return true;
   };
@@ -319,6 +351,7 @@ export function createGame(cfg) {
     state.tasks.push(id); prog.flag(id); ctx.checkpoint = { x: camera.position.x, z: camera.position.z, yaw: fp.yaw, floor: ctx.floor };
     if (!o.quiet) { ui.toast(`✓ ${esc((taskById.get(id) || {}).title || id)}`, 'ok'); sound('beep', true); }
     bus.emit('task:done', { id });
+    for (const it of items) if (it.given === id && !state.inv.includes(it.id)) { state.inv.push(it.id); if (!o.quiet) ui.toast(`受け取った：${esc(it.name)}`); bus.emit('item:given', { id: it.id, task: id }); }   // "given": <task id> (standard 1.7)
     const reg = ext.reg.task.get(id); reg && reg.onDone && reg.onDone(ctx, taskById.get(id));
     if (!o.noSave) ctx.save();
     checkEndings();
@@ -448,6 +481,8 @@ export function createGame(cfg) {
     if (k.handled) return;
     if (e.code === 'KeyE') ctx.interact();
     else if (e.code === 'KeyG') tm.open('tasks');
+    else if (controls.crouch && e.code === 'KeyC') ctx.setCrouch(!fp.crouching);
+    else if (controls.flashlight && e.code === 'KeyF') ctx.setLight(!ctx.lightOn);
     else if (e.code === 'KeyI') tm.open('items');
     else if (e.code === 'KeyM') tm.open('map');
   });
@@ -510,8 +545,50 @@ export function createGame(cfg) {
   // monsters (registered by the game): each gets create(ctx) once and update(dt, ctx) per frame; systems are the same without the "monster" meaning
   const monsters = ext.reg.monster.list().map((m) => ({ id: m.id, inst: m.create(ctx) }));
   const systems = ext.reg.system.list().map((s) => ({ id: s.id, def: s, inst: s.create ? s.create(ctx) : null }));
+  // crouch and flashlight (game.json "controls": { "crouch": true, "flashlight": true | { "on": true, "intensity": 24 } }, standard 1.7): [C] / [F] and touch
+  // buttons; ctx.visibility() tells the monster how easy you are to notice (crouching 0.6, a light on 1.3: controls.crouchVisibility / lightVisibility)
+  ctx.setCrouch = (on) => { if (!controls.crouch) return; fp.crouching = !!on; bus.emit('player:crouch', { on: fp.crouching }); ui.toast(fp.crouching ? 'しゃがんだ（Cで立つ）' : '立ち上がった'); };
+  ctx.lightOn = false;
+  if (controls.flashlight) {
+    const fl = typeof controls.flashlight === 'object' ? controls.flashlight : {};
+    const light = ctx.flashlight = new THREE.SpotLight(fl.color ?? 0xffefc7, fl.intensity ?? 24, fl.distance ?? 22, fl.angle ?? Math.PI / 6.5, 0.7, 1.3);
+    light.visible = false; scene.add(light, light.target);
+    ctx.setLight = (on) => { ctx.lightOn = !!on; light.visible = ctx.lightOn; bus.emit('player:light', { on: ctx.lightOn }); };
+    const dir = new THREE.Vector3();
+    systems.push({ id: 'flashlight', def: { update: () => { if (!light.visible) return; light.position.copy(camera.position); camera.getWorldDirection(dir); light.target.position.copy(camera.position).addScaledVector(dir, 6); } }, inst: null });
+    if (fl.on) ctx.setLight(true);
+  } else ctx.setLight = () => {};
+  ctx.visibility = () => (fp.crouching ? controls.crouchVisibility ?? 0.6 : 1) * (ctx.lightOn ? controls.lightVisibility ?? 1.3 : 1);
+
+  // timed tasks (tasks.json "timer": { "seconds": 150, "label": "夜明けまで" }, standard 1.7): once the task can be worked on (its stage, its needs),
+  // play time counts up and the task completes by itself; ext.registerTask(id, { beforeDone: async (ctx, task) => ... }) runs first (a conversation).
+  // ctx.timer(id) -> { elapsed, seconds, left, k }. On respawn the running timers start over. ?qa: 10x by the wall clock (window.__gfRealtime = true: off).
+  state.timers = state.timers || {};
+  const timed = tasks.filter((t) => t.timer && t.timer.seconds > 0);
+  ctx.timer = (id) => { const t = taskById.get(id); if (!t || !t.timer) return null; const e = state.timers[id] || 0, S = t.timer.seconds; return { elapsed: e, seconds: S, left: Math.max(0, S - e), k: Math.min(1, e / S), label: t.timer.label || t.title }; };
+  if (timed.length) {
+    let wallT = 0; const finishing = new Set();
+    const runnable = (t) => !state.tasks.includes(t.id) && ctx.levelIndex(t.stage) === prog.index && (t.needs || []).every((n) => state.tasks.includes(n));
+    systems.push({ id: 'task-timers', def: { update: (dt, c, active) => {
+      const now = performance.now(), wall = wallT ? Math.min(2, (now - wallT) / 1000) : dt; wallT = now;
+      if (!active) return;
+      const step = ctx.qa && !(typeof window !== 'undefined' && window.__gfRealtime) ? wall * 10 : dt;
+      for (const t of timed) {
+        if (!runnable(t) || finishing.has(t.id)) continue;
+        state.timers[t.id] = (state.timers[t.id] || 0) + step;
+        if (state.timers[t.id] >= t.timer.seconds) {
+          finishing.add(t.id);
+          const reg = ext.reg.task.get(t.id) || {};
+          Promise.resolve(reg.beforeDone ? reg.beforeDone(ctx, t) : true).then(() => { finishing.delete(t.id); ctx.completeTask(t.id); });
+        }
+      }
+    } }, inst: null });
+    bus.on('player:respawn', () => { for (const t of timed) if (!state.tasks.includes(t.id)) state.timers[t.id] = 0; });
+  }
   ctx.systems = systems;
   ctx.monologue = (text, sec = 2.2) => ui.say(esc(text), sec);   // the protagonist's thought line (U23); monster hints ("走れ") go through it
+  // the conversation window and the choice (js/talk-ui.js, standard 1.7): ctx.talk(lines | 'key of data/talk.json', o), ctx.choose({ who, text, options })
+  { const T = createTalk({ wm, qa: !!ctx.qa, data: data.talk || null, log: (ctx.talkLog = []) }); ctx.talk = T.talk; ctx.choose = T.choose; }
   if (manifest.things && data.things && cfg.mods && cfg.mods.things) cfg.mods.things.installThings(ctx);   // data/things.json: [E] examine -> card + thought + journal (standard 1.5)
   if (data.terminals && cfg.mods && cfg.mods.terminals) cfg.mods.terminals.installTerminals(ctx);   // data/terminals.json: the 'terminal' screen kind (standard 1.5)
   if (data.monsters && cfg.mods && cfg.mods.monsters) { const ms = cfg.mods.monsters.installMonsters(ctx); if (ms) systems.push({ id: 'monsters', def: { update: (dt, c, active) => ms.update(dt, c, active) }, inst: ms }); }   // the default monster pack (data/monsters.json, standard 1.5)

@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/env-props.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit c6b44d4: js/env-props.js — edit in game-kit and run tools/kit-sync.js */
 // Environment pieces that several games build on their own: doors, windows, benches, vending machines,
 // sign panels, lamps, fences, railings, stairs, pipes, crates, pallets, drums, bins, bags, plants, cones,
 // bollards and cars. Bevelled edges (bevelBox), metre UVs, the shared PBR materials (prop-mats.js), baked
@@ -1051,5 +1051,41 @@ export function car(o = {}) {
       if (det(o) >= 1) cyl(g, o, wr * 0.6, wr * 0.6, 0.012, rim, sx * (W / 2 + 0.002), wr, z, 20, 0, Math.PI / 2);
       if (det(o) >= 1) bx(g, o, 0.02, wr * 1.2, wr * 2.3, dark, sx * (W / 2 - 0.005), clear + 0.18, z, 0.01);
     }
-  return done(g, o, "car", [boxFrom(W + 0.1, H, L + 0.05)]);
+  const out = done(g, o, "car", [boxFrom(W + 0.1, H, L + 0.05)]);
+  if (o.interior) carInterior(out, o, { W, L, H, clear, bodyH, cabL, cabZ, kind });
+  return out;
+}
+// the inside of a car for a ride scene (standard 1.7): o.interior = true adds group "interior" (hidden; show it and hide userData.shell
+// when the camera is inside): floor, roof lining, pillars, side and front glass, dashboard, wheel, seats. userData.seats = eye points
+// [{ id, x, y, z }] in the car's space (front +z, so the right hand is -x; the driver sits on the right, as in Japan).
+function carInterior(car, o, { W, L, H, clear, bodyH, cabL, cabZ }) {
+  const shell = [...car.children];
+  const I = new THREE.Group(); I.name = "interior"; I.visible = false;
+  const trim = pm("plastic", 0x2a2c2a, { roughness: 0.7 }), lining = pm("fabric", 0x8a877e, { roughness: 1 }), seat = pm("fabric", o.seatColor ?? 0x3a3f44, { roughness: 0.95 });
+  const glassIn = new THREE.MeshStandardMaterial({ color: 0x9fb6b2, transparent: true, opacity: 0.12, roughness: 0.1, depthWrite: false });
+  const iw = W - 0.16, floorY = clear + 0.12, roofY = H - 0.08, z0 = cabZ - cabL / 2, z1 = cabZ + cabL / 2;
+  const box = (w, h, d, m, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); I.add(b); return b; };
+  box(iw, 0.04, cabL, trim, 0, floorY, cabZ); box(iw, 0.04, cabL, lining, 0, roofY, cabZ);
+  for (const sx of [-1, 1]) {
+    box(0.05, clear + bodyH - floorY, cabL, trim, sx * iw / 2, (floorY + clear + bodyH) / 2, cabZ);
+    for (const z of [z0 + 0.05, cabZ, z1 - 0.05]) box(0.06, roofY - clear - bodyH, 0.1, trim, sx * iw / 2, (roofY + clear + bodyH) / 2, z);
+    const gl = box(0.01, roofY - clear - bodyH - 0.06, cabL - 0.1, glassIn, sx * (iw / 2 - 0.01), (roofY + clear + bodyH) / 2, cabZ); gl.renderOrder = 2;
+  }
+  box(iw, 0.36, 0.5, trim, 0, clear + bodyH - 0.02, z1 - 0.25);
+  const ws = box(iw, roofY - clear - bodyH, 0.01, glassIn, 0, (roofY + clear + bodyH) / 2, z1 + 0.02); ws.renderOrder = 2;
+  const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.025, 6, 20), trim); wheel.position.set(-iw / 4, clear + bodyH + 0.18, z1 - 0.6); wheel.rotation.x = -0.9; I.add(wheel);
+  const rows = Math.max(1, Math.min(3, Math.floor((cabL - 0.8) / 0.85)));
+  const seats = [];
+  for (let r = 0; r < rows; r++) {
+    const z = z1 - 1.0 - r * 0.85;
+    for (const [sx, id] of [[-1, r ? `rear${r}-right` : "driver"], [1, r ? `rear${r}-left` : "front-left"]]) {   // facing +z, the right hand is -x
+      const x = sx * iw / 4;
+      box(iw / 2 - 0.1, 0.12, 0.5, seat, x, floorY + 0.36, z + 0.05);
+      box(iw / 2 - 0.1, 0.62, 0.12, seat, x, floorY + 0.7, z - 0.22);
+      seats.push({ id, x, y: floorY + 1.15, z: z + 0.05 });
+    }
+  }
+  car.add(I);
+  car.userData.interior = I; car.userData.shell = shell; car.userData.seats = seats;
+  return I;
 }
