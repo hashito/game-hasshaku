@@ -187,7 +187,14 @@ monsters = {
 }
 
 # ---------------------------------------------------------------- release notes (Q10)
-notes = {'version': '1.1.4', 'notes': [
+notes = {'version': '1.1.5', 'notes': [
+    {'version': '1.1.5', 'date': '2026-11-01', 'title': '村の境と隠れ場所を分かりやすくしました', 'items': [
+        {'type': 'change', 'text': '田んぼの囲いの生け垣をなくし、道から開けた田んぼにしました。田んぼの東と裏庭の南には、板塀で囲った空き家があります。'},
+        {'type': 'change', 'text': '村の外れに低い石垣を巡らせ、行ける範囲が見て分かるようにしました。田んぼも少し狭くしました。'},
+        {'type': 'new', 'text': '隠れ場所を三つ増やしました（薪の山の陰、稲藁の山の陰、空き家の門の陰）。'},
+        {'type': 'fix', 'text': '生け垣や小屋の壁を通り抜けられたのを直しました。木や石、柱などにも質感を付けました。'},
+        {'type': 'new', 'text': '会話の画面に、祖父とＫさんの姿が出るようにしました。'},
+    ]},
     {'version': '1.1.4', 'date': '2026-10-31', 'title': '夕霧商店を村の商店らしくしました', 'items': [
         {'type': 'change', 'text': '棚に瓶・缶・袋の品物と値札を並べ、ガラスの陳列台の帳場、冷たい飲みものの冷蔵ケース、氷のケース、野菜の箱を置きました。'},
         {'type': 'change', 'text': '店の入口に暖簾を掛け、表に自動販売機を置きました。'},
@@ -320,4 +327,13 @@ talk = {
         'records': '家と村に、記録が三つ残っているらしい。読めば、この家のことがもう少し分かるかもしれない。',
     },
 }
+# Issue #4: the grandfather and Ｋさん are shown in the talk window - their first line of each conversation carries their portrait
+PORTRAIT = {'祖父': P + 'ph-grandpa.webp', 'Ｋさん': P + 'ph-k.webp'}
+for lines in talk.values():
+    if not isinstance(lines, list): continue
+    seen = set()
+    for L in lines:
+        if isinstance(L, dict) and L.get('who') in PORTRAIT and L['who'] not in seen:
+            seen.add(L['who'])
+            L.setdefault('img', PORTRAIT[L['who']])
 dump('talk.json', talk)

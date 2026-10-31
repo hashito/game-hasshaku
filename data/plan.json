@@ -121,7 +121,7 @@
    "name": "田んぼの畦",
    "x": 5,
    "z": -2,
-   "w": 19,
+   "w": 13,
    "d": 29,
    "kind": "outdoor",
    "floorTex": "mud",
@@ -288,17 +288,8 @@
    "a": "O_FRONT",
    "b": "O_FIELD",
    "x": 5,
-   "z": 3.5,
-   "width": 3.0,
-   "open": true
-  },
-  {
-   "id": "G_FRONT_FIELD2",
-   "a": "O_FRONT",
-   "b": "O_FIELD",
-   "x": 5,
-   "z": 24.5,
-   "width": 3.0,
+   "z": 12.5,
+   "width": 25.0,
    "open": true
   },
   {
@@ -460,15 +451,36 @@
    "id": "H_GATESHED",
    "room": "O_ROAD",
    "x": -3.0,
-   "z": -20.6,
+   "z": -19.4,
    "label": "車止めの脇の藁小屋"
   },
   {
    "id": "H_FIELDHUT",
    "room": "O_FIELD",
-   "x": 21.5,
-   "z": -0.6,
+   "x": 16.4,
+   "z": 25.6,
    "label": "農具小屋"
+  },
+  {
+   "id": "H_WOODPILE",
+   "room": "O_BACK",
+   "x": -24.4,
+   "z": 7.0,
+   "label": "薪の山の陰"
+  },
+  {
+   "id": "H_STRAW",
+   "room": "O_FIELD",
+   "x": 17.0,
+   "z": 11.6,
+   "label": "稲藁の山の陰"
+  },
+  {
+   "id": "H_AKIYA",
+   "room": "O_GARDEN",
+   "x": -12.0,
+   "z": 26.7,
+   "label": "空き家の門の陰"
   }
  ],
  "routes": [

@@ -138,13 +138,24 @@ export function dressVillage(ctx) {
     const stone = (run.room === 'O_ROAD' || run.room === 'O_SHOPFRONT' || run.room === 'O_GATE') && !(run.room === 'O_ROAD' && run.edge === 'e');
     const h = stone ? 1.15 : 1.9, m = stone ? M.stone : M.hedge;
     const b = box(alongX ? len : 0.9, h, alongX ? 0.9 : len, m, cx, h / 2, cz);
+    if (!stone) addCol(cx - (alongX ? len : 0.6) / 2, cz - (alongX ? 0.6 : len) / 2, cx + (alongX ? len : 0.6) / 2, cz + (alongX ? 0.6 : len) / 2, 0, h);   // thick enough that the view (body radius + this) stops outside it (Issue #4)
     if (!stone) for (let i = 0; i < len / 0.7; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(0.42 + rnd() * 0.2, 6, 5), M.hedge); const t = (i + 0.5) / (len / 0.7); s.position.set(alongX ? run.x0 + (run.x1 - run.x0) * t : cx + (rnd() - 0.5) * 0.3, h - 0.05 + rnd() * 0.2, alongX ? cz + (rnd() - 0.5) * 0.3 : run.z0 + (run.z1 - run.z0) * t); if (!nearIndoor(s.position.x, s.position.z, 0.7)) G.add(s); }
     texReady.then((tex) => { if (tex && stone) b.material = tex.material('block_wall_old', { triplanar: true }); });
   }
 
-  // ---------------------------------------------------------------- the rice field (x 6..23, z 1..25): water, rice, the levee path around it
+  // the outer edge of the map: a low old stone wall along every edge that leads nowhere (Issue #4: make the border plain to see), the cedars
+  // behind it; the empty houses' board fences take the east of the field and the south of the back garden
+  for (const run of edgeRuns.filter((e) => !e.shared && !(e.room === 'O_FIELD' && e.edge === 'e') && !(e.room === 'O_GARDEN' && e.edge === 's'))) {
+    const len = Math.hypot(run.x1 - run.x0, run.z1 - run.z0), alongX = run.x1 - run.x0 > run.z1 - run.z0;
+    const out = { n: [0, -1], s: [0, 1], w: [-1, 0], e: [1, 0] }[run.edge], cx = (run.x0 + run.x1) / 2 + out[0] * 0.3, cz = (run.z0 + run.z1) / 2 + out[1] * 0.3;
+    box(alongX ? len : 0.6, 0.85, alongX ? 0.6 : len, M.stone, cx, 0.42, cz);
+    addCol(cx - (alongX ? len : 0.6) / 2, cz - (alongX ? 0.6 : len) / 2, cx + (alongX ? len : 0.6) / 2, cz + (alongX ? 0.6 : len) / 2, 0, 0.85);   // as high as it looks (the plan's wall keeps the player in)
+  }
+
+  // ---------------------------------------------------------------- the rice field (x 6.6..16.2, z 1..23): water, rice, the levee path around it;
+  // open to the road on the west (Issue #4: no hedge round the field), the empty house's board fence on the east
   {
-    const fx0 = 7.6, fx1 = 22.4, fz0 = 1.2, fz1 = 23.4;
+    const fx0 = 6.6, fx1 = 16.2, fz0 = 1.2, fz1 = 23.4;
     const water = new THREE.Mesh(new THREE.PlaneGeometry(fx1 - fx0, fz1 - fz0), M.water); water.rotation.x = -Math.PI / 2; water.position.set((fx0 + fx1) / 2, 0.02, (fz0 + fz1) / 2); G.add(water); own('paddy_water', { size: [fx1 - fx0, fz1 - fz0] }, (m) => { m.transparent = false; m.roughness = 0.25; water.material = m; });
     const rice = new THREE.ConeGeometry(0.05, 0.62, 4); rice.translate(0, 0.31, 0);
     const pts = []; for (let x = fx0 + 0.3; x < fx1 - 0.2; x += 0.5) for (let z = fz0 + 0.3; z < fz1 - 0.2; z += 0.55) pts.push([x + (rnd() - 0.5) * 0.08, z + (rnd() - 0.5) * 0.08]);
@@ -155,11 +166,48 @@ export function dressVillage(ctx) {
     for (const [x0, z0, x1, z1] of [[fx0 - 0.25, fz0 - 0.25, fx1 + 0.25, fz0], [fx0 - 0.25, fz1, fx1 + 0.25, fz1 + 0.25], [fx0 - 0.25, fz0, fx0, fz1], [fx1, fz0, fx1 + 0.25, fz1]]) { const lv = box(x1 - x0, 0.16, z1 - z0, M.moss, (x0 + x1) / 2, 0.08, (z0 + z1) / 2); own('aze_grass', { triplanar: true }, (m) => { lv.material = m; }); }
     addCol(fx0, fz0, fx1, fz1, 0, 0.5, { low: true });
     // a small hut for tools in the corner (a hiding place, plan.hides H_FIELDHUT)
-    hut(21.6, -0.8, 2.6, 1.8, Math.PI);
+    hut(16.6, 25.6, 2.4, 1.6, Math.PI);
+    // a stack of rice straw on the east path (a hiding place, plan.hides H_STRAW)
+    { const g = new THREE.Group(); at(g, 17.35, 0, 10.4); cyl(0.62, 0.7, 1.5, M.straw, 0, 0.75, 0, 12, g); const top = new THREE.Mesh(new THREE.ConeGeometry(0.75, 0.7, 12), M.straw); top.position.y = 1.85; g.add(top); cyl(0.04, 0.04, 2.6, M.darkWood, 0, 1.3, 0, 6, g); addCol(16.85, 9.85, 17.85, 10.95, 0, 2.2); }
   }
+
+  // ---------------------------------------------------------------- empty houses behind board fences (Issue #4): they close the map on the east of the
+  // field and on the south of the back garden, so the edge reads as a place, not an invisible wall
+  const boardFence = (x0, z0, x1, z1, h = 1.7, gap = null) => {
+    const alongX = Math.abs(x1 - x0) > Math.abs(z1 - z0), len = Math.hypot(x1 - x0, z1 - z0), n = Math.ceil(len / 0.9);
+    for (let i = 0; i < n; i++) {
+      const t0 = i / n, t1 = (i + 1) / n, cx = x0 + (x1 - x0) * (t0 + t1) / 2, cz = z0 + (z1 - z0) * (t0 + t1) / 2;
+      if (gap && Math.hypot(cx - gap[0], cz - gap[1]) < gap[2]) continue;
+      const b = box(alongX ? len / n - 0.02 : 0.05, h - (i % 3 === 1 ? 0.12 : 0), alongX ? 0.05 : len / n - 0.02, M.wood, cx, (h - (i % 3 === 1 ? 0.12 : 0)) / 2, cz); b.rotation.y = (rnd() - 0.5) * 0.03;
+    }
+    for (let i = 0; i <= n; i += 2) { const t = i / n; cyl(0.06, 0.07, h + 0.15, M.darkWood, x0 + (x1 - x0) * t, (h + 0.15) / 2, z0 + (z1 - z0) * t, 6); }
+    for (const y of [0.35, h - 0.25]) box(alongX ? len : 0.06, 0.07, alongX ? 0.06 : len, M.beam, (x0 + x1) / 2 + (alongX ? 0 : 0.05), y, (z0 + z1) / 2 + (alongX ? 0.05 : 0));
+    const segs = gap ? [[x0, z0, gap[0] - (alongX ? gap[2] : 0), gap[1] - (alongX ? 0 : gap[2])], [gap[0] + (alongX ? gap[2] : 0), gap[1] + (alongX ? 0 : gap[2]), x1, z1]] : [[x0, z0, x1, z1]];
+    for (const [a, b, c, d] of segs) addCol(Math.min(a, c) - 0.15, Math.min(b, d) - 0.15, Math.max(a, c) + 0.15, Math.max(b, d) + 0.15, 0, h);
+  };
+  const akiya = (x0, z0, w, d) => {
+    // a shut farmhouse: weathered board walls, rain shutters, a tiled roof with a sag, grass up to the sill
+    const cx = x0 + w / 2, cz = z0 + d / 2, wall = 2.8;
+    box(w, wall, d, M.wood, cx, wall / 2, cz);
+    for (let i = 0; i < Math.floor(w / 1.8); i++) box(0.9, 1.7, 0.04, M.darkWood, x0 + 0.9 + i * 1.8, 1.15, z0 - 0.03);
+    const half = d / 2 + 0.7, rise = 1.6, len = Math.hypot(half, rise), sl = Math.atan2(rise, half);
+    for (const s of [-1, 1]) { const r = box(w + 1.0, 0.14, len, M.roof, cx, wall + rise / 2, cz + s * half / 2); r.rotation.x = s * sl; r.rotation.z = s * 0.015; }
+    for (let i = 0; i < 26; i++) { const t = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.5 + rnd() * 0.4, 4), M.moss); t.position.set(x0 + rnd() * w, 0.25, z0 - 0.3 - rnd() * 0.6); G.add(t); }
+  };
+  akiya(19.5, 5.0, 8, 9); boardFence(18.35, -1.8, 18.35, 26.8);
+  akiya(-19.0, 29.5, 10, 6); boardFence(-25.8, 27.35, -4.2, 27.35, 1.7, [-12.0, 27.35, 1.1]);
+  // the gate of the empty house behind the garden: posts, a small roof and wing walls make a nook (a hiding place, plan.hides H_AKIYA)
+  { for (const x of [-13.15, -10.85]) { box(0.16, 2.3, 0.16, M.darkWood, x, 1.15, 27.3); addCol(x - 0.12, 27.2, x + 0.12, 27.45, 0, 2.3); }
+    const r = box(2.9, 0.1, 1.1, M.roof, -12.0, 2.38, 27.0); r.rotation.x = -0.1;
+    for (const x of [-13.15, -10.85]) { box(0.05, 1.7, 1.0, M.wood, x, 0.85, 26.8); addCol(x - 0.05, 26.3, x + 0.05, 27.3, 0, 1.7); }
+    const door = box(2.1, 1.9, 0.06, M.darkWood, -12.0, 0.95, 27.55); addCol(-13.0, 27.5, -11.0, 27.6, 0, 1.9); void door; }
+  // a woodpile against the west edge of the back of the house (a hiding place, plan.hides H_WOODPILE)
+  { const g = new THREE.Group(); at(g, -25.45, 0, 7.0); for (let y = 0; y < 6; y++) for (let k = 0; k < 9; k++) { const c = cyl(0.11, 0.11, 0.9, M.wood, 0, 0.12 + y * 0.21, -0.95 + k * 0.24 + (y % 2) * 0.1, 7, g); c.rotation.z = Math.PI / 2; }
+    const r = box(1.2, 0.06, 2.6, M.roof, 0, 1.5, 0, g); r.rotation.z = 0.15; addCol(-26.0, 5.75, -24.95, 8.25, 0, 1.5); }
   function hut(x, z, w, d, ry) {
     const g = new THREE.Group(); at(g, x, 0, z, ry);
-    box(w, 2.1, 0.08, M.wood, 0, 1.05, -d / 2, g); box(0.08, 2.1, d, M.wood, -w / 2, 1.05, 0, g); box(0.08, 2.1, d, M.wood, w / 2, 1.05, 0, g);
+    const walls = [box(w, 2.1, 0.08, M.wood, 0, 1.05, -d / 2, g), box(0.08, 2.1, d, M.wood, -w / 2, 1.05, 0, g), box(0.08, 2.1, d, M.wood, w / 2, 1.05, 0, g)];
+    g.updateMatrixWorld(true); for (const m of walls) { const b = new THREE.Box3().setFromObject(m); addCol(b.min.x - 0.04, b.min.z - 0.04, b.max.x + 0.04, b.max.z + 0.04, 0, 2.1); }   // every wall is solid (Issue #4)
     const roof = box(w + 0.5, 0.08, d + 0.6, M.roof, 0, 2.2, 0.1, g); roof.rotation.x = 0.12;
     return g;
   }
@@ -177,7 +225,7 @@ export function dressVillage(ctx) {
   // the bus stop shelter on the road (a hiding place, plan.hides H_BUSSTOP): open towards the road
   { const g = hut(-3.25, -6.5, 2.2, 1.3, -Math.PI / 2); box(1.6, 0.08, 0.4, M.wood, 0, 0.45, -0.3, g); addCol(-4.0, -7.7, -3.85, -5.3); const bs = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), new THREE.MeshStandardMaterial({ map: canvasTexture(['バス', '村口'], { w: 256, h: 256, bg: '#e8e2d0', fg: '#2a3a6a', head: true }) })); cyl(0.03, 0.03, 2.1, M.pole, -2.0, 1.05, -8.1, 6); bs.position.set(-2.0, 1.95, -8.07); G.add(bs); }
   // the straw shed by the gate (a hiding place, plan.hides H_GATESHED)
-  { const g = hut(-3.3, -20.6, 2.0, 1.2, -Math.PI / 2); for (let i = 0; i < 3; i++) cyl(0.3, 0.32, 0.7, M.straw, 0, 0.35, -0.2 + i * 0.01, 8, g).position.x = -0.6 + i * 0.6; addCol(-4.0, -21.7, -3.85, -19.5); }
+  { const g = hut(-3.3, -19.4, 2.0, 1.2, -Math.PI / 2); for (let i = 0; i < 3; i++) cyl(0.3, 0.32, 0.7, M.straw, 0, 0.35, -0.2 + i * 0.01, 8, g).position.x = -0.6 + i * 0.6; }
   // signs on the road (text is HTML-free canvas, never inside generated pictures)
   const sign = (lines, x, z, ry, w = 1.1) => { const g = new THREE.Group(); cyl(0.04, 0.04, 1.6, M.darkWood, 0, 0.8, 0, 6, g); const p = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 0.45), new THREE.MeshStandardMaterial({ map: canvasTexture(lines, { w: 512, h: 230, bg: '#2c2621', fg: '#e8e0c8', border: '#55493c' }), roughness: 0.9, side: THREE.DoubleSide })); p.position.set(0, 1.5, 0.03); g.add(p); return at(g, x, 0, z, ry); };
   sign(['← 祖父の家'], 3.6, 18.5, -Math.PI / 2);
@@ -455,6 +503,17 @@ export function dressVillage(ctx) {
     const ui = o.userData && o.userData.interact;
     if (ui && ui.kind === 'doc' && ui.id === 'N_NOTICE') { o.rotation.x = Math.PI / 2; o.scale.setScalar(1.6); o.position.z = -23.72; }
   }
+  // every plain material gets a light texture from the shared catalog (Issue #4: "put a texture on basically everything"): world-space
+  // (triplanar) mapping, so the boxes and cylinders need no UVs; the colour stays as a tint
+  texReady.then((tex) => {
+    if (!tex) return;
+    const has = (id) => (tex.catalog.textures || []).some((e) => e.id === id);
+    const look = new Map([[M.wood, ['wood_cedar_old', 1.0, 0xc8b8a0]], [M.darkWood, ['wood_dark', 0.8, 0xb0a090]], [M.beam, ['wood_dark', 0.8, 0x908070]], [M.pole, ['wood_worn_grey', 1.2, 0xd0ccc4]],
+      [M.stone, ['block_wall_old', 1.0, 0xd8d8d0]], [M.moss, ['moss', 1.0, 0xffffff]], [M.hedge, ['moss', 0.8, 0x7a9a6a]], [M.straw, ['grass_dry', 0.6, 0xe0d0a0]], [M.paper, ['washi_paper', 0.5, 0xffffff]], [M.red, ['wood_worn_grey', 1.0, 0xc05040]]]);
+    const made = new Map();
+    for (const [m0, [id, scale, tint]] of look) if (has(id)) { const m = tex.material(id, { triplanar: scale }); m.color.set(tint); made.set(m0, m); }
+    ctx.scene.traverse((o) => { if (o.isMesh && made.has(o.material)) o.material = made.get(o.material); });
+  });
   // every texture (the kit's and ours) is on its mesh: the boot step in story.js pre-compiles the shaders after this
   api.ready = Promise.all([texReady, ownReady]).then(() => new Promise((r) => setTimeout(r, 50)));
   return api;

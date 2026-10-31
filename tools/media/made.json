@@ -143,6 +143,15 @@
   "seed": 73989002,
   "prompt": "Close-up of an opened brown kraft paper bag standing on a dark wooden shop counter, inside the bag a glass bottle of dark soy sauce with a plain red cap and a small plain pack of four AA batteries, unbranded plain packaging with nothing printed, warm light of a bare bulb, shallow depth of field, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
  },
+ "ph-grandpa": {
+  "file": "assets/photos/ph-grandpa.webp",
+  "bytes": 109398,
+  "size": "657x960",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 455044801,
+  "prompt": "Portrait of a thin Japanese man in his late seventies sitting on his knees on tatami in a dim old farmhouse living room at dusk, short white hair, a plain grey shirt and an old cardigan, a tired kind face with deep lines, looking just past the camera with worry, warm low light from a pendant lamp, waist up, no other people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
  "ph-hashira": {
   "file": "assets/photos/ph-hashira.webp",
   "bytes": 99636,
@@ -169,6 +178,15 @@
   "model": "flux1-dev-fp8 (ComfyUI, local)",
   "seed": 876101230,
   "prompt": "A small weathered moss-covered stone Jizo statue standing by a rural gravel road at dusk, wearing a new red cloth bib, a small neat heap of white salt at its feet, rice fields and dark cedar forest behind, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-k": {
+  "file": "assets/photos/ph-k.webp",
+  "bytes": 100898,
+  "size": "657x960",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 288995049,
+  "prompt": "Portrait of a stern Japanese woman in her sixties with a short black bob haircut and a dark plain coat over a white blouse, standing in the doorway of an old farmhouse at night, holding a small bundle of white paper talismans against her chest, a grave unsmiling face, lit from the side by a single warm lamp, waist up, no other people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
  },
  "ph-kakejiku": {
   "file": "assets/photos/ph-kakejiku.webp",

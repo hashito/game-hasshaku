@@ -22,7 +22,7 @@ rooms = [
     room('O_GARDEN', '裏庭', -26, 19, 22, 8, kind='outdoor', floorTex='soil', edge='none'),
     room('O_BACK', '家の西', -26, -2, 6, 21, kind='outdoor', floorTex='grass_dry', edge='none'),
     room('O_NORTH', '家の北', -20, -2, 16, 5, kind='outdoor', floorTex='moss', edge='none'),
-    room('O_FIELD', '田んぼの畦', 5, -2, 19, 29, kind='outdoor', floorTex='mud', edge='none'),
+    room('O_FIELD', '田んぼの畦', 5, -2, 13, 29, kind='outdoor', floorTex='mud', edge='none'),
     room('O_ROAD', '村道', -4, -24, 9, 22, kind='outdoor', floorTex='gravel', edge='none'),
     room('O_SHOPFRONT', '商店の前', -9, -18, 5, 9, kind='outdoor', floorTex='gravel', edge='none'),
     room('O_SHRINE', '道端の社', 5, -18, 13, 16, kind='outdoor', floorTex='moss', edge='none'),
@@ -47,8 +47,8 @@ doors = [
     door('G_GARDEN_BACK', 'O_GARDEN', 'O_BACK', -23, 19, 5.6, open=True),
     door('G_BACK_NORTH', 'O_BACK', 'O_NORTH', -20, 0.5, 4.6, open=True),
     door('G_NORTH_FRONT', 'O_NORTH', 'O_FRONT', -4, 0.5, 4.6, open=True),
-    door('G_FRONT_FIELD', 'O_FRONT', 'O_FIELD', 5, 3.5, 3.0, open=True),
-    door('G_FRONT_FIELD2', 'O_FRONT', 'O_FIELD', 5, 24.5, 3.0, open=True),
+    # the field lies open beside the road (Issue #4: no hedge round the field); only its two ends are closed
+    door('G_FRONT_FIELD', 'O_FRONT', 'O_FIELD', 5, 12.5, 25.0, open=True),
     door('G_FRONT_ROAD', 'O_FRONT', 'O_ROAD', 0.5, -2, 8.6, open=True),
     door('G_ROAD_SHOPFRONT', 'O_ROAD', 'O_SHOPFRONT', -4, -13.5, 8.6, open=True),
     door('G_ROAD_SHRINE', 'O_ROAD', 'O_SHRINE', 5, -12, 4.0, open=True),
@@ -76,8 +76,12 @@ hides = [
     dict(id='H_SHRINE', room='O_SHRINE', x=15.8, z=-15.6, label='社の裏'),
     dict(id='H_SHOPSIDE', room='O_SHOPFRONT', x=-6.3, z=-16.9, label='商店の軒下の樽の陰'),
     dict(id='H_BUSSTOP', room='O_ROAD', x=-3.0, z=-6.5, label='バス停の待合小屋'),
-    dict(id='H_GATESHED', room='O_ROAD', x=-3.0, z=-20.6, label='車止めの脇の藁小屋'),
-    dict(id='H_FIELDHUT', room='O_FIELD', x=21.5, z=-0.6, label='農具小屋'),
+    dict(id='H_GATESHED', room='O_ROAD', x=-3.0, z=-19.4, label='車止めの脇の藁小屋'),
+    dict(id='H_FIELDHUT', room='O_FIELD', x=16.4, z=25.6, label='農具小屋'),
+    # Issue #4: more places to hide
+    dict(id='H_WOODPILE', room='O_BACK', x=-24.4, z=7.0, label='薪の山の陰'),
+    dict(id='H_STRAW', room='O_FIELD', x=17.0, z=11.6, label='稲藁の山の陰'),
+    dict(id='H_AKIYA', room='O_GARDEN', x=-12.0, z=26.7, label='空き家の門の陰'),
 ]
 
 plan = dict(
