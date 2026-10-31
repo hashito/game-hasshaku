@@ -14,6 +14,7 @@ import { dressVillage } from './village.js';
 import { makeHasshaku } from './hasshaku.js';
 import { createSound } from './sound.js';
 import { saltGame, gateGame } from './minigames.js';
+import { prewarm } from '../kit/frame-guard.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -33,6 +34,28 @@ export function curseStep(curse, { grip, yaw, pitch }, dt) {
 export default function story(ext) {
   const st = { seen: false, genkan: false, zashiki: false, gate: [0, 0, 0], deaths: 0, night: 0, dark: { NW: 0, NE: 0, SW: 0, SE: 0 }, warned: false, fired: [], ride: 0, curse: 0, startedAt: 0, played: 0, first: { road: false, po: false } };
   let ctx = null, V = null, T = null, snd = null, H = null, light = null, dying = false, gripKey = false, gripTouch = false;
+  // behind the title (the start button waits): wait for the textures, then compile the shaders of every stage's lights and upload
+  // the textures, so pressing start does not freeze for seconds while the GPU driver links the programs (GPU perf, Issue #3)
+  ext.registerBoot('hk-prewarm', async (c, report) => {
+    if (!V) return;
+    report(0, '村を準備中…');
+    await Promise.race([V.ready, new Promise((r) => setTimeout(r, 15000))]);
+    const real = Object.getOwnPropertyDescriptor(c.prog, 'index');
+    // the look's post pass draws the scene into its own target (no tone mapping, linear output): compile for that target, as play does
+    const warm = async () => { const rt = c.look && c.look.post && c.look.post.rt; const was = c.renderer.getRenderTarget(); if (rt) c.renderer.setRenderTarget(rt);
+      try { await prewarm(c.renderer, c.scene, c.camera, { render: true }); } finally { c.renderer.setRenderTarget(was); } };
+    try {
+      for (let i = 0; i < STAGE_SKY.length; i++) {
+        Object.defineProperty(c.prog, 'index', { get: () => i, configurable: true }); applyStage();
+        // the flashlight on and off (F): a light appearing / disappearing changes every lit program
+        for (const on of [false, true]) { if (light) light.visible = on; await warm(); }
+        report((i + 1) / STAGE_SKY.length, '村を準備中…');
+      }
+    } finally {
+      if (real) Object.defineProperty(c.prog, 'index', real); else delete c.prog.index;
+      applyStage(); if (light) light.visible = lvl() >= 1 && lvl() !== 4;
+    }
+  });
   const lvl = () => (ctx && ctx.prog ? ctx.prog.index : 0);
   const done = (id) => ctx.state.tasks.includes(id);
   const say = (text, sec) => ctx.monologue(text, sec ?? Math.min(9, 2.4 + String(text).length * 0.09));

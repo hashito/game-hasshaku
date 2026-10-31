@@ -367,5 +367,7 @@ export function dressVillage(ctx) {
     const ui = o.userData && o.userData.interact;
     if (ui && ui.kind === 'doc' && ui.id === 'N_NOTICE') { o.rotation.x = Math.PI / 2; o.scale.setScalar(1.6); o.position.z = -23.72; }
   }
+  // every texture (the kit's and ours) is on its mesh: the boot step in story.js pre-compiles the shaders after this
+  api.ready = Promise.all([texReady, ownReady]).then(() => new Promise((r) => setTimeout(r, 50)));
   return api;
 }
