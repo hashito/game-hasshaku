@@ -1,5 +1,5 @@
 {
-  "kit": "c6b44d4",
+  "kit": "49b581e",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -64,7 +64,8 @@
     "item-kinds",
     "item-models",
     "talk-ui",
-    "room-types"
+    "room-types",
+    "interior-finish"
   ],
   "css": "css/kit.css",
   "cssExtra": [
@@ -179,7 +180,24 @@
     "js/kit/item-kinds.js": "170ca47c72cb",
     "js/kit/item-models.js": "611975f171a7",
     "js/kit/talk-ui.js": "7e860befbb70",
-    "js/kit/room-types.js": "a2993c599dea"
+    "js/kit/room-types.js": "a2993c599dea",
+    "js\\kit\\interior-finish.js": "d83cb4466f85",
+    "js\\kit\\plan-check.js": "90ff7161541b",
+    "js\\kit\\schema-check.js": "4aa2e6649b29",
+    "js\\kit\\monster-ai.js": "6b12618090ae",
+    "js\\kit\\things-data.js": "cf0796317eae",
+    "js\\kit\\terminal-data.js": "b17f0493a17c",
+    "js\\kit\\recipes-data.js": "da4c3ffccbe3",
+    "js\\kit\\release-notes.js": "d8ddffb53e2a",
+    "js\\kit\\ui.js": "7c217016955f",
+    "js\\kit\\gf-test.js": "7d0d181ce548",
+    "js\\kit\\progression.js": "b3ae970812d7",
+    "js\\kit\\game-data.js": "00c47779edc1",
+    "js\\kit\\task-minigames.js": "ce980fe2c074",
+    "js\\kit\\interact-select.js": "e92bb2810a7f",
+    "js\\kit\\text-contrast.js": "7fee755af57a",
+    "js\\kit\\monster-nav.js": "aa4dd24b4872",
+    "js\\kit\\monster-escape.js": "4a9e4dd0e05d"
   },
   "textures": [
     "planks_worn",

@@ -12,6 +12,7 @@ import * as E from '../kit/env-props.js';
 import * as P from '../kit/props.js';
 import { makeCharacter } from '../kit/character.js';
 import { TextureLibrary, trailSteps } from '../kit/texture-library.js';
+import { finishInterior } from '../kit/interior-finish.js';
 
 const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
 const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.9, ...o });
@@ -229,47 +230,10 @@ export function dressVillage(ctx) {
     const sm = []; ['salt_white', 'salt_grey', 'salt_black'].forEach((id, i) => own(id, { size: [0.3, 0.3] }, (m) => { sm[i] = m.map; if (sm.filter(Boolean).length === 3) api.saltMaps = sm; }));
   });
 
-  // ---- inside the house (Issue #4): tatami laid as mats with their cloth borders, a wooden ceiling, the kamoi beam at the door
-  // height, skirting and a ceiling rim, corner posts, lintels in the wall's own look, and softer pendants (no white-hot ceiling)
-  const houseRooms = plan.rooms.filter((r) => r.kind !== 'outdoor' && r.x >= H.x0 - 0.01 && r.x + r.w <= H.x1 + 0.01 && r.z >= H.z0 - 0.01 && r.z + r.d <= H.z1 + 0.01);
-  const indoorRooms = plan.rooms.filter((r) => r.kind !== 'outdoor');
-  const tatamiBorders = (w, d) => {
-    const P = 128, c = document.createElement('canvas'); c.width = Math.round(w * P); c.height = Math.round(d * P);
-    const g = c.getContext('2d'), mw = 1.8, md = 0.9;
-    for (let j = 0, z = 0; z < d; j++, z += md) for (let x = j % 2 ? -mw / 2 : 0; x < w; x += mw) {
-      g.fillStyle = `rgba(${rnd() < 0.5 ? '40,30,10' : '255,240,200'},${(0.03 + rnd() * 0.05).toFixed(3)})`; g.fillRect(x * P, z * P, mw * P, md * P);   // each mat ages on its own
-      g.fillStyle = 'rgba(0,0,0,0.45)'; g.fillRect(x * P - 1, z * P, 2, md * P);   // the short ends butt together
-      g.fillStyle = '#26241d'; g.fillRect(x * P, z * P, mw * P, 0.035 * P); g.fillRect(x * P, (z + md) * P - 0.035 * P, mw * P, 0.035 * P);   // heri on the long sides
-    }
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
-  };
-  for (const r of indoorRooms) { const lamp = world.group.getObjectByName(`lamp:${r.id}`); if (lamp) lamp.intensity *= 0.6; }
-  for (const r of houseRooms) {
-    const cx = r.x + r.w / 2, cz = r.z + r.d / 2;
-    if (/tatami/.test(r.floorTex || '')) { const p = new THREE.Mesh(new THREE.PlaneGeometry(r.w, r.d), new THREE.MeshStandardMaterial({ map: tatamiBorders(r.w, r.d), transparent: true, depthWrite: false, roughness: 0.95 })); p.rotation.x = -Math.PI / 2; p.position.set(cx, 0.006, cz); p.receiveShadow = true; G.add(p); }
-    const sides = [[r.x, r.z, r.x + r.w, r.z, 0, 1], [r.x, r.z + r.d, r.x + r.w, r.z + r.d, 0, -1], [r.x, r.z, r.x, r.z + r.d, 1, 0], [r.x + r.w, r.z, r.x + r.w, r.z + r.d, -1, 0]];
-    for (const [x0, z0, x1, z1, nx, nz] of sides) {
-      const along = x1 - x0 > 0, len = along ? x1 - x0 : z1 - z0;
-      for (const [y, h, t] of [[2.27, 0.1, 0.07], [0.05, 0.1, 0.03], [2.97, 0.06, 0.05]]) {
-        const off = 0.08 + t / 2; box(along ? len : t, h, along ? t : len, M.beam, (x0 + x1) / 2 + nx * off, y, (z0 + z1) / 2 + nz * off).castShadow = false;
-      }
-    }
-    for (const [x, z] of [[r.x + 0.15, r.z + 0.15], [r.x + r.w - 0.15, r.z + 0.15], [r.x + 0.15, r.z + r.d - 0.15], [r.x + r.w - 0.15, r.z + r.d - 0.15]]) box(0.14, 3.0, 0.14, M.darkWood, x, 1.5, z).castShadow = false;
-  }
-  texReady.then((tex) => {
-    if (!tex) return;
-    const ceilM = tex.material('wood_cedar_old', { triplanar: 1.2 }); ceilM.color.set(0x8a7a68);
-    for (const r of indoorRooms) { const c = world.group.getObjectByName(`ceil:${r.id}`); if (c) c.material = ceilM; }
-    // the kit's lintels (unnamed thin boxes above the doors) take the clay of the walls they belong to
-    const clay = tex.material('clay_wall', { triplanar: true });
-    world.group.traverse((o) => { if (o.isMesh && !o.name && o.geometry && o.geometry.parameters && o.geometry.parameters.height < 1 && o.position.y > 2 && o.position.x > H.x0 - 0.1 && o.position.x < H.x1 + 0.1 && o.position.z > H.z0 - 0.1 && o.position.z < H.z1 + 0.1) o.material = clay; });
-  });
-
-  // the kit's shelves and tables are office furniture (steel frames, grey legs): in the old house and shop every part is dark wood,
-  // so the rooms keep one palette (Issue #4)
-  const woodM = M.darkWood.clone(); texReady.then((tex) => { if (tex) { const m = tex.material('wood_dark', { triplanar: 0.8 }); woodM.map = m.map; woodM.color.set(0x8a7560); woodM.needsUpdate = true; } });
-  const hsl = {}, woody = (obj) => { obj.traverse((o) => { if (o.isMesh && o.material && o.material.color && o.material.color.getHSL(hsl).s < 0.15) o.material = woodM; }); return obj; };   // grey = steel
-  const shelf = (...a) => woody(P.shelf({}, ...a)), table = (...a) => woody(P.table({}, ...a));
+  // ---- inside the house and the shop (Issue #4): the standard's look for old Japanese interiors (js/kit/interior-finish.js):
+  // tatami with borders, board ceilings, kamoi / skirting / posts, lintels in the wall's clay, wooden shelves and tables, softer pendants
+  const fin = finishInterior({ world, plan, tex: texReady });
+  const shelf = (...a) => fin.woody(P.shelf({}, ...a)), table = (...a) => fin.woody(P.table({}, ...a));
 
   // ---- 北の座敷: four salt plates on stands, futon, the clock, the north lattice window
   const plates = {};
