@@ -20,7 +20,7 @@ const M = {
   hedge: mat(0x2c4428), paper: mat(0xe6dfc8, { roughness: 1 }), salt: mat(0xf2eee2, { roughness: 1 }), plate: mat(0xd6d0c0, { roughness: 0.5 }),
   red: mat(0xa8452f), roof: mat(0x2f3836, { roughness: 0.8 }), water: new THREE.MeshStandardMaterial({ color: 0x2c3b3a, roughness: 0.15, metalness: 0.2, transparent: true, opacity: 0.85 }),
   rice: mat(0x4f6b35), bark: mat(0x3a2f26), cedar: mat(0x1f3326), pole: mat(0x6a645a), wire: new THREE.LineBasicMaterial({ color: 0x1a1a1a }),
-  futon: mat(0xc9c2ad), futonCover: mat(0x6c7a8a), cloth: mat(0x7a3b30), brass: mat(0xb08a4a, { metalness: 0.6, roughness: 0.4 }), lampGlow: new THREE.MeshStandardMaterial({ color: 0xffe2b0, emissive: 0xffc070, emissiveIntensity: 1.6 }),
+  futon: mat(0xc9c2ad), futonCover: mat(0x5d5a50), cloth: mat(0x5a3428), brass: mat(0xb08a4a, { metalness: 0.6, roughness: 0.4 }), lampGlow: new THREE.MeshStandardMaterial({ color: 0xffe2b0, emissive: 0xffc070, emissiveIntensity: 1.6 }),
   hidden: new THREE.MeshBasicMaterial({ visible: false }),
 };
 
@@ -78,8 +78,10 @@ export function dressVillage(ctx) {
       edgeRuns.push({ x0: b.min.x, z0: b.min.z, x1: b.max.x, z1: b.max.z, shared: !!other, room: r.id, edge });
     }
   }
-  // lintels over the openings of outdoor rooms: nothing to show
-  world.group.traverse((o) => { if (o.isMesh && !o.name && o.material && o.material.color && o.geometry && o.geometry.parameters && o.geometry.parameters.height < 1 && o.position.y > 2) { const r = roomOf(o.position.x, o.position.z); if (!r || r.kind === 'outdoor') o.visible = false; } });
+  // lintels over the openings between two outdoor rooms: nothing to show. A lintel stands on the line between two rooms, so look
+  // half a metre to each side: one indoor room there keeps it (the wall above a house or shop door, Issue #4)
+  const indoorNear = (x, z) => [[0.5, 0], [-0.5, 0], [0, 0.5], [0, -0.5]].some(([dx, dz]) => { const r = roomOf(x + dx, z + dz); return r && r.kind !== 'outdoor'; });
+  world.group.traverse((o) => { if (o.isMesh && !o.name && o.material && o.material.color && o.geometry && o.geometry.parameters && o.geometry.parameters.height < 1 && o.position.y > 2 && !indoorNear(o.position.x, o.position.z)) o.visible = false; });
 
   // openings between outdoor rooms: no panel, always open, not something to interact with
   for (const d of plan.doors) {
@@ -127,13 +129,14 @@ export function dressVillage(ctx) {
   }
   for (let i = 0; i < 14; i++) { const a = (i / 14) * Math.PI * 2, r = 105 + rnd() * 20; const h = 34 + rnd() * 26; const m = new THREE.Mesh(new THREE.ConeGeometry(30 + rnd() * 14, h, 6), mat(0x1c2a27)); m.position.set(Math.cos(a) * r, h / 2 - 2, -20 + Math.sin(a) * r); G.add(m); }
 
-  // hedges / stone walls on the shared edges between outdoor rooms (the collider is the plan's wall)
+  // hedges / stone walls on the shared edges between outdoor rooms (the collider is the plan's wall); nothing pokes into a building
+  const nearIndoor = (x, z, pad) => plan.rooms.some((r) => r.kind !== 'outdoor' && x > r.x - pad && x < r.x + r.w + pad && z > r.z - pad && z < r.z + r.d + pad);
   for (const run of edgeRuns.filter((e) => e.shared)) {
     const len = Math.hypot(run.x1 - run.x0, run.z1 - run.z0), cx = (run.x0 + run.x1) / 2, cz = (run.z0 + run.z1) / 2, alongX = run.x1 - run.x0 > run.z1 - run.z0;
     const stone = (run.room === 'O_ROAD' || run.room === 'O_SHOPFRONT' || run.room === 'O_GATE') && !(run.room === 'O_ROAD' && run.edge === 'e');
     const h = stone ? 1.15 : 1.9, m = stone ? M.stone : M.hedge;
     const b = box(alongX ? len : 0.9, h, alongX ? 0.9 : len, m, cx, h / 2, cz);
-    if (!stone) for (let i = 0; i < len / 0.7; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(0.42 + rnd() * 0.2, 6, 5), M.hedge); const t = (i + 0.5) / (len / 0.7); s.position.set(alongX ? run.x0 + (run.x1 - run.x0) * t : cx + (rnd() - 0.5) * 0.3, h - 0.05 + rnd() * 0.2, alongX ? cz + (rnd() - 0.5) * 0.3 : run.z0 + (run.z1 - run.z0) * t); G.add(s); }
+    if (!stone) for (let i = 0; i < len / 0.7; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(0.42 + rnd() * 0.2, 6, 5), M.hedge); const t = (i + 0.5) / (len / 0.7); s.position.set(alongX ? run.x0 + (run.x1 - run.x0) * t : cx + (rnd() - 0.5) * 0.3, h - 0.05 + rnd() * 0.2, alongX ? cz + (rnd() - 0.5) * 0.3 : run.z0 + (run.z1 - run.z0) * t); if (!nearIndoor(s.position.x, s.position.z, 0.7)) G.add(s); }
     texReady.then((tex) => { if (tex && stone) b.material = tex.material('block_wall_old', { triplanar: true }); });
   }
 
@@ -188,26 +191,28 @@ export function dressVillage(ctx) {
   // ---------------------------------------------------------------- the grandfather's house
   const H = { x0: -20, x1: -4, z0: 3, z1: 19 };
   {
-    // gable roof along x (ridge over z = 11), deep eaves
-    const ridgeY = 4.9, eave = 1.1, wallTop = 3.0, half = (H.z1 - H.z0) / 2 + eave, rise = ridgeY - wallTop + 0.3;
+    // gable roof along x (ridge over z = 11), deep eaves. The slabs sit on a wall plate above the ceiling (3.05 m), so no tile
+    // shows inside the rooms (Issue #4); a board closes the gap between the wall top and the roof on the long sides
+    const ridgeY = 5.3, eave = 1.1, wallTop = 3.0, roofBase = 3.42, half = (H.z1 - H.z0) / 2 + eave, rise = ridgeY - roofBase + 0.3;
     const slope = Math.atan2(rise, half), len = Math.hypot(half, rise);
-    for (const s of [-1, 1]) { const r = box(H.x1 - H.x0 + 2 * eave, 0.16, len, M.roof, (H.x0 + H.x1) / 2, (wallTop - 0.3 + ridgeY) / 2, 11 + s * half / 2); r.rotation.x = s * slope; }
+    for (const s of [-1, 1]) { const r = box(H.x1 - H.x0 + 2 * eave, 0.16, len, M.roof, (H.x0 + H.x1) / 2, (roofBase - 0.3 + ridgeY) / 2, 11 + s * half / 2); r.rotation.x = s * slope; }
+    for (const z of [H.z0 - 0.06, H.z1 + 0.06]) box(H.x1 - H.x0 + 0.1, roofBase - wallTop + 0.1, 0.1, M.beam, (H.x0 + H.x1) / 2, (wallTop + roofBase) / 2, z);
     // gable ends (triangles)
     const tri = new THREE.Shape(); tri.moveTo(-8, 0); tri.lineTo(8, 0); tri.lineTo(0, ridgeY - wallTop); tri.closePath();
     for (const x of [H.x0, H.x1]) { const m = new THREE.Mesh(new THREE.ShapeGeometry(tri), M.wood); m.rotation.y = Math.PI / 2; m.position.set(x, wallTop, 11); m.material = new THREE.MeshStandardMaterial({ color: 0x4e3d2c, side: THREE.DoubleSide, roughness: 0.95 }); G.add(m); }
     box(H.x1 - H.x0 + 2 * eave + 0.2, 0.22, 0.3, M.beam, (H.x0 + H.x1) / 2, ridgeY + 0.1, 11);
     // stone base and the engawa (veranda) on the east side by the entrance
-    box(H.x1 - H.x0 + 0.4, 0.22, H.z1 - H.z0 + 0.4, M.stone, (H.x0 + H.x1) / 2, -0.09, 11);
+    box(H.x1 - H.x0 + 0.4, 0.22, H.z1 - H.z0 + 0.4, M.stone, (H.x0 + H.x1) / 2, -0.125, 11);   // its top stays under the floors (it hid them, Issue #4)
     box(1.2, 0.3, 7.5, M.wood, -3.4, 0.15, 15.2); addCol(-4.0, 11.4, -2.8, 13.9, 0, 0.6, { low: true }); addCol(-4.0, 17.3, -2.8, 19, 0, 0.6, { low: true });
     for (const z of [11.6, 18.8]) { cyl(0.08, 0.08, 3.0, M.beam, -2.85, 1.5, z, 8); addCol(-3.0, z - 0.15, -2.7, z + 0.15); }
     // the step stone at the door
     box(1.0, 0.18, 0.7, M.stone, -3.3, 0.09, 15.6);
   }
   // interior doors: paper and wood looks on the standard door panels
-  const doorLook = { D_GENKAN: 'wood_cedar_old', D_IMA: 'shoji_paper', D_DAIDOKORO: 'wood_dark', D_NANDO: 'shoji_paper', D_FUSUMA: 'fusuma_old', D_SHOP: 'wood_cedar_old' };
+  const doorLook = { D_GENKAN: 'wood_cedar_old', D_KATTE: 'wood_dark', D_DAIDOKORO: 'wood_dark', D_NANDO: 'shoji_paper', D_FUSUMA: 'fusuma_old', D_SHOP: 'wood_cedar_old' };
   texReady.then((tex) => { if (!tex) return; for (const [id, t] of Object.entries(doorLook)) { const d = world.doors.get(id); if (d) d.mesh.material = tex.material(t, { size: [1, 2.2] }); } });
   // own textures on the doors (shoji lit from behind, the old fusuma of the north room) and the roof tiles of every roof
-  const ownDoor = { D_IMA: 'shoji_lit', D_NANDO: 'shoji_lit', D_FUSUMA: 'fusuma_old_a' };
+  const ownDoor = { D_NANDO: 'shoji_lit', D_FUSUMA: 'fusuma_old_a' };
   Promise.all([texReady, ownReady]).then(() => {
     for (const [id, t] of Object.entries(ownDoor)) own(t, { size: [1, 2.2] }, (m) => { const d = world.doors.get(id); if (d) d.mesh.material = m; });
     own('roof_kawara_ibushi', { triplanar: true }, (m) => ctx.scene.traverse((o) => { if (o.isMesh && o.material === M.roof) o.material = m; }));
@@ -224,9 +229,51 @@ export function dressVillage(ctx) {
     const sm = []; ['salt_white', 'salt_grey', 'salt_black'].forEach((id, i) => own(id, { size: [0.3, 0.3] }, (m) => { sm[i] = m.map; if (sm.filter(Boolean).length === 3) api.saltMaps = sm; }));
   });
 
+  // ---- inside the house (Issue #4): tatami laid as mats with their cloth borders, a wooden ceiling, the kamoi beam at the door
+  // height, skirting and a ceiling rim, corner posts, lintels in the wall's own look, and softer pendants (no white-hot ceiling)
+  const houseRooms = plan.rooms.filter((r) => r.kind !== 'outdoor' && r.x >= H.x0 - 0.01 && r.x + r.w <= H.x1 + 0.01 && r.z >= H.z0 - 0.01 && r.z + r.d <= H.z1 + 0.01);
+  const indoorRooms = plan.rooms.filter((r) => r.kind !== 'outdoor');
+  const tatamiBorders = (w, d) => {
+    const P = 128, c = document.createElement('canvas'); c.width = Math.round(w * P); c.height = Math.round(d * P);
+    const g = c.getContext('2d'), mw = 1.8, md = 0.9;
+    for (let j = 0, z = 0; z < d; j++, z += md) for (let x = j % 2 ? -mw / 2 : 0; x < w; x += mw) {
+      g.fillStyle = `rgba(${rnd() < 0.5 ? '40,30,10' : '255,240,200'},${(0.03 + rnd() * 0.05).toFixed(3)})`; g.fillRect(x * P, z * P, mw * P, md * P);   // each mat ages on its own
+      g.fillStyle = 'rgba(0,0,0,0.45)'; g.fillRect(x * P - 1, z * P, 2, md * P);   // the short ends butt together
+      g.fillStyle = '#26241d'; g.fillRect(x * P, z * P, mw * P, 0.035 * P); g.fillRect(x * P, (z + md) * P - 0.035 * P, mw * P, 0.035 * P);   // heri on the long sides
+    }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+  };
+  for (const r of indoorRooms) { const lamp = world.group.getObjectByName(`lamp:${r.id}`); if (lamp) lamp.intensity *= 0.6; }
+  for (const r of houseRooms) {
+    const cx = r.x + r.w / 2, cz = r.z + r.d / 2;
+    if (/tatami/.test(r.floorTex || '')) { const p = new THREE.Mesh(new THREE.PlaneGeometry(r.w, r.d), new THREE.MeshStandardMaterial({ map: tatamiBorders(r.w, r.d), transparent: true, depthWrite: false, roughness: 0.95 })); p.rotation.x = -Math.PI / 2; p.position.set(cx, 0.006, cz); p.receiveShadow = true; G.add(p); }
+    const sides = [[r.x, r.z, r.x + r.w, r.z, 0, 1], [r.x, r.z + r.d, r.x + r.w, r.z + r.d, 0, -1], [r.x, r.z, r.x, r.z + r.d, 1, 0], [r.x + r.w, r.z, r.x + r.w, r.z + r.d, -1, 0]];
+    for (const [x0, z0, x1, z1, nx, nz] of sides) {
+      const along = x1 - x0 > 0, len = along ? x1 - x0 : z1 - z0;
+      for (const [y, h, t] of [[2.27, 0.1, 0.07], [0.05, 0.1, 0.03], [2.97, 0.06, 0.05]]) {
+        const off = 0.08 + t / 2; box(along ? len : t, h, along ? t : len, M.beam, (x0 + x1) / 2 + nx * off, y, (z0 + z1) / 2 + nz * off).castShadow = false;
+      }
+    }
+    for (const [x, z] of [[r.x + 0.15, r.z + 0.15], [r.x + r.w - 0.15, r.z + 0.15], [r.x + 0.15, r.z + r.d - 0.15], [r.x + r.w - 0.15, r.z + r.d - 0.15]]) box(0.14, 3.0, 0.14, M.darkWood, x, 1.5, z).castShadow = false;
+  }
+  texReady.then((tex) => {
+    if (!tex) return;
+    const ceilM = tex.material('wood_cedar_old', { triplanar: 1.2 }); ceilM.color.set(0x8a7a68);
+    for (const r of indoorRooms) { const c = world.group.getObjectByName(`ceil:${r.id}`); if (c) c.material = ceilM; }
+    // the kit's lintels (unnamed thin boxes above the doors) take the clay of the walls they belong to
+    const clay = tex.material('clay_wall', { triplanar: true });
+    world.group.traverse((o) => { if (o.isMesh && !o.name && o.geometry && o.geometry.parameters && o.geometry.parameters.height < 1 && o.position.y > 2 && o.position.x > H.x0 - 0.1 && o.position.x < H.x1 + 0.1 && o.position.z > H.z0 - 0.1 && o.position.z < H.z1 + 0.1) o.material = clay; });
+  });
+
+  // the kit's shelves and tables are office furniture (steel frames, grey legs): in the old house and shop every part is dark wood,
+  // so the rooms keep one palette (Issue #4)
+  const woodM = M.darkWood.clone(); texReady.then((tex) => { if (tex) { const m = tex.material('wood_dark', { triplanar: 0.8 }); woodM.map = m.map; woodM.color.set(0x8a7560); woodM.needsUpdate = true; } });
+  const hsl = {}, woody = (obj) => { obj.traverse((o) => { if (o.isMesh && o.material && o.material.color && o.material.color.getHSL(hsl).s < 0.15) o.material = woodM; }); return obj; };   // grey = steel
+  const shelf = (...a) => woody(P.shelf({}, ...a)), table = (...a) => woody(P.table({}, ...a));
+
   // ---- 北の座敷: four salt plates on stands, futon, the clock, the north lattice window
   const plates = {};
-  for (const [k, x, z] of [['NW', -11.9, 4.1], ['NE', -5.1, 4.1], ['SW', -11.9, 9.3], ['SE', -5.1, 9.3]]) {
+  for (const [k, x, z] of [['NW', -10.9, 4.1], ['NE', -5.1, 4.1], ['SW', -10.9, 9.9], ['SE', -5.1, 9.9]]) {
     const g = new THREE.Group(); box(0.42, 0.5, 0.42, M.darkWood, 0, 0.25, 0, g);
     const plate = cyl(0.2, 0.15, 0.04, M.plate, 0, 0.52, 0, 20, g);
     const salt = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.14, 16), M.salt.clone()); salt.position.y = 0.6; salt.visible = false; g.add(salt);
@@ -263,24 +310,24 @@ export function dressVillage(ctx) {
     api.parts.windowShadow = { group: sh, mat: shm };
   }
   // the talisman on the inside of the fusuma (shown from L3)
-  { const t = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.44), new THREE.MeshStandardMaterial({ map: canvasTexture(['身代守'], { w: 128, h: 352, bg: '#ddd0a8', fg: '#4b3025', vertical: true, border: '#7f4935', size: 80 }), roughness: 1 })); t.position.set(-7.6, 1.5, 10.33); t.rotation.y = Math.PI; t.visible = false; G.add(t); api.parts.sealPaper = t; }
+  { const t = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.44), new THREE.MeshStandardMaterial({ map: canvasTexture(['身代守'], { w: 128, h: 352, bg: '#ddd0a8', fg: '#4b3025', vertical: true, border: '#7f4935', size: 80 }), roughness: 1 })); t.position.set(-7.6, 1.5, 10.93); t.rotation.y = Math.PI; t.visible = false; G.add(t); api.parts.sealPaper = t; }
 
   // ---- 居間: low table, cushions, butsudan against the south wall, tokonoma scroll, the pillar with height marks
-  { const t = P.table({}, 1.3, 0.85, 0.34, 0x5a4330); at(t, -8.4, 0, 16.4); addCol(-9.1, 16.0, -7.7, 16.85, 0, 0.4, { low: true });
+  { const t = table(1.3, 0.85, 0.34, 0x5a4330); at(t, -8.4, 0, 16.4); addCol(-9.1, 16.0, -7.7, 16.85, 0, 0.4, { low: true });
     for (const [x, z] of [[-9.5, 16.4], [-7.3, 16.4], [-8.4, 17.4]]) box(0.55, 0.08, 0.55, M.cloth, x, 0.04, z); }
-  { const g = new THREE.Group(); box(1.1, 1.6, 0.6, M.beam, 0, 0.8, 0, g); box(1.0, 0.04, 0.5, M.brass, 0, 1.0, 0.03, g); box(0.12, 0.3, 0.06, M.darkWood, -0.15, 1.2, 0.0, g); box(0.12, 0.3, 0.06, M.darkWood, 0.15, 1.2, 0.0, g); cyl(0.03, 0.03, 0.12, M.paper, -0.35, 1.08, 0.1, 6, g); cyl(0.03, 0.03, 0.12, M.paper, 0.35, 1.08, 0.1, 6, g); at(g, -11.9, 0, 18.65, Math.PI); addCol(-12.5, 18.3, -11.3, 19, 0, 1.7); }
-  { box(0.5, 0.4, 0.4, M.beam, -10.9, 0.2, 18.5); addCol(-11.15, 18.3, -10.65, 18.7, 0, 0.45, { low: true }); }   // the low stand where Ｋさん left the talismans
+  { const g = new THREE.Group(); box(1.1, 1.6, 0.6, M.beam, 0, 0.8, 0, g); box(1.0, 0.04, 0.5, M.brass, 0, 1.0, 0.03, g); box(0.12, 0.3, 0.06, M.darkWood, -0.15, 1.2, 0.0, g); box(0.12, 0.3, 0.06, M.darkWood, 0.15, 1.2, 0.0, g); cyl(0.03, 0.03, 0.12, M.paper, -0.35, 1.08, 0.1, 6, g); cyl(0.03, 0.03, 0.12, M.paper, 0.35, 1.08, 0.1, 6, g); at(g, -11.3, 0, 18.65, Math.PI); addCol(-11.9, 18.3, -10.7, 19, 0, 1.7); }
+  { box(0.5, 0.4, 0.4, M.beam, -10.3, 0.2, 18.5); addCol(-10.55, 18.3, -10.05, 18.7, 0, 0.45, { low: true }); }   // the low stand where Ｋさん left the talismans
   { const s = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 1.4), new THREE.MeshStandardMaterial({ map: canvasTexture(['静'], { w: 180, h: 512, bg: '#ece4cc', fg: '#262018', vertical: true, size: 150, border: '#5c4632' }) })); s.position.set(-9.6, 1.6, 18.9); s.rotation.y = Math.PI; G.add(s); box(1.6, 0.12, 0.6, M.darkWood, -9.6, 0.06, 18.65); }
   { const c = canvasTexture([''], { w: 64, h: 512, bg: '#4b3b2b' }); const g = c.image.getContext('2d'); g.strokeStyle = '#d8c8a8'; g.lineWidth = 3; for (const y of [470, 440, 400, 360, 60]) { g.beginPath(); g.moveTo(8, y); g.lineTo(56, y); g.stroke(); } c.needsUpdate = true; const p = cyl(0.12, 0.12, 3, new THREE.MeshStandardMaterial({ map: c, roughness: 0.9 }), -4.25, 1.5, 12.65, 10); p.rotation.y = Math.PI / 2; addCol(-4.4, 12.5, -4.1, 12.8); }
   // ---- 台所: sink, kamado (stove), work table with the salt, shelves
   { box(1.4, 0.85, 0.6, M.stone, -19.6 + 0.3, 0.42, 14.4).rotation.y = Math.PI / 2; addCol(-19.95, 13.7, -19.35, 15.1, 0, 0.9); }
   { const g = new THREE.Group(); box(1.5, 0.75, 0.9, M.stone, 0, 0.37, 0, g); cyl(0.25, 0.2, 0.2, M.beam, -0.35, 0.85, 0, 12, g); cyl(0.25, 0.2, 0.2, M.beam, 0.35, 0.85, 0, 12, g); at(g, -15.6, 0, 18.5); addCol(-16.4, 18.0, -14.8, 19, 0, 0.9); }
-  { const t = P.table({}, 1.4, 0.7, 0.86, 0x6a5038); at(t, -17.0, 0, 15.2); addCol(-17.7, 14.85, -16.3, 15.55, 0, 0.9, { low: true }); }
-  { const s = P.shelf({}, 1.6, 1.8, 0.4, 3, 'boxes'); at(s, -14.2, 0, 12.65, 0); addCol(-15.0, 12.4, -13.4, 12.9, 0, 1.8); }   // clear of the door to the hallway (W1)
+  { const t = table(1.4, 0.7, 0.86, 0x6a5038); at(t, -17.0, 0, 15.2); addCol(-17.7, 14.85, -16.3, 15.55, 0, 0.9, { low: true }); }
+  { const s = shelf(1.6, 1.8, 0.4, 3, 'boxes'); at(s, -14.2, 0, 12.65, 0); addCol(-15.0, 12.4, -13.4, 12.9, 0, 1.8); }   // clear of the doors to the store room and the living room (W1)
   // ---- 納戸: shelves of baskets, desks with the newspaper and the photo
-  { const s = P.shelf({}, 1.8, 2.0, 0.45, 5, 'boxes'); at(s, -18.4, 0, 3.3, 0); addCol(-19.3, 3.0, -17.5, 3.55, 0, 2.0); }
-  { const t = P.table({}, 1.2, 0.6, 0.76, 0x5a4330); at(t, -17.0, 0, 7.0); addCol(-17.6, 6.7, -16.4, 7.3, 0, 0.8, { low: true }); }
-  { const t = P.table({}, 0.9, 0.5, 0.76, 0x4e3b2a); at(t, -18.4, 0, 9.55); addCol(-18.85, 9.3, -17.95, 9.8, 0, 0.8, { low: true }); }
+  { const s = shelf(1.8, 2.0, 0.45, 5, 'boxes'); at(s, -18.4, 0, 3.3, 0); addCol(-19.3, 3.0, -17.5, 3.55, 0, 2.0); }
+  { const t = table(1.2, 0.6, 0.76, 0x5a4330); at(t, -17.0, 0, 7.0); addCol(-17.6, 6.7, -16.4, 7.3, 0, 0.8, { low: true }); }
+  { const t = table(0.9, 0.5, 0.76, 0x4e3b2a); at(t, -18.4, 0, 9.55); addCol(-18.85, 9.3, -17.95, 9.8, 0, 0.8, { low: true }); }
   { const g = new THREE.Group(); for (let i = 0; i < 3; i++) box(0.6, 0.45, 0.5, M.straw, (i - 1) * 0.7, 0.22, 0, g); at(g, -14.2, 0, 9.9); addCol(-15.3, 9.6, -13.2, 10.2, 0, 0.5, { low: true }); }
 
   // ---------------------------------------------------------------- the shed in the back garden (a hiding place)
@@ -300,8 +347,8 @@ export function dressVillage(ctx) {
     for (const z of [-15.6, -11.4]) { cyl(0.05, 0.05, 2.45, M.darkWood, FX + 1.15, 1.22, z, 6); addCol(FX + 1.05, z - 0.1, FX + 1.25, z + 0.1); }
     { const st = new THREE.Group(); box(0.5, 1.0, 0.06, M.darkWood, 0, 0.6, 0, st); const sp = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.85), new THREE.MeshStandardMaterial({ map: canvasTexture(['醤油', 'あります'], { w: 160, h: 320, bg: '#e8dcc0', fg: '#6a2018', vertical: true, size: 56 }) })); sp.position.set(0, 0.6, 0.035); st.add(sp); at(st, FX + 2.2, 0, -15.9, Math.PI / 2); addCol(FX + 2.0, -16.2, FX + 2.4, -15.6, 0, 1.1, { low: true }); }
     { const ch = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.42, 14), M.lampGlow); ch.position.set(FX + 1.15, 2.05, -11.75); G.add(ch); const l = new THREE.PointLight(0xffc27a, 8, 9, 1.6); l.position.set(FX + 1.4, 2.0, -12.2); G.add(l); }
-    const counter = P.table({}, 2.4, 0.7, 0.92, 0x5a4330); at(counter, -15.9, 0, -13.5, Math.PI / 2); addCol(-16.25, -14.7, -15.55, -12.3, 0, 1.0);
-    for (const z of [-17.4, -9.6]) { const s = P.shelf({}, 3.2, 1.9, 0.45, z < -13 ? 11 : 12, 'boxes'); at(s, -13.4, 0, z, z < -13 ? 0 : Math.PI); addCol(-15.0, z - 0.25, -11.8, z + 0.25, 0, 1.9); }
+    const counter = table(2.4, 0.7, 0.92, 0x5a4330); at(counter, -15.9, 0, -13.5, Math.PI / 2); addCol(-16.25, -14.7, -15.55, -12.3, 0, 1.0);
+    for (const z of [-17.4, -9.6]) { const s = shelf(3.2, 1.9, 0.45, z < -13 ? 11 : 12, 'boxes'); at(s, -13.4, 0, z, z < -13 ? 0 : Math.PI); addCol(-15.0, z - 0.25, -11.8, z + 0.25, 0, 1.9); }
     cyl(0.04, 0.06, 0.28, M.cloth, -15.85, 1.06, -13.2, 8); box(0.12, 0.06, 0.08, M.brass, -15.8, 0.97, -13.8);
     const l = new THREE.PointLight(0xffc57a, 10, 12, 1.5); l.position.set(-14.5, 2.6, -13.5); G.add(l); api.parts.shopLight = l;
     // barrels by the wall outside (a hiding place, plan.hides H_SHOPSIDE)

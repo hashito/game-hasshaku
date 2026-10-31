@@ -55,14 +55,14 @@ for k, name in bowls:
                   'meaning': '座敷の四隅に塩を置くと、外のものが入りにくくなる、と祖父は言う。',
                   'hint': '粗塩の袋は台所の作業台にある。',
                   'minigame': {'type': 'salt', 'cfg': {'title': f'{name}の皿：塩を盛る', 'help': '押している間、塩が落ちます。線のところで離してください。'}},
-                  'steps': steps(('台所で粗塩の袋を取る', '中廊下の西、台所の作業台にあります。', 'look', 'item:I_SALT'),
+                  'steps': steps(('台所で粗塩の袋を取る', '居間の西隣、台所の作業台にあります。', 'look', 'item:I_SALT'),
                                  (f'座敷の{name}の皿に塩を盛る', '座敷の四隅に、小さな皿が置いてあります。', 'task', f'station:S_BOWL_{k}'))})
 tasks += [
     {'id': 'T_WINDOW', 'title': '座敷の窓を新聞紙でふさぐ', 'stage': 'L2', 'room': 'ZASHIKI', 'station': 'S_WINDOW',
      'meaning': '外から部屋の中が見えないようにする。中からも、外を見ないで済む。',
      'hint': '古い新聞は納戸の机にある。',
      'minigame': {'type': 'wipe', 'cfg': {'title': '北の格子窓：新聞紙を貼る', 'help': '窓をなぞって、新聞紙を端まで押さえてください。'}},
-     'steps': steps(('納戸で新聞紙を取る', '中廊下の西、納戸の机の上です。', 'look', 'item:I_PAPER'),
+     'steps': steps(('納戸で新聞紙を取る', '台所の北隣、納戸の机の上です。', 'look', 'item:I_PAPER'),
                     ('北の格子窓をふさぐ', '座敷の北の窓です。', 'task', 'station:S_WINDOW'))},
     {'id': 'T_SEAL', 'title': '座敷の内側から、襖に札を貼る', 'stage': 'L2', 'room': 'ZASHIKI', 'station': 'S_SEAL',
      'needs': ['T_SALT_NW', 'T_SALT_NE', 'T_SALT_SW', 'T_SALT_SE', 'T_WINDOW'],
@@ -103,7 +103,7 @@ items = [
     {'id': 'I_PAPER', 'name': '新聞紙（村の便り）', 'photo': P + 'ph-newspaper.webp', 'desc': '納戸の机に重ねてあった古い新聞。座敷の北の窓をふさぐのに使う。',
      'why': '外から部屋の中を見られないようにするため。', 'feeling': '「北の木戸は日没で閉鎖」。見出しが小さい。', 'room': 'NANDO', 'stage': 'L2', 'x': -17.0, 'z': 7.0, 'y': 0.76, 'kind': 'paper'},
     {'id': 'I_OFUDA', 'name': 'Ｋさんの札', 'photo': P + 'ph-ofuda.webp', 'desc': '「身代守」と書かれた札が二枚。一枚は襖に、もう一枚は手元に持つ。車の中では握りしめる。',
-     'why': '朝まで部屋を守り、村境まで身を守るため。', 'feeling': '墨の匂いが新しい。今日、書いたばかりの札だ。', 'room': 'IMA', 'stage': 'L2', 'x': -10.9, 'z': 18.45, 'y': 0.4, 'kind': 'talisman'},
+     'why': '朝まで部屋を守り、村境まで身を守るため。', 'feeling': '墨の匂いが新しい。今日、書いたばかりの札だ。', 'room': 'IMA', 'stage': 'L2', 'x': -10.3, 'z': 18.45, 'y': 0.4, 'kind': 'talisman'},
 ]
 
 # ---------------------------------------------------------------- docs (the three records are the side quests, S9 / S13)
@@ -136,7 +136,7 @@ things = [
     {'id': 'TH_SHOPNOTE', 'room': 'SHOP_DOMA', 'position': [-9.9, -11.0], 'y': 1.3, 'label': '店の柱の張り紙', 'photo': P + 'ph-shopnote.webp', 'size': 1,
      'text': ['「夕方以降、畑の先で妙な声を聞いた方は、真似をせず、まっすぐ帰宅してください。　区長」'],
      'feeling': '「真似をせず」。声の真似のことか。'},
-    {'id': 'TH_BUTSUDAN', 'room': 'IMA', 'position': [-11.9, 17.5], 'y': 1.0, 'label': '仏壇', 'photo': P + 'ph-butsudan.webp', 'size': 1,
+    {'id': 'TH_BUTSUDAN', 'room': 'IMA', 'position': [-11.3, 17.5], 'y': 1.0, 'label': '仏壇', 'photo': P + 'ph-butsudan.webp', 'size': 1,
      'text': ['仏壇の扉が開いている。位牌が一つ、裏返しに置かれている。', '裏返しの位牌には、触らないことにした。'],
      'feeling': '誰の位牌なのか、祖父に聞けなかった。'},
     {'id': 'TH_HASHIRA', 'room': 'IMA', 'position': [-4.8, 13.2], 'y': 1.3, 'label': '柱の背比べの傷', 'photo': P + 'ph-hashira.webp', 'size': 1,
@@ -187,7 +187,14 @@ monsters = {
 }
 
 # ---------------------------------------------------------------- release notes (Q10)
-notes = {'version': '1.1.2', 'notes': [
+notes = {'version': '1.1.3', 'notes': [
+    {'version': '1.1.3', 'date': '2026-10-31', 'title': '祖父の家を作り直しました', 'items': [
+        {'type': 'change', 'text': '祖父の家の廊下をなくし、四つの部屋が田の字に並ぶ間取りにしました。'},
+        {'type': 'fix', 'text': '床が石の色に隠れていたのを直し、畳を縁のある一枚ずつの畳にしました。天井を板張りにし、鴨居と柱を付けました。'},
+        {'type': 'fix', 'text': '扉の上が空いて外の杉が見えていたのと、屋根の瓦が部屋の中に見えていたのを直しました。'},
+        {'type': 'fix', 'text': '家の角から生け垣が部屋の中に突き出していたのを直しました。'},
+        {'type': 'change', 'text': '家と商店の棚や机を木の色にそろえ、天井の照明のまぶしさを抑えました。'},
+    ]},
     {'version': '1.1.2', 'date': '2026-10-31', 'title': '横向きのスマートフォンで表示を直しました', 'items': [
         {'type': 'fix', 'text': '横向きのスマートフォンで、タイトル画面の上下が切れていたのを直しました。'},
         {'type': 'fix', 'text': '操作の説明の言い回しをそろえました。'},

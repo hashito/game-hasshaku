@@ -77,7 +77,7 @@ try {
   expect((await deathText()).includes('盛り塩'), 'leaving a plate black breaks the guard (death)');
   await retry();
   // changing black salt in time
-  await run(`hk.st.night = 30; hk.st.dark.NW = 0.9; g.teleport({ x: -11.0, z: 5.2, yaw: Math.atan2(0.9, 1.1) }); g.fp.pitch = -0.5;`); await frames(6);
+  await run(`hk.st.night = 30; hk.st.dark.NW = 0.9; g.teleport({ x: -10.0, z: 5.2, yaw: Math.atan2(0.9, 1.1) }); g.fp.pitch = -0.5;`); await frames(6);
   const tgt = await G('g.target && g.target.kind + ":" + g.target.id');
   if (tgt === 'hk-salt:NW') { await p.key('KeyE'); await sleep(300); }
   expect(tgt === 'hk-salt:NW' && (await G('hk.st.dark.NW')) < 0.1, 'a black plate can be changed with [E] (it turns white)');

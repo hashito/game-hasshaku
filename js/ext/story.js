@@ -304,7 +304,7 @@ export default function story(ext) {
   const shadow = (s) => { shadowT = Math.max(shadowT, s); };
   function updateHouseFx(dt, t) {
     const fus = ctx.world.doors.get('D_FUSUMA');
-    if (fus && fus.mesh) { shakeT = Math.max(0, shakeT - dt); fus.mesh.position.z = 10.4 + (shakeT > 0 && !ctx.calm ? Math.sin(t * 40) * 0.02 * Math.min(1, shakeT) : 0); }
+    if (fus && fus.mesh) { shakeT = Math.max(0, shakeT - dt); fus.mesh.position.z = 11 + (shakeT > 0 && !ctx.calm ? Math.sin(t * 40) * 0.02 * Math.min(1, shakeT) : 0); }
     const w = V.parts.windowShadow; shadowT = Math.max(0, shadowT - dt);
     w.group.visible = shadowT > 0 || (lvl() === 1 && st.zashikiShadow > 0);
     w.mat.opacity = Math.min(0.55, shadowT * 0.3 + (st.zashikiShadow > 0 ? 0.3 : 0)) * (0.7 + 0.3 * Math.sin(t * 2.3) ** 2);

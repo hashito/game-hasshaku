@@ -5,34 +5,22 @@
    "name": "納戸",
    "x": -20,
    "z": 3,
-   "w": 7,
-   "d": 7.4,
+   "w": 8,
+   "d": 8,
    "kind": "room",
-   "floorTex": "planks_worn",
+   "floorTex": "planks_dark",
    "wallTex": "clay_wall",
    "safe": true
   },
   {
    "id": "ZASHIKI",
    "name": "北の座敷",
-   "x": -13,
+   "x": -12,
    "z": 3,
-   "w": 9,
-   "d": 7.4,
+   "w": 8,
+   "d": 8,
    "kind": "room",
-   "floorTex": "tatami_weave_old",
-   "wallTex": "clay_wall",
-   "safe": true
-  },
-  {
-   "id": "ROUKA",
-   "name": "中廊下",
-   "x": -20,
-   "z": 10.4,
-   "w": 16,
-   "d": 2,
-   "kind": "corridor",
-   "floorTex": "engawa_boards",
+   "floorTex": "tatami_weave",
    "wallTex": "clay_wall",
    "safe": true
   },
@@ -40,21 +28,21 @@
    "id": "DAIDOKORO",
    "name": "台所",
    "x": -20,
-   "z": 12.4,
-   "w": 7,
-   "d": 6.6,
+   "z": 11,
+   "w": 8,
+   "d": 8,
    "kind": "room",
    "floorTex": "planks_dark",
-   "wallTex": "plaster_yellowed",
+   "wallTex": "clay_wall",
    "safe": true
   },
   {
    "id": "IMA",
    "name": "居間",
-   "x": -13,
-   "z": 12.4,
-   "w": 9,
-   "d": 6.6,
+   "x": -12,
+   "z": 11,
+   "w": 8,
+   "d": 8,
    "kind": "room",
    "floorTex": "tatami_weave",
    "wallTex": "clay_wall",
@@ -195,66 +183,51 @@
    "label": "玄関の木戸"
   },
   {
-   "id": "D_IMA",
-   "a": "IMA",
-   "b": "ROUKA",
+   "id": "D_FUSUMA",
+   "a": "ZASHIKI",
+   "b": "IMA",
    "x": -8.0,
-   "z": 12.4,
-   "width": 1.6,
-   "label": "居間の障子"
-  },
-  {
-   "id": "D_KATTE",
-   "a": "ROUKA",
-   "b": "O_BACK",
-   "x": -20,
-   "z": 11.4,
-   "width": 1.1,
-   "label": "勝手口",
-   "unlock": "dawn",
-   "hint": "勝手口は、外から閂が掛けてある。"
-  },
-  {
-   "id": "D_ENGAWA",
-   "a": "ROUKA",
-   "b": "O_FRONT",
-   "x": -4,
-   "z": 11.4,
-   "width": 1.2,
-   "label": "縁側の戸"
+   "z": 11,
+   "width": 1.8,
+   "label": "北の座敷の襖",
+   "reason": "minka: rooms open into each other through fusuma",
+   "unlock": "prep",
+   "hint": "北の座敷は閉め切ってある。今は、居間の祖父に話すのが先だ。"
   },
   {
    "id": "D_DAIDOKORO",
    "a": "DAIDOKORO",
-   "b": "ROUKA",
-   "x": -16.5,
-   "z": 12.4,
+   "b": "IMA",
+   "x": -12,
+   "z": 15.0,
    "width": 1.2,
    "label": "台所の引き戸",
+   "reason": "minka: the kitchen opens off the living room",
    "unlock": "prep",
    "hint": "今は、居間の祖父に話すのが先だ。"
   },
   {
    "id": "D_NANDO",
    "a": "NANDO",
-   "b": "ROUKA",
-   "x": -16.5,
-   "z": 10.4,
+   "b": "DAIDOKORO",
+   "x": -16.0,
+   "z": 11,
    "width": 1.2,
    "label": "納戸の障子戸",
+   "reason": "minka: the store room behind the kitchen",
    "unlock": "prep",
    "hint": "今は、居間の祖父に話すのが先だ。"
   },
   {
-   "id": "D_FUSUMA",
-   "a": "ZASHIKI",
-   "b": "ROUKA",
-   "x": -8.0,
-   "z": 10.4,
-   "width": 1.8,
-   "label": "北の座敷の襖",
-   "unlock": "prep",
-   "hint": "北の座敷は閉め切ってある。今は、居間の祖父に話すのが先だ。"
+   "id": "D_KATTE",
+   "a": "DAIDOKORO",
+   "b": "O_BACK",
+   "x": -20,
+   "z": 16.6,
+   "width": 1.1,
+   "label": "勝手口",
+   "unlock": "dawn",
+   "hint": "勝手口は、外から閂が掛けてある。"
   },
   {
    "id": "D_SHOP",
@@ -393,7 +366,7 @@
   {
    "id": "S_BOWL_NW",
    "room": "ZASHIKI",
-   "x": -11.9,
+   "x": -10.9,
    "z": 4.1,
    "label": "北西の皿"
   },
@@ -407,15 +380,15 @@
   {
    "id": "S_BOWL_SW",
    "room": "ZASHIKI",
-   "x": -11.9,
-   "z": 9.3,
+   "x": -10.9,
+   "z": 9.9,
    "label": "南西の皿"
   },
   {
    "id": "S_BOWL_SE",
    "room": "ZASHIKI",
    "x": -5.1,
-   "z": 9.3,
+   "z": 9.9,
    "label": "南東の皿"
   },
   {
@@ -429,7 +402,7 @@
    "id": "S_SEAL",
    "room": "ZASHIKI",
    "x": -8.0,
-   "z": 9.95,
+   "z": 10.55,
    "label": "襖の内側"
   },
   {
@@ -519,5 +492,12 @@
  "exits": [
   "O_GATE",
   "O_GARDEN"
- ]
+ ],
+ "checks": {
+  "ignore": [
+   "direct-total",
+   "no-corridor"
+  ],
+  "why": "minka: four rooms two by two, no hallway"
+ }
 }
