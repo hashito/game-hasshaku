@@ -254,7 +254,7 @@ export function dressVillage(ctx) {
   { box(1.4, 0.85, 0.6, M.stone, -19.6 + 0.3, 0.42, 14.4).rotation.y = Math.PI / 2; addCol(-19.95, 13.7, -19.35, 15.1, 0, 0.9); }
   { const g = new THREE.Group(); box(1.5, 0.75, 0.9, M.stone, 0, 0.37, 0, g); cyl(0.25, 0.2, 0.2, M.beam, -0.35, 0.85, 0, 12, g); cyl(0.25, 0.2, 0.2, M.beam, 0.35, 0.85, 0, 12, g); at(g, -15.6, 0, 18.5); addCol(-16.4, 18.0, -14.8, 19, 0, 0.9); }
   { const t = P.table({}, 1.4, 0.7, 0.86, 0x6a5038); at(t, -17.0, 0, 15.2); addCol(-17.7, 14.85, -16.3, 15.55, 0, 0.9, { low: true }); }
-  { const s = P.shelf({}, 1.6, 1.8, 0.4, 3, 'boxes'); at(s, -16.8, 0, 12.65, 0); addCol(-17.6, 12.4, -16.0, 12.9, 0, 1.8); }
+  { const s = P.shelf({}, 1.6, 1.8, 0.4, 3, 'boxes'); at(s, -14.2, 0, 12.65, 0); addCol(-15.0, 12.4, -13.4, 12.9, 0, 1.8); }   // clear of the door to the hallway (W1)
   // ---- 納戸: shelves of baskets, desks with the newspaper and the photo
   { const s = P.shelf({}, 1.8, 2.0, 0.45, 5, 'boxes'); at(s, -18.4, 0, 3.3, 0); addCol(-19.3, 3.0, -17.5, 3.55, 0, 2.0); }
   { const t = P.table({}, 1.2, 0.6, 0.76, 0x5a4330); at(t, -17.0, 0, 7.0); addCol(-17.6, 6.7, -16.4, 7.3, 0, 0.8, { low: true }); }
@@ -293,8 +293,8 @@ export function dressVillage(ctx) {
     for (const x of [-1.6, 1.6]) for (const z of [-0.9, 0.9]) cyl(0.08, 0.08, 2.2, M.darkWood, x, 1.1, z, 8, g);
     box(3.4, 1.8, 0.1, M.wood, 0, 1.1, -0.9, g); const rf = box(4.0, 0.12, 2.6, M.roof, 0, 2.35, 0, g); rf.rotation.x = 0.05;
     box(0.9, 0.9, 0.6, M.darkWood, 0, 1.25, -0.5, g); box(0.4, 0.5, 0.02, M.paper, 0, 1.3, -0.19, g);
-    box(1.4, 0.8, 0.6, M.wood, -0.4, 0.4, 0.95, g);
-    addCol(10.2, -15.5, 13.8, -13.4, 0, 2.3); addCol(10.9, -13.7, 12.3, -13.2, 0, 0.9, { low: true });
+    box(1.4, 0.8, 0.6, M.wood, -0.4, 0.4, 1.35, g);
+    addCol(10.2, -15.5, 13.8, -13.4, 0, 2.3); addCol(10.9, -13.35, 12.3, -12.75, 0, 0.9, { low: true });
     const t = new THREE.Group(); at(t, 12, 0, -8.2);
     for (const x of [-2.4, 2.4]) { cyl(0.16, 0.18, 3.3, M.red, x, 1.65, 0, 10, t); addCol(12 + x - 0.2, -8.4, 12 + x + 0.2, -8.0); }
     box(5.8, 0.2, 0.3, M.red, 0, 3.25, 0, t); box(5.2, 0.14, 0.2, M.red, 0, 2.7, 0, t); box(6.4, 0.12, 0.4, M.beam, 0, 3.42, 0, t);

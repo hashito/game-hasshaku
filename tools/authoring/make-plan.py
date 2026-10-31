@@ -67,7 +67,7 @@ stations = [
     dict(id='S_BOWL_SE', room='ZASHIKI', x=-5.1, z=9.3, label='南東の皿'),
     dict(id='S_WINDOW', room='ZASHIKI', x=-8.5, z=3.5, label='北の格子窓'),
     dict(id='S_SEAL', room='ZASHIKI', x=-8.0, z=9.95, label='襖の内側'),
-    dict(id='S_CLOCK', room='ZASHIKI', x=-4.5, z=6.6, label='柱時計'),
+    dict(id='S_CLOCK', room='ZASHIKI', x=-5.1, z=6.6, label='柱時計'),
     dict(id='S_GATE', room='O_ROAD', x=-1.6, z=-23.2, label='車止めの回し金'),
     dict(id='S_CAR', room='O_GATE', x=2.0, z=-33.5, label='迎えの車'),
 ]

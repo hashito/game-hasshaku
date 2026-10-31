@@ -92,9 +92,24 @@ const SWEEP = `(() => {
   cam.rotation.order = 'YXZ';
   let eye = cam.position.y;
   let colliders = (G.player && G.player.colliders) || (G.fp && G.fp.colliders) || [];
+  // a tall collider (a wall, a shelf) crossed by the floor line from the pose to the thing (core games have no walk grid; standard 1.7)
+  const wallBetween = (x0, z0, x1, z1, V) => {
+    for (const c of colliders) {
+      if (c.off) continue; const b = c.box; if (b.max.y - b.min.y < 1.0 || b.min.y > eye) continue;
+      if (b.min.x <= V.max[0] && b.max.x >= V.min[0] && b.min.z <= V.max[2] && b.max.z >= V.min[2]) continue;   // the thing's own box / what it stands on
+      let t0 = 0, t1 = 1; const dx = x1 - x0, dz = z1 - z0; let ok = true;
+      for (const [p, d, lo, hi] of [[x0, dx, b.min.x, b.max.x], [z0, dz, b.min.z, b.max.z]]) {
+        if (Math.abs(d) < 1e-9) { if (p < lo || p > hi) { ok = false; break; } continue; }
+        let a = (lo - p) / d, c2 = (hi - p) / d; if (a > c2) [a, c2] = [c2, a]; t0 = Math.max(t0, a); t1 = Math.min(t1, c2); if (t0 > t1) { ok = false; break; }
+      }
+      if (ok && t1 > 0.02 && t0 < 0.98) return true;
+    }
+    return false;
+  };
   const walk = (x, z) => {
     if (walkUser) return !!walkUser(x, z);
     if (G.grid && G.grid.open && !G.grid.open(Math.floor(x), Math.floor(z))) return false;
+    if (!G.grid && G.world && G.world.roomAt && G.world.roomAt(x, z) == null) return false;   // core games: a pose outside every room is not an approach
     for (const c of colliders) { if (c.off) continue; const b = c.box; if (b.max.y < 0.15 || b.min.y > eye) continue;
       const cx = Math.max(b.min.x, Math.min(x, b.max.x)), cz = Math.max(b.min.z, Math.min(z, b.max.z));
       if ((x - cx) ** 2 + (z - cz) ** 2 < 0.28 * 0.28) return false; }
@@ -118,7 +133,7 @@ const SWEEP = `(() => {
     const cx = (V.min[0] + V.max[0]) / 2, cy = (V.min[1] + V.max[1]) / 2, cz = (V.min[2] + V.max[2]) / 2;
     const y0 = eye;
     // does the line from p to the object's centre stay on walkable ground until it reaches the object?
-    const clear = (x, z) => { if (losUser) { const qx = Math.max(V.min[0], Math.min(x, V.max[0])), qz = Math.max(V.min[2], Math.min(z, V.max[2])); if (!losUser(x, z, cx, cz) && !losUser(x, z, qx, qz)) return false; } else if (G.grid && G.grid.los) { const qx = Math.max(V.min[0], Math.min(x, V.max[0])), qz = Math.max(V.min[2], Math.min(z, V.max[2])); if (!G.grid.los(x, z, cx, cz) && !G.grid.los(x, z, qx, qz)) return false; } const n = 12; for (let i = 1; i < n; i++) { const px = x + (cx - x) * i / n, pz = z + (cz - z) * i / n; if (rectDist(px, pz, t) < 0.06) return true; if (walkUser ? false : (G.grid && G.grid.open && !G.grid.open(Math.floor(px), Math.floor(pz)))) return false; } return true; };
+    const clear = (x, z) => { if (!losUser && !(G.grid && G.grid.los) && wallBetween(x, z, cx, cz, V)) return false; if (losUser) { const qx = Math.max(V.min[0], Math.min(x, V.max[0])), qz = Math.max(V.min[2], Math.min(z, V.max[2])); if (!losUser(x, z, cx, cz) && !losUser(x, z, qx, qz)) return false; } else if (G.grid && G.grid.los) { const qx = Math.max(V.min[0], Math.min(x, V.max[0])), qz = Math.max(V.min[2], Math.min(z, V.max[2])); if (!G.grid.los(x, z, cx, cz) && !G.grid.los(x, z, qx, qz)) return false; } const n = 12; for (let i = 1; i < n; i++) { const px = x + (cx - x) * i / n, pz = z + (cz - z) * i / n; if (rectDist(px, pz, t) < 0.06) return true; if (walkUser ? false : (G.grid && G.grid.open && !G.grid.open(Math.floor(px), Math.floor(pz)))) return false; } return true; };
     const big = Math.max(V.max[0] - V.min[0], V.max[2] - V.min[2]) > 1.5;
     const aimPt = (x, z) => big ? [Math.max(V.min[0] + 0.05, Math.min(x, V.max[0] - 0.05)), cy, Math.max(V.min[2] + 0.05, Math.min(z, V.max[2] - 0.05))] : [cx, cy, cz];
     const poseAt = (a, d) => { // d metres from the rectangle of the object, in direction a
@@ -176,7 +191,7 @@ try {
   await p.goto(url);
   await p.waitFor(`(() => { const G = ${GAME}; return !!G && (${READY}); })()`, 150000);
   await p.sleep(1500);
-  if (KIT) { const src = fs.readFileSync(path.join(HERE, "../js/kit/interact-select.js"), "utf8"); await p.eval(`(async () => { window.__kitSel = await import(URL.createObjectURL(new Blob([${JSON.stringify(src)}], { type: 'text/javascript' }))); })()`); }
+  if (KIT) { const src = fs.readFileSync(path.join(HERE, "../js/interact-select.js"), "utf8"); await p.eval(`(async () => { window.__kitSel = await import(URL.createObjectURL(new Blob([${JSON.stringify(src)}], { type: 'text/javascript' }))); })()`); }
   if (PREP) await p.eval(`(async () => { const G = ${GAME}; ${PREP} })()`);
   const rows = JSON.parse(await p.eval(SWEEP));
   const bad = (r) => r.poses === 0 ? null : (r.frac7 < 0.85 ? "角度" : r.cover != null && r.cover < 0.9 ? "見た目" : r.px < 44 ? "px" : r.reach < 1.8 ? "距離" : null);
