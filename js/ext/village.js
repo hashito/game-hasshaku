@@ -509,7 +509,8 @@ export function dressVillage(ctx) {
     if (!tex) return;
     const has = (id) => (tex.catalog.textures || []).some((e) => e.id === id);
     const look = new Map([[M.wood, ['wood_cedar_old', 1.0, 0xc8b8a0]], [M.darkWood, ['wood_dark', 0.8, 0xb0a090]], [M.beam, ['wood_dark', 0.8, 0x908070]], [M.pole, ['wood_worn_grey', 1.2, 0xd0ccc4]],
-      [M.stone, ['block_wall_old', 1.0, 0xd8d8d0]], [M.moss, ['moss', 1.0, 0xffffff]], [M.hedge, ['moss', 0.8, 0x7a9a6a]], [M.straw, ['grass_dry', 0.6, 0xe0d0a0]], [M.paper, ['washi_paper', 0.5, 0xffffff]], [M.red, ['wood_worn_grey', 1.0, 0xc05040]]]);
+      [M.stone, ['stone_wall', 1.2, 0xd8d8d0]], [M.moss, ['moss', 1.0, 0xffffff]], [M.hedge, ['moss', 0.8, 0x7a9a6a]], [M.straw, ['burlap', 0.5, 0xe8d49a]], [M.paper, ['washi_paper', 0.5, 0xffffff]], [M.red, ['wood_worn_grey', 1.0, 0xc05040]],
+      [M.futon, ['linen_white', 0.6, 0xe8e0cc]], [M.futonCover, ['wool_grey', 0.6, 0x9a9488]], [M.cloth, ['wool_grey', 0.5, 0x9a5040]]]);   // the shared catalog (game-kit #2): stone wall, burlap, linen, wool
     const made = new Map();
     for (const [m0, [id, scale, tint]] of look) if (has(id)) { const m = tex.material(id, { triplanar: scale }); m.color.set(tint); made.set(m0, m); }
     ctx.scene.traverse((o) => { if (o.isMesh && made.has(o.material)) o.material = made.get(o.material); });

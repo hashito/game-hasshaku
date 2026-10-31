@@ -191,7 +191,7 @@ try {
   await p.goto(url);
   await p.waitFor(`(() => { const G = ${GAME}; return !!G && (${READY}); })()`, 150000);
   await p.sleep(1500);
-  if (KIT) { const src = fs.readFileSync(path.join(HERE, "../js/interact-select.js"), "utf8"); await p.eval(`(async () => { window.__kitSel = await import(URL.createObjectURL(new Blob([${JSON.stringify(src)}], { type: 'text/javascript' }))); })()`); }
+  if (KIT) { const src = fs.readFileSync(path.join(HERE, "../js/kit/interact-select.js"), "utf8"); await p.eval(`(async () => { window.__kitSel = await import(URL.createObjectURL(new Blob([${JSON.stringify(src)}], { type: 'text/javascript' }))); })()`); }
   if (PREP) await p.eval(`(async () => { const G = ${GAME}; ${PREP} })()`);
   const rows = JSON.parse(await p.eval(SWEEP));
   const bad = (r) => r.poses === 0 ? null : (r.frac7 < 0.85 ? "角度" : r.cover != null && r.cover < 0.9 ? "見た目" : r.px < 44 ? "px" : r.reach < 1.8 ? "距離" : null);
