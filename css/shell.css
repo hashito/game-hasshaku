@@ -1,7 +1,7 @@
-/* game-kit 3f1a7d2: css/shell.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit f3a18d2: css/shell.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: the standard 3D shell (js/game-core.js): title screen, prompt, endings, pause menu, custom mini-game layer.
    Tokens only (css/theme.css); loaded after kit.css and theme.css. A game restyles it through tokens in css/theme-game.css. */
-#title { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; text-align: center; padding: var(--gf-win-margin, 16px);
+#title { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; text-align: center; padding: var(--gf-win-margin, 16px); overflow-y: auto; overscroll-behavior: contain;
   background: radial-gradient(ellipse at 50% 40%, var(--gf-surface-2, #2a2a2a), var(--gf-bg, #000) 70%); color: var(--gf-text, #eee); }
 #title.hidden { display: none; }
 /* the title text sits on the title picture: a scrim of the page colour keeps every line AA whatever the picture is (rule U30; tools/check-text-contrast.mjs reads the real pixels).
@@ -134,6 +134,8 @@ body.gf-hidden #crosshair { opacity: 0.3; }
 .gf-title-art { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 1; transition: opacity 0.5s ease; pointer-events: none; will-change: opacity; }
 .gf-title-art.gf-art-wait { opacity: 0; }
 .gf-title-box { position: relative; }
+/* a short screen (phone landscape): the box scrolls instead of losing its top and bottom (centred with margin:auto, so it never overflows upward) */
+#title > .gf-title-box { margin: auto; }
 .gf-boot-status { min-height: 1.5em; margin: 0; font-size: 0.85em; }
 
 /* ---- HUD slots + toast lane (rule U27, docs/hud-slots.md): one region per HUD part; notifications live in the lane (#hs-tc), below the top stacks ---- */

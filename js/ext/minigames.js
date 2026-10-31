@@ -24,7 +24,7 @@ export const saltGame = {
       const tick = (t) => { if (holding) { const dt = last ? Math.min(0.05, (t - last) / 1000) : 0; level += dt * 0.55; if (level > 1.05) { holding = false; miss('こぼれてしまった。もう一度、少しずつ。'); } draw(); } last = t; raf = requestAnimationFrame(tick); };
       const miss = (m) => { f.msg.textContent = m; level = 0; setTimeout(draw, 250); };
       const end = (ok) => { if (finished) return; finished = true; cancelAnimationFrame(raf); removeEventListener('keydown', key); removeEventListener('keyup', keyUp); done(ok); };
-      const release = () => { if (!holding) return; holding = false; if (saltOk(level)) { f.msg.textContent = 'ちょうどいい。白い山が、皿の真ん中に立った。'; ctx && ctx.hk && ctx.hk.sound.salt(); setTimeout(() => end(true), 650); } else miss(level < 0.62 ? '少なすぎる。線まで盛ってください。' : '多すぎる。線のところで離してください。'); };
+      const release = () => { if (!holding) return; holding = false; if (saltOk(level)) { f.msg.textContent = 'ちょうどいい。白い山が、皿の真ん中に立った。'; ctx && ctx.hk && ctx.hk.sound.salt(); setTimeout(() => end(true), 650); } else miss(level < 0.62 ? '少なすぎます。線まで盛ってください。' : '多すぎます。線のところで離してください。'); };
       pour.addEventListener('pointerdown', (e) => { e.preventDefault(); holding = true; f.msg.textContent = ''; ctx && ctx.hk && ctx.hk.sound.salt(); });
       for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) pour.addEventListener(ev, release);
       const key = (e) => { if (e.code === 'Space' || e.code === 'KeyE') { e.preventDefault(); if (!holding) { holding = true; f.msg.textContent = ''; } } else if (e.code === 'Escape') end(false); };

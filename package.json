@@ -1,6 +1,6 @@
 {
   "name": "game-hasshaku",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "private": true,
   "description": "八尺様 ― 境の夜：ネット怪談『八尺様』を題材にした一人称3D探索ホラー（game-kit 3D 標準 1.5）",
   "scripts": {
