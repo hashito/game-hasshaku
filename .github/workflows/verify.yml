@@ -1,0 +1,30 @@
+name: Game verification
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  game:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Japanese fonts for readable screenshots
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+      - name: Playwright and Chromium
+        run: npm install -g playwright@1 && npx -y playwright install --with-deps chromium
+      - run: npm test
+      - run: npm run build
+      - name: Desktop and phone start, walk and page errors
+        run: npm run smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: game-verification
+          path: shots/
+          if-no-files-found: ignore

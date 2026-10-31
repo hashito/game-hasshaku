@@ -1,0 +1,14 @@
+{
+  "name": "hasshaku-boundary",
+  "version": "4.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ネット怪談『八尺様』を題材にした一人称3D探索ホラー",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "serve": "node tools/serve.mjs dist",
+    "og": "node tools/make-og.mjs",
+    "build": "node tools/build-site.js",
+    "smoke": "node tools/smoke.mjs public"
+  }
+}
