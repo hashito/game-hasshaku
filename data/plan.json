@@ -9,7 +9,7 @@
    "d": 8,
    "kind": "room",
    "floorTex": "planks_dark",
-   "wallTex": "clay_wall",
+   "wallTex": "wall_clay_stained",
    "safe": true
   },
   {
@@ -21,7 +21,7 @@
    "d": 8,
    "kind": "room",
    "floorTex": "tatami_weave",
-   "wallTex": "clay_wall",
+   "wallTex": "wall_clay_stained",
    "safe": true
   },
   {
@@ -33,7 +33,7 @@
    "d": 8,
    "kind": "room",
    "floorTex": "planks_dark",
-   "wallTex": "clay_wall",
+   "wallTex": "wall_clay_stained",
    "safe": true
   },
   {
@@ -45,7 +45,7 @@
    "d": 8,
    "kind": "room",
    "floorTex": "tatami_weave",
-   "wallTex": "clay_wall",
+   "wallTex": "wall_clay_stained",
    "safe": true
   },
   {

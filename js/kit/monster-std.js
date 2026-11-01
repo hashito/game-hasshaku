@@ -1,4 +1,4 @@
-/* game-kit 08f1905: js/monster-std.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 695f291: js/monster-std.js — edit in game-kit and run tools/kit-sync.js */
 // The default monster pack (standard 1.5; rules S12 / S20). Driven by DATA: manifest data.monsters = data/monsters.json (schema/monsters.schema.json).
 //   { "early": { "stages": 2 },
 //     "monsters": [ { "id": "windmill", "look": "windmill", "phases": [ { "preset": "early", "untilStage": "L3" }, { "preset": "normal" } ],
@@ -107,7 +107,7 @@ export function installMonsters(ctx) {
     return r ? { x: r.cx, z: r.cz, floor: r.floor } : { x: 0, z: 0, floor: 0 };
   };
   const place = (m) => { const sp = farSpawn(m); m.ai.spawnAt(sp, m.ai.route ? 'wander' : 'idle'); if (m.ai.route) m.ai.goTo(m.ai.route[m.ai.routeIdx % m.ai.route.length]); m.ai.blockNotice = 4; m.look.respawn && m.look.respawn(); m.spawned = true; };
-  const monologue = (text, sec = 2.2) => (ctx.monologue ? ctx.monologue(text, sec) : ctx.ui && ctx.ui.say && ctx.ui.say(text, sec));
+  const monologue = (text, sec = 2.2) => (ctx.monologue ? ctx.monologue(text, sec, { urgent: true }) : ctx.ui && ctx.ui.say && ctx.ui.say(text, sec, { urgent: true }));   // the chase hint ("走れ") cuts in
 
   const onEvent = (m, e) => {
     if (e.type === 'notice') {

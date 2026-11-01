@@ -71,6 +71,15 @@
   "seed": 817417483,
   "prompt": "An old Japanese family Buddhist altar butsudan with its black lacquered doors open, standing against the wall of a dim tatami living room, brass candle holders and an incense bowl, plain dark wooden memorial tablets with no writing, one tablet turned to face the wall, dim evening light, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
  },
+ "ph-clipping": {
+  "file": "assets/photos/ph-clipping.webp",
+  "bytes": 41470,
+  "size": "720x493",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 1522454,
+  "prompt": "A yellowed old newspaper clipping pinned to a dark wooden wall inside an old country store, a small grainy black and white photo of a rural farm road in the article, the columns of print completely blurred and unreadable, a faint pencil mark in the margin, warm bulb light, close-up, shallow depth of field, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
  "ph-clock": {
   "file": "assets/photos/ph-clock.webp",
   "bytes": 34832,
@@ -242,6 +251,24 @@
   "seed": 764613416,
   "prompt": "A folded sheet of thin letter paper with faint vertical ruled lines lying on a low round wooden chabudai table beside a small teacup, evening light, the faint handwriting is soft and out of focus and unreadable, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
  },
+ "ph-memorial-stone": {
+  "file": "assets/photos/ph-memorial-stone.webp",
+  "bytes": 49720,
+  "size": "493x720",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 202307182,
+  "prompt": "An old upright moss-covered memorial stone slab beside a small wooden roadside shrine in a Japanese mountain village at dusk, weathered carved grooves blurred and unreadable, a small offering of wild flowers in a bamboo tube and a cup of water at its foot, cedar trees and mist behind, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-missing-poster": {
+  "file": "assets/photos/ph-missing-poster.webp",
+  "bytes": 41048,
+  "size": "493x720",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 119700938,
+  "prompt": "A faded old paper missing person poster pinned with rusty tacks to a charred black cedar board wall of a rural shop at dusk, the paper yellowed and rain stained, a small blurry black and white portrait photo of a teenage girl at the top, the printed lines below are completely blurred and unreadable, many old pin holes around it, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
  "ph-newspaper": {
   "file": "assets/photos/ph-newspaper.webp",
   "bytes": 37474,
@@ -259,6 +286,15 @@
   "model": "flux1-dev-fp8 (ComfyUI, local)",
   "seed": 860417379,
   "prompt": "Two blank Japanese talisman paper strips of thick handmade cream washi paper lying side by side on a dark lacquered wooden tray, long vertical rectangles, plain paper with no characters and no ink, soft warm lamp light, seen from above, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-old-record": {
+  "file": "assets/photos/ph-old-record.webp",
+  "bytes": 34732,
+  "size": "720x493",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 773074245,
+  "prompt": "An old hand-bound Japanese record book of washi paper tied with string lying open on a dusty wooden storeroom shelf, faint brush ink columns blurred and illegible, a faded drawing of a very tall figure in a wide hat beside a small house, dim lantern light, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
  },
  "ph-pole": {
   "file": "assets/photos/ph-pole.webp",

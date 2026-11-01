@@ -4,10 +4,10 @@
  "license": "Per-entry license and source govern use. Existing license records are preserved; imported/generated assets do not inherit a blanket CC0 grant.",
  "units": "repeat = metres covered by one tile [u, v]; meters = suggested decal size in metres [w, h]",
  "categories": {
-  "plaster": 4,
+  "plaster": 5,
   "floor": 3,
   "metal": 1,
-  "wood": 9,
+  "wood": 10,
   "fabric": 3,
   "paper": 3,
   "stone": 1,
@@ -1374,6 +1374,168 @@
        "processing": "Size/format/compression only; source file retained. Lossless thumbnails have identical decoded RGBA pixels.",
        "sourceAlpha": true
       }
+     }
+    }
+   ]
+  },
+  {
+   "id": "wall_yakisugi",
+   "category": "wood",
+   "type": "surface",
+   "file": "wood/wall_yakisugi.webp",
+   "size": [
+    512,
+    512
+   ],
+   "alpha": false,
+   "bytes": 22714,
+   "sha256": "2eec5b0a3156892974c90c378957c24874e5c53484b463b986dd0f6dcb340300",
+   "tileable": true,
+   "repeat": [
+    2,
+    2
+   ],
+   "roughness": 0.95,
+   "metalness": 0,
+   "tags": [
+    "japanese",
+    "wall",
+    "exterior",
+    "hasshaku"
+   ],
+   "license": "Game-fleet internal reuse by the owner's instruction (generated locally with ComfyUI FLUX.1-dev fp8 by the source game's media pipeline; no public license such as CC0 or MIT is asserted)",
+   "source": {
+    "method": "documented-local-generation",
+    "authorization": "Owner instruction 2026-11-01: reuse the 3D games' textures across Game-fleet (standard textures)",
+    "sourceGame": "hasshaku",
+    "repo": "https://github.com/hashito/game-hasshaku",
+    "originalFile": "hasshaku/assets/textures-game/wood/wall_yakisugi.webp",
+    "originalSha256": "1e3eeb8f06b416134c1110aca4742a06ef7f5b96db6a0af98c97013cfaaa09ea",
+    "originalBytes": 21822,
+    "originalDimensions": [
+     512,
+     512
+    ],
+    "generation": {
+     "method": "comfyui",
+     "model": "flux1-dev-fp8",
+     "seed": 735938052,
+     "prompt": "Seamless texture of a yakisugi charred cedar board wall, vertical wooden boards with a crackled black charcoal surface, some boards brushed to dark brown grain, orthographic straight-on view filling the frame, flat even lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels",
+     "post": "tools/media/post-images.py seamless xy"
+    },
+    "processing": "resized to <=512 px long side, WebP q86 (<=60 KiB)",
+    "import": {
+     "sourcePath": "wall_yakisugi.webp",
+     "sha256": "2eec5b0a3156892974c90c378957c24874e5c53484b463b986dd0f6dcb340300"
+    }
+   },
+   "origins": [
+    {
+     "requestedId": "wall_yakisugi",
+     "sourcePath": "wall_yakisugi.webp",
+     "sha256": "2eec5b0a3156892974c90c378957c24874e5c53484b463b986dd0f6dcb340300",
+     "license": "Game-fleet internal reuse by the owner's instruction (generated locally with ComfyUI FLUX.1-dev fp8 by the source game's media pipeline; no public license such as CC0 or MIT is asserted)",
+     "provenance": {
+      "method": "documented-local-generation",
+      "authorization": "Owner instruction 2026-11-01: reuse the 3D games' textures across Game-fleet (standard textures)",
+      "sourceGame": "hasshaku",
+      "repo": "https://github.com/hashito/game-hasshaku",
+      "originalFile": "hasshaku/assets/textures-game/wood/wall_yakisugi.webp",
+      "originalSha256": "1e3eeb8f06b416134c1110aca4742a06ef7f5b96db6a0af98c97013cfaaa09ea",
+      "originalBytes": 21822,
+      "originalDimensions": [
+       512,
+       512
+      ],
+      "generation": {
+       "method": "comfyui",
+       "model": "flux1-dev-fp8",
+       "seed": 735938052,
+       "prompt": "Seamless texture of a yakisugi charred cedar board wall, vertical wooden boards with a crackled black charcoal surface, some boards brushed to dark brown grain, orthographic straight-on view filling the frame, flat even lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels",
+       "post": "tools/media/post-images.py seamless xy"
+      },
+      "processing": "resized to <=512 px long side, WebP q86 (<=60 KiB)"
+     }
+    }
+   ]
+  },
+  {
+   "id": "wall_clay_stained",
+   "category": "plaster",
+   "type": "surface",
+   "file": "plaster/wall_clay_stained.webp",
+   "size": [
+    512,
+    512
+   ],
+   "alpha": false,
+   "bytes": 3844,
+   "sha256": "2d92df28b1201cf0e07443be8b7eeb3ac239e2f948c554940ce3307b4bc80267",
+   "tileable": true,
+   "repeat": [
+    2,
+    2
+   ],
+   "roughness": 0.95,
+   "metalness": 0,
+   "tags": [
+    "japanese",
+    "wall",
+    "aged",
+    "hasshaku"
+   ],
+   "license": "Game-fleet internal reuse by the owner's instruction (generated locally with ComfyUI FLUX.1-dev fp8 by the source game's media pipeline; no public license such as CC0 or MIT is asserted)",
+   "source": {
+    "method": "documented-local-generation",
+    "authorization": "Owner instruction 2026-11-01: reuse the 3D games' textures across Game-fleet (standard textures)",
+    "sourceGame": "hasshaku",
+    "repo": "https://github.com/hashito/game-hasshaku",
+    "originalFile": "hasshaku/assets/textures-game/plaster/wall_clay_stained.webp",
+    "originalSha256": "48551ead3f93f4f7c37e126b7f788109ce954d440337f90f28dc55541fdb235b",
+    "originalBytes": 3754,
+    "originalDimensions": [
+     512,
+     512
+    ],
+    "generation": {
+     "method": "comfyui",
+     "model": "flux1-dev-fp8",
+     "seed": 784544696,
+     "prompt": "Seamless texture of an old Japanese earthen clay wall, beige brown tsuchikabe plaster with chopped straw fibres, water stains running down, dirt smudges and small hairline cracks, orthographic straight-on view filling the frame, flat even lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels",
+     "post": "tools/media/post-images.py seamless xy"
+    },
+    "processing": "resized to <=512 px long side, WebP q86 (<=60 KiB)",
+    "import": {
+     "sourcePath": "wall_clay_stained.webp",
+     "sha256": "2d92df28b1201cf0e07443be8b7eeb3ac239e2f948c554940ce3307b4bc80267"
+    }
+   },
+   "origins": [
+    {
+     "requestedId": "wall_clay_stained",
+     "sourcePath": "wall_clay_stained.webp",
+     "sha256": "2d92df28b1201cf0e07443be8b7eeb3ac239e2f948c554940ce3307b4bc80267",
+     "license": "Game-fleet internal reuse by the owner's instruction (generated locally with ComfyUI FLUX.1-dev fp8 by the source game's media pipeline; no public license such as CC0 or MIT is asserted)",
+     "provenance": {
+      "method": "documented-local-generation",
+      "authorization": "Owner instruction 2026-11-01: reuse the 3D games' textures across Game-fleet (standard textures)",
+      "sourceGame": "hasshaku",
+      "repo": "https://github.com/hashito/game-hasshaku",
+      "originalFile": "hasshaku/assets/textures-game/plaster/wall_clay_stained.webp",
+      "originalSha256": "48551ead3f93f4f7c37e126b7f788109ce954d440337f90f28dc55541fdb235b",
+      "originalBytes": 3754,
+      "originalDimensions": [
+       512,
+       512
+      ],
+      "generation": {
+       "method": "comfyui",
+       "model": "flux1-dev-fp8",
+       "seed": 784544696,
+       "prompt": "Seamless texture of an old Japanese earthen clay wall, beige brown tsuchikabe plaster with chopped straw fibres, water stains running down, dirt smudges and small hairline cracks, orthographic straight-on view filling the frame, flat even lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels",
+       "post": "tools/media/post-images.py seamless xy"
+      },
+      "processing": "resized to <=512 px long side, WebP q86 (<=60 KiB)"
      }
     }
    ]

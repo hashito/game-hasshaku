@@ -10,10 +10,10 @@ rooms = [
     # the grandfather's house (x -20..-4, z 3..19): four rooms, two by two, no hallway (Issue #4: easy to read)
     #   NANDO | ZASHIKI   (north)
     #   DAIDOKORO | IMA   (south; the entrance is on the east side of IMA)
-    room('NANDO', '納戸', -20, 3, 8, 8, floorTex='planks_dark', wallTex='clay_wall', safe=True),
-    room('ZASHIKI', '北の座敷', -12, 3, 8, 8, floorTex='tatami_weave', wallTex='clay_wall', safe=True),
-    room('DAIDOKORO', '台所', -20, 11, 8, 8, floorTex='planks_dark', wallTex='clay_wall', safe=True),
-    room('IMA', '居間', -12, 11, 8, 8, floorTex='tatami_weave', wallTex='clay_wall', safe=True),
+    room('NANDO', '納戸', -20, 3, 8, 8, floorTex='planks_dark', wallTex='wall_clay_stained', safe=True),
+    room('ZASHIKI', '北の座敷', -12, 3, 8, 8, floorTex='tatami_weave', wallTex='wall_clay_stained', safe=True),
+    room('DAIDOKORO', '台所', -20, 11, 8, 8, floorTex='planks_dark', wallTex='wall_clay_stained', safe=True),
+    room('IMA', '居間', -12, 11, 8, 8, floorTex='tatami_weave', wallTex='wall_clay_stained', safe=True),
     # 夕霧商店
     room('SHOP', '夕霧商店', -19, -18, 8, 9, floorTex='planks_grey_old', wallTex='panel_wood_wall', safe=True),
     room('SHOP_DOMA', '商店の土間', -11, -18, 2, 9, kind='corridor', floorTex='soil', wallTex='panel_wood_wall', safe=True),

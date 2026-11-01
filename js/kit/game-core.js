@@ -1,4 +1,4 @@
-/* game-kit 77ebe23: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 695f291: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -55,7 +55,7 @@ import { gfRegister, gfOk, gfFail, gfUnknown } from './gf-test.js';
 import { createExtensions } from './ext.js';
 import { buildProgressionDef, taskAtStation, pickEnding } from './game-data.js';
 
-export const CORE_VERSION = '1.8.0';
+export const CORE_VERSION = '1.8.1';
 const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(typeof location !== 'undefined' ? location.search : '');
 const safe = (fn, d = null) => { try { return fn(); } catch { return d; } };
@@ -607,7 +607,7 @@ export function createGame(cfg) {
     bus.on('player:respawn', () => { for (const t of timed) if (!state.tasks.includes(t.id)) state.timers[t.id] = 0; });
   }
   ctx.systems = systems;
-  ctx.monologue = (text, sec = 2.2) => ui.say(esc(text), sec);   // the protagonist's thought line (U23); monster hints ("走れ") go through it
+  ctx.monologue = (text, sec = 2.2, o) => ui.say(esc(text), sec, o);   // the protagonist's thought line (U23); monster hints ("走れ") go through it
   // the conversation window and the choice (js/talk-ui.js, standard 1.7): ctx.talk(lines | 'key of data/talk.json', o), ctx.choose({ who, text, options })
   { const T = createTalk({ wm, qa: !!ctx.qa, data: data.talk || null, portraits: manifest.portraits || null, log: (ctx.talkLog = []), voice: (L) => ctx.voiceLine(L.voice, L.vfx || null) }); ctx.talk = T.talk; ctx.choose = T.choose; }
   if (manifest.things && data.things && cfg.mods && cfg.mods.things) cfg.mods.things.installThings(ctx);   // data/things.json: [E] examine -> card + thought + journal (standard 1.5)

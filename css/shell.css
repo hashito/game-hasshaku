@@ -1,4 +1,4 @@
-/* game-kit c7a7c2b: css/shell.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit b71afe5: css/shell.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: the standard 3D shell (js/game-core.js): title screen, prompt, endings, pause menu, custom mini-game layer.
    Tokens only (css/theme.css); loaded after kit.css and theme.css. A game restyles it through tokens in css/theme-game.css. */
 #title { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; text-align: center; padding: var(--gf-win-margin, 16px); overflow-y: auto; overscroll-behavior: contain;
@@ -169,11 +169,32 @@ body.touch #hud-right { top: calc(max(12px, var(--gf-safe-t, 0px)) + 52px); }   
 /* the interaction prompt: under the crosshair on desktop; on touch it is the first line of the action-cluster column (right above the menu icon and the buttons) */
 #t-right #prompt { position: static; transform: none; align-self: flex-end; max-width: min(56vw, 300px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
 @media (orientation: landscape) { #t-right #prompt { position: fixed; left: 50%; top: calc(50% + 22px); transform: translateX(-50%); align-self: auto; max-width: min(44vw, 360px); } }   /* short landscape: no room above the cluster, the prompt stays under the crosshair */
-/* the thought line is at most 4 lines (a longer one is cut, never grows over the lane / the crosshair); the touch stick keeps off the notch */
+/* the thought line is at most 4 lines and never grows over the lane / the crosshair. A long line is not cut (feedback 2026-11-01): js/ui.js SayLine
+   shows it as pages of at most 60 characters, one after another, and a line over 44 characters takes the smaller type; the touch stick keeps off the notch */
 #say { max-height: 7.4em; overflow: hidden; }
+#say.long { font-size: 0.9em; line-height: 1.6; padding: 8px 14px; }
 /* touch, landscape: the thought band sits at the bottom between the stick and the action cluster; portrait: above the cluster column (menu icon + prompt + buttons, --gf-cluster-h) */
 body.touch #say { bottom: max(12px, var(--gf-safe-b, 0px)); }
 @media (orientation: portrait) { body.touch #say { bottom: calc(max(18px, var(--gf-safe-b, 0px)) + var(--gf-cluster-h, 236px)); } }
 #t-stick { left: max(22px, var(--gf-safe-l, 0px)); bottom: max(26px, var(--gf-safe-b, 0px)); }
 :root { --gf-cluster-w: 190px; --gf-cluster-h: 236px; }   /* the action cluster's width / height (menu icon + prompt line + buttons): the thought band stays clear of it; a game with other buttons sets them in theme-game.css */
 #t-menu { right: max(12px, var(--gf-safe-r, 0px)); top: max(12px, var(--gf-safe-t, 0px)); }
+/* fear on the body (js/fear-fx.js): the edges close in when the thing is near; above the world, under every HUD part and window */
+#gf-fear { position: fixed; inset: 0; pointer-events: none; z-index: 5; opacity: 0; background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0) 38%, rgba(10, 0, 0, 0.55) 72%, rgba(0, 0, 0, 0.92) 100%); }
+/* the ending as a scene (js/ending-scene.js): the picture fills the screen and comes slowly closer; the text stands in front, a line at a time */
+.gf-ending { position: fixed; inset: 0; z-index: 96; background: #050505; color: #f1ece0; overflow: hidden auto; display: flex; align-items: flex-end; justify-content: center; }
+.gf-ending-photo { position: fixed; inset: 0; background: center / cover no-repeat; filter: saturate(0.75) brightness(0.8); animation: gf-end-zoom 40s ease-out both, gf-end-fade 2.4s ease-out both; }
+.gf-ending-shade { position: fixed; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.5) 28%, rgba(0, 0, 0, 0.8) 58%, rgba(0, 0, 0, 0.94) 100%); }
+.gf-ending-text { position: relative; width: min(720px, 100% - 32px); margin: 30vh auto 0; padding: 0 0 max(32px, var(--gf-safe-b, 0px)); display: flex; flex-direction: column; gap: 12px; text-shadow: 0 1px 3px #000, 0 0 18px rgba(0, 0, 0, 0.8); }
+.gf-ending-text > * { margin: 0; opacity: 0; animation: gf-end-in 1.6s ease-out var(--d, 0s) both; }
+.gf-ending-kicker { font-size: 13px; letter-spacing: 0.22em; color: #d9c9a3; }
+.gf-ending-title { font-family: var(--hk-serif, serif); font-size: clamp(26px, 6vw, 40px); font-weight: 600; letter-spacing: 0.08em; }
+.gf-ending-line { font-family: var(--hk-serif, serif); font-size: clamp(15px, 2.4vw, 18px); line-height: 2; }
+.gf-ending-stats { font-size: 13px; color: #bdb5a4; }
+.gf-ending-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px !important; }
+.gf-ending.all .gf-ending-text > *, .gf-ending.still .gf-ending-text > * { animation: none; opacity: 1; }
+.gf-ending.still .gf-ending-photo { animation: none; }
+@keyframes gf-end-zoom { from { transform: scale(1.02); } to { transform: scale(1.16); } }
+@keyframes gf-end-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes gf-end-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .gf-ending-photo { animation: none; } .gf-ending-text > * { animation: none; opacity: 1; } }

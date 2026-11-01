@@ -97,5 +97,17 @@ export function createSound(ctx) {
     b.ins.gain.setTargetAtTime(o.insects ?? 1, t, 1.5);
     b.wg.gain.setTargetAtTime(o.wind ?? 0.12, t, 1.5);
   }
-  return { po, knock, scrape, salt, sting, update };
+  // the van's radio switching itself on (the ride, feedback 2026-11-01): crackling static that swells and cuts, the po buried in it
+  function radio(o = {}) {
+    const ac = A(); if (!ac) return;
+    const t = ac.currentTime + 0.02, sec = o.sec ?? 3, vol = (o.vol ?? 0.22) * (S.quiet() ? 0.5 : 1);
+    const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(), am = ac.createGain(), lfo = ac.createOscillator(), lg = ac.createGain();
+    src.buffer = noiseBuf(ac, sec + 0.5); f.type = 'bandpass'; f.frequency.value = 1700; f.Q.value = 0.9;
+    lfo.type = 'square'; lfo.frequency.value = 7.5; lg.gain.value = 0.45; am.gain.value = 0.55; lfo.connect(lg); lg.connect(am.gain);
+    env(ac, g, t, 0.05, vol, sec - 0.4, 0.05);
+    src.connect(f); f.connect(am); am.connect(g); g.connect(pan(ac, o.pan ?? -0.2)).connect(out());
+    src.start(t); lfo.start(t); src.stop(t + sec + 0.2); lfo.stop(t + sec + 0.2);
+    setTimeout(() => po({ vol: vol * 1.4, pan: o.pan ?? -0.2 }), sec * 450);
+  }
+  return { po, knock, scrape, salt, sting, radio, update };
 }

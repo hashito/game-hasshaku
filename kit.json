@@ -1,5 +1,5 @@
 {
-  "kit": "77ebe23",
+  "kit": "1087070",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -70,7 +70,10 @@
     "mg-frame",
     "mg-turn-dials",
     "mg-library",
-    "step-sound"
+    "step-sound",
+    "fear-fx",
+    "ending-scene",
+    "outer-walls"
   ],
   "css": "css/kit.css",
   "cssExtra": [
@@ -195,7 +198,7 @@
     "js\\kit\\terminal-data.js": "b17f0493a17c",
     "js\\kit\\recipes-data.js": "dce7915bf632",
     "js\\kit\\release-notes.js": "d8ddffb53e2a",
-    "js\\kit\\ui.js": "7c217016955f",
+    "js\\kit\\ui.js": "96211241f236",
     "js\\kit\\gf-test.js": "7d0d181ce548",
     "js\\kit\\progression.js": "b3ae970812d7",
     "js\\kit\\game-data.js": "00c47779edc1",
@@ -204,7 +207,7 @@
     "js\\kit\\text-contrast.js": "7fee755af57a",
     "js\\kit\\monster-nav.js": "aa4dd24b4872",
     "js\\kit\\monster-escape.js": "4a9e4dd0e05d",
-    "js\\kit\\game-core.js": "ff97c132b454",
+    "js\\kit\\game-core.js": "2af0d11d88bc",
     "js\\kit\\item-kinds.js": "20b7d7ac8f6a",
     "js\\kit\\item-models.js": "611975f171a7",
     "js\\kit\\prop-geo.js": "b7d46c577d9a",
@@ -237,7 +240,7 @@
     "js\\kit\\look-input.js": "acebad92f70f",
     "js\\kit\\pad-input.js": "7e4fab6b2245",
     "js\\kit\\ext.js": "7668a40046b1",
-    "js\\kit\\monster-std.js": "983542aaaa74",
+    "js\\kit\\monster-std.js": "fb9e6ac7879c",
     "js\\kit\\monster-looks.js": "c353da72ebd1",
     "js\\kit\\character.js": "d45df815eeca",
     "js\\kit\\motion.js": "f2a850adc06b",
@@ -252,13 +255,16 @@
     "js\\kit\\env-props.js": "8173704023b6",
     "js\\kit\\texture-library.js": "b28d6322f0be",
     "css\\theme.css": "ebaca1cab248",
-    "css\\shell.css": "8730c4644182",
+    "css\\shell.css": "9c24d82d2ed7",
     "js\\kit\\mg-pour.js": "11f3d7486b85",
     "js\\kit\\mg-frame.js": "1e639b5179ca",
     "js\\kit\\mg-turn-dials.js": "194968af640e",
     "js\\kit\\mg-library.js": "7320867851a5",
     "tools/check-traps.mjs": "4390617a5164",
-    "js\\kit\\step-sound.js": "7cbebde5476f"
+    "js\\kit\\step-sound.js": "7cbebde5476f",
+    "js\\kit\\fear-fx.js": "086714c2913d",
+    "js\\kit\\ending-scene.js": "44a929039a01",
+    "js\\kit\\outer-walls.js": "753347b4f3a0"
   },
   "textures": [
     "planks_worn",
@@ -294,6 +300,8 @@
     "burlap",
     "stone_wall",
     "linen_white",
-    "wool_grey"
+    "wool_grey",
+    "wall_clay_stained",
+    "wall_yakisugi"
   ]
 }

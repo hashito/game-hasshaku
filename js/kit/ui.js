@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/ui.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 5feba9d: js/ui.js — edit in game-kit and run tools/kit-sync.js */
 // Windows and short messages over a first-person game (style: css/kit.css). From ひだまり薬局 js/ui.js.
 // One window at a time; while one is open the controller should not move (pass `isBlocked: () => !!ui.open`).
 //
@@ -20,11 +20,68 @@ function ensure(id, parent = document.body) {
   return el;
 }
 
+// the thought line (standard 1.8.1, feedback "messages get cut off"): a line stays up at least as long as it takes to read (readSec), and a
+// line that arrives while another is still being read waits for it (a short queue) instead of replacing it mid-sentence; a repeated line
+// only extends the one showing. o.urgent shows at once ("走れ"). Pure: the clock and the timers are injected (test/say-line.test.mjs).
+export const sayText = (html) => String(html).replace(/<[^>]*>/g, "").replace(/&[a-z]+;/g, " ");
+export const readSec = (html) => Math.min(12, 1.6 + sayText(html).length * 0.11);
+// a line longer than `max` visible characters becomes pages shown one after another (split after 。！？, then 、, then hard), so the band
+// never needs more than about 4 lines on a phone; a leading speaker tag (<span class="who">…</span>) is repeated on every page
+export function splitSay(html, max = 60) {
+  const h = String(html), m = h.match(/^(<span[^>]*>[^<]*<\/span>)/), head = m ? m[1] : "", body = h.slice(head.length);
+  if (sayText(body).length <= max || /<(?!\/?(b|i|em|strong|span))/i.test(body)) return [h];
+  const pages = []; let rest = body;
+  while (sayText(rest).length > max) {
+    let cut = -1;
+    for (const re of [/[。！？!?」]/g, /[、，,]/g]) { let x; re.lastIndex = 0; while ((x = re.exec(rest)) && x.index < max) cut = x.index + 1; if (cut > max * 0.35) break; cut = -1; }
+    if (cut < 0) cut = max;
+    pages.push(rest.slice(0, cut)); rest = rest.slice(cut).replace(/^\s+/, "");
+  }
+  if (rest) pages.push(rest);
+  return pages.map((p) => head + p);
+}
+export class SayLine {
+  // timer / clear are wrapped: a browser throws "Illegal invocation" when setTimeout is called as a method of another object (this.timer(...))
+  constructor({ show, hide, now = () => performance.now() / 1000, timer = (f, ms) => setTimeout(f, ms), clear = (h) => clearTimeout(h), max = 6 } = {}) {
+    Object.assign(this, { show, hide, now, timer, clear, max });
+    this.q = []; this.cur = null; this.hideT = null; this.waitT = null;
+  }
+  push(html, sec = 4.5, o = {}) {
+    const pages = splitSay(html, o.max ?? this.pageMax ?? 60);
+    if (pages.length > 1) { pages.forEach((pg, i) => this.push(pg, Math.max(readSec(pg), sec / pages.length), { ...o, urgent: o.urgent && i === 0, max: Infinity })); return; }
+    const t = this.now(), dur = Math.max(sec, readSec(html));
+    if (this.cur && this.cur.html === html) { this.cur.hideAt = Math.max(this.cur.hideAt, t + dur); this.arm(); return; }
+    this.q = this.q.filter((x) => x.html !== html);
+    if (o.urgent) { this.q.unshift({ html, dur }); this.clear(this.waitT); this.waitT = null; this.next(true); return; }
+    this.q.push({ html, dur });
+    if (this.q.length > this.max) this.q.splice(0, this.q.length - this.max);
+    this.next();
+  }
+  next(force = false) {
+    const t = this.now();
+    if (!force && this.cur && t < this.cur.readyAt) {
+      if (!this.waitT) this.waitT = this.timer(() => { this.waitT = null; this.next(); }, (this.cur.readyAt - t) * 1000 + 20);
+      return;
+    }
+    const n = this.q.shift(); if (!n) return;
+    this.cur = { html: n.html, readyAt: t + Math.min(n.dur, readSec(n.html)), hideAt: t + n.dur };
+    this.show(n.html, sayText(n.html).length);
+    this.arm();
+    if (this.q.length) this.next();
+  }
+  arm() {
+    this.clear(this.hideT);
+    const c = this.cur; if (!c) return;
+    this.hideT = this.timer(() => { if (this.cur === c) { this.cur = null; this.hide(); this.next(); } }, Math.max(0, c.hideAt - this.now()) * 1000);
+  }
+}
+
 export class KitUI {
   constructor(o = {}) {
     this.o = o;
     this.root = ensure("ui");
     this.sayEl = ensure("say", ensure("hud"));
+    this.sayLine = new SayLine({ show: (html, n) => { this.sayEl.innerHTML = html; this.sayEl.classList.toggle("long", n > 44); this.sayEl.classList.add("on"); }, hide: () => this.sayEl.classList.remove("on") });
     this.lane = o.lane || null;   // a ToastLane (js/toast-lane.js): toasts go there (rule U27); without it the legacy #toasts box
     this.toastsEl = this.lane ? null : ensure("toasts", ensure("hud"));
     this.open = null;
@@ -89,11 +146,9 @@ export class KitUI {
     }
   }
 
-  say(html, sec = 4.5) {
-    this.sayEl.innerHTML = html;
-    this.sayEl.classList.add("on");
-    clearTimeout(this.sayT);
-    this.sayT = setTimeout(() => this.sayEl.classList.remove("on"), sec * 1000);
+  // the thought line: queued, never cut while it is being read (SayLine). o.urgent shows at once
+  say(html, sec = 4.5, o = {}) {
+    this.sayLine.push(html, sec, o);
   }
 
   toast(html, cls = "", max = 4) {

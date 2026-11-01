@@ -17,6 +17,8 @@ import pour from '../kit/mg-pour.js';
 import turnDials from '../kit/mg-turn-dials.js';
 import { useMinigames } from '../kit/mg-library.js';
 import { prewarm } from '../kit/frame-guard.js';
+import { createFear } from '../kit/fear-fx.js';
+import { showEndingScene } from '../kit/ending-scene.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -35,13 +37,14 @@ export function curseStep(curse, { grip, yaw, pitch }, dt) {
 
 export default function story(ext) {
   const st = { seen: false, genkan: false, zashiki: false, gate: [0, 0, 0], deaths: 0, night: 0, dark: { NW: 0, NE: 0, SW: 0, SE: 0 }, warned: false, fired: [], ride: 0, curse: 0, startedAt: 0, played: 0, first: { road: false, po: false } };
-  let ctx = null, V = null, T = null, snd = null, H = null, light = null, dying = false, gripKey = false, gripTouch = false;
+  let ctx = null, V = null, T = null, snd = null, H = null, light = null, dying = false, gripKey = false, gripTouch = false, fear = null;
   // behind the title (the start button waits): wait for the textures, then compile the shaders of every stage's lights and upload
   // the textures, so pressing start does not freeze for seconds while the GPU driver links the programs (GPU perf, Issue #3)
   ext.registerBoot('hk-prewarm', async (c, report) => {
     if (!V) return;
     report(0, '村を準備中…');
     await Promise.race([V.ready, new Promise((r) => setTimeout(r, 15000))]);
+    await V.dressOuterWalls();
     const real = Object.getOwnPropertyDescriptor(c.prog, 'index');
     // the look's post pass draws the scene into its own target (no tone mapping, linear output): compile for that target, as play does
     const warm = async () => { const rt = c.look && c.look.post && c.look.post.rt; const was = c.renderer.getRenderTarget(); if (rt) c.renderer.setRenderTarget(rt);
@@ -91,7 +94,7 @@ export default function story(ext) {
     serialize: () => ({ seen: st.seen, genkan: st.genkan, zashiki: st.zashiki, gate: st.gate, deaths: st.deaths, played: st.played }),
     restore: (j) => { Object.assign(st, { seen: false, genkan: false, zashiki: false, gate: [0, 0, 0], deaths: 0, played: 0 }, j || {}); resetStageLocal(); },
   });
-  function resetStageLocal() { st.fakeClock = false; st.night = 0; st.dark = { NW: 0, NE: 0, SW: 0, SE: 0 }; st.warned = false; st.fired = []; st.ride = 0; st.curse = 0; }
+  function resetStageLocal() { faceT = 0; darkT = 0; handsK = 0; if (hands) hands.material.opacity = 0; fear && fear.reset(); st.fakeClock = false; st.night = 0; st.dark = { NW: 0, NE: 0, SW: 0, SE: 0 }; st.warned = false; st.fired = []; st.ride = 0; st.curse = 0; }
 
   // ---------------------------------------------------------------- conversations: the standard window (ctx.talk / ctx.choose, standard 1.7)
   const talk = (lines, o = {}) => ctx.talk(lines, o);
@@ -173,8 +176,8 @@ export default function story(ext) {
     snd.knock({ n: 1, vol: 0.5, pan: 0 });
     await talk(T.gate_opened, { title: '農道の車止め' });
     return true;
-  }, onDone: () => { const d = ctx.world.doors.get('D_GATE'); d && d.open(); } });
-  ext.registerTask('T_CAR', { run: async () => { await talk(T.boarded, { title: '迎えの車' }); return true; } });
+  }, onDone: () => { const d = ctx.world.doors.get('D_GATE'); d && d.open(); if (V.parts.gate) V.parts.gate.target = 1; snd.scrape({ vol: 0.45 }); ctx.audio && ctx.audio.noise && ctx.audio.noise('scrape', { gain: 0.6 }); say('重い木の門が、軋みながら左右に開いていく。', 4.5); } });   // feedback 2026-11-01: the gate was not seen to open (only the plan's door opened; the leaves waited for the next stage)
+  ext.registerTask('T_CAR', { run: async () => { await talk(T.boarded, { title: '迎えの車' }); return true; }, onDone: () => { if (V.parts.boarding) V.parts.boarding.visible = false; } });
   ext.registerTask('T_RIDE', { canStart: () => '村境まで、札を握って待つ。' });
 
   // ---------------------------------------------------------------- interactions of the night (L3)
@@ -212,13 +215,14 @@ export default function story(ext) {
     const el = document.getElementById('hk-jump');
     if (el && !c.calm) { el.hidden = false; setTimeout(() => { el.hidden = true; show(); }, 900); } else show();
   } });
-  // the ending: the kicker, the picture, the epilogue and how the night went
+  // the ending (feedback 2026-11-01 "最後にも写真を置いて手前に文字"): the kit's ending scene - the picture fills the screen, the kicker, the title
+  // and the epilogue appear in front of it a line at a time, then how the night went
   ext.registerScreen('ending', { keepSave: false, open: (c, e) => {
     const sec = Math.round(st.played), recs = ['N_LETTER', 'N_PHOTO', 'N_DIARY'].filter((d) => c.state.docsRead.includes(d)).length;
-    c.wm.open('ending', { title: e.title, size: 'm', locked: true, render: (el) => {
-      el.innerHTML = `<div class="hk-ending"><p class="hk-death-kicker">${esc(e.kicker || '')}</p>${e.photo ? `<img class="hk-talk-img" src="${esc(e.photo)}" alt="">` : ''}${e.text.split('\n').map((p) => `<p>${esc(p)}</p>`).join('')}<p class="hk-ending-stats">5 / 5 段階 ・ 記録 ${recs} / 3 ・ やり直し ${st.deaths} 回 ・ ${Math.floor(sec / 60)}分${String(sec % 60).padStart(2, '0')}秒</p><div class="hk-choices"><button type="button" class="btn primary" data-title>タイトルに戻る</button></div></div>`;
-      el.querySelector('[data-title]').onclick = () => location.reload();
-    } });
+    if (fear) fear.reset();
+    showEndingScene(c, { photo: e.photo, kicker: e.kicker, title: e.title, text: e.text,
+      stats: `5 / 5 段階 ・ 記録 ${recs} / 3 ・ やり直し ${st.deaths} 回 ・ ${Math.floor(sec / 60)}分${String(sec % 60).padStart(2, '0')}秒`,
+      buttons: [{ label: 'タイトルに戻る', primary: true, fn: () => location.reload() }] });
   } });
 
   // ---------------------------------------------------------------- stage looks and who is where
@@ -242,6 +246,7 @@ export default function story(ext) {
     P.k.root.visible = i === 1;
     P.lady.root.visible = i <= 1;
     P.driver.root.visible = i >= 3;
+    if (V.parts.boarding) V.parts.boarding.visible = i === 3 && !done('T_CAR');
     V.parts.van.visible = i >= 3; V.parts.vanLight.visible = i >= 3; V.parts.vanInside.visible = i === 4; for (const m of V.parts.vanShell) m.visible = i !== 4;   // in the van: the inside instead of the shell
     V.parts.shopLight.intensity = i === 2 ? 4 : 10;
     for (const k of BOWLS) V.parts.plates[k].salt.visible = done(`T_SALT_${k}`);
@@ -331,9 +336,9 @@ export default function story(ext) {
         st.fired.push(t);
         if (who === '私') say(text, 5.5); else voice(who, text, 5.5);
         if (fx === 'knock') { snd.knock({ pan: 0.2 }); shake(1.6); }
-        if (fx === 'knockFinal') { snd.knock({ n: 5, vol: 0.9, pan: 0.1 }); snd.sting(); shake(3.5); }
+        if (fx === 'knockFinal') { snd.knock({ n: 5, vol: 0.9, pan: 0.1 }); snd.sting(); shake(3.5); fear && fear.kick(0.9); }
         if (fx === 'fakeDawn') { st.fakeClock = true; snd.knock({ n: 2, vol: 0.3 }); }   // the HUD clock shows 07:00 until fakeEnd
-        if (fx === 'fakeEnd') { st.fakeClock = false; snd.po({ vol: 0.7, pan: 0.1 }); snd.sting(); shake(2.5); }
+        if (fx === 'fakeEnd') { st.fakeClock = false; snd.po({ vol: 0.7, pan: 0.1 }); snd.sting(); shake(2.5); fear && fear.kick(0.8); }
         if (fx === 'po') { snd.po({ vol: 0.5, pan: -0.2 }); shadow(7); flashPhoto('assets/photos/ph-window-shadow.webp', '', 2.6); }
       }
     }
@@ -387,8 +392,11 @@ export default function story(ext) {
     fp.yaw = clamp(fp.yaw, -1.35, 1.35);
     const me = seat('rear1-right'); cam.position.set(me.x, me.y + 0.25, me.z + Math.sin(st.ride * 9) * 0.004);
     st.curse = curseStep(st.curse, { grip, yaw: fp.yaw, pitch: fp.pitch }, dt);
-    if (H) { H.root.visible = k < 0.87; H.root.position.set(3.3 + Math.sin(st.ride * 2) * 0.12, 0, vz - 0.3 - Math.sin(st.ride * 1.3) * 1.2); H.root.rotation.y = Math.PI / 2; H.character.lookAt(cam); H.character.setSpeed(0); H.character.update(dt); }
-    for (const [t, who, text, fx] of T.ride) if (st.ride >= t && !st.fired.includes(`r${t}`)) { st.fired.push(`r${t}`); if (who === '私') say(text, 5); else voice(who, text, 5); if (fx === 'po') { snd.po({ vol: 0.5, pan: 0.9 }); flashPhoto('assets/photos/ph-van-window.webp', '', 2.2); } if (fx === 'knock') snd.knock({ pan: 0.9, vol: 0.6 }); }
+    if (H) { H.root.visible = k < 0.87; H.root.position.set(3.3 + Math.sin(st.ride * 2) * 0.12, 0, vz - 0.3 - Math.sin(st.ride * 1.3) * 1.2); H.root.rotation.y = Math.PI / 2;
+      if (faceT > 0) { H.root.visible = true; H.root.position.set(0.5 + vanHalf() + 0.42, cam.position.y - 2.88, cam.position.z + 0.3); H.root.rotation.y = -Math.PI / 2; }   // she stoops to the glass, her face filling the window
+      H.character.lookAt(cam); H.character.setSpeed(0); H.character.update(dt); }
+    for (const [t, who, text, fx] of T.ride) if (st.ride >= t && !st.fired.includes(`r${t}`)) { st.fired.push(`r${t}`); if (who === '私') say(text, 3.2); else voice(who, text, 3.2); rideFx(fx); }
+    updateRideFx(dt);
     el('hk-ride-bar').style && (el('hk-ride-bar').style.width = `${Math.round(k * 100)}%`);
     el('hk-curse-bar').style && (el('hk-curse-bar').style.width = `${Math.round(st.curse * 100)}%`);
     const threat = el('hk-ride-threat'); const tt = grip ? '' : Math.abs(Math.sin(fp.yaw)) > 0.58 && fp.pitch > -0.3 ? '窓から、目が離せない。' : '窓を見続けない。札を握って、目を伏せる。'; if (threat.textContent !== tt) threat.textContent = tt;
@@ -400,6 +408,45 @@ export default function story(ext) {
       snd.knock({ n: 1, vol: 0.2 });
       ctx.completeTask('T_RIDE');
     }
+  }
+
+
+  // the ride's frights (feedback 2026-11-01 "車に乗って行くシーンでもう少し怖いイベント"): steps on the roof, the radio switching itself on,
+  // pale hand prints spreading over the right-hand glass from outside, the lights dying, and her face at the window
+  let faceT = 0, darkT = 0, hands = null, handsK = 0;
+  const vanHalf = () => { const s0 = V.parts.vanSeats.find((x) => x.id === 'rear1-right') || V.parts.vanSeats[0]; return Math.abs(s0.x) * 2; };
+  function handPrints() {
+    if (hands) return hands;
+    const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
+    const hand = (x, y, r, k) => {
+      g.save(); g.filter = 'blur(2.5px)'; g.translate(x, y); g.rotate(r); g.scale(k, k); g.fillStyle = 'rgba(236,232,220,0.34)';
+      g.beginPath(); g.ellipse(0, 0, 21, 26, 0, 0, Math.PI * 2); g.fill();
+      for (const [fx, fy, l, a] of [[-16, -19, 30, -0.35], [-6, -27, 40, -0.1], [5, -28, 43, 0.04], [15, -24, 37, 0.17], [23, 4, 25, 0.95]]) { g.save(); g.translate(fx, fy); g.rotate(a); g.beginPath(); g.ellipse(0, -l / 2, 5.5, l / 2, 0, 0, Math.PI * 2); g.fill(); g.restore(); }
+      const gr = g.createLinearGradient(0, 18, 0, 92); gr.addColorStop(0, 'rgba(236,232,220,0.22)'); gr.addColorStop(1, 'rgba(236,232,220,0)'); g.fillStyle = gr; g.fillRect(-15, 16, 30, 76);
+      g.restore();
+    };
+    [[70, 120, -0.25, 0.62], [150, 70, 0.08, 0.7], [250, 150, 0.22, 0.6], [330, 80, -0.06, 0.66], [420, 170, 0.5, 0.55], [470, 70, -0.4, 0.6], [200, 205, 0.1, 0.5]].forEach((a) => hand(...a));
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.8), new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+    const s0 = V.parts.vanSeats.find((x) => x.id === 'rear1-right') || V.parts.vanSeats[0];
+    m.position.set(-vanHalf() + 0.005, s0.y + 0.02, s0.z); m.rotation.y = Math.PI / 2; m.renderOrder = 3; m.name = 'hk-hands';
+    V.parts.van.add(m); hands = m; return m;
+  }
+  const noise = (name, o) => ctx.audio && ctx.audio.noise && ctx.audio.noise(name, o);
+  function rideFx(fx) {
+    if (!fx) return;
+    if (fx === 'po') { snd.po({ vol: 0.5, pan: 0.9 }); flashPhoto('assets/photos/ph-van-window.webp', '', 2.2); fear.kick(0.5); }
+    if (fx === 'knock') { snd.knock({ pan: 0.9, vol: 0.6 }); fear.kick(0.45); }
+    if (fx === 'roof') { noise('thud', { n: 1, gain: 0.9 }); setTimeout(() => noise('thud', { n: 1, gain: 0.8 }), 650); setTimeout(() => noise('thud', { n: 1, gain: 0.7 }), 1250); fear.kick(0.75); darkT = Math.max(darkT, 0.4); }
+    if (fx === 'radio') { snd.radio({ sec: 3.2, vol: 0.24 }); fear.kick(0.5); }
+    if (fx === 'hands') { handPrints(); handsK = 0.001; noise('tap', { n: 4, gap: 0.22, gain: 0.8 }); fear.kick(0.7); }
+    if (fx === 'dark') { darkT = 1.8; noise('rattle', { gain: 0.5 }); fear.kick(0.7); }
+    if (fx === 'face') { faceT = 2.4; const j = document.getElementById('hk-jump'); if (j && !ctx.calm) { j.hidden = false; setTimeout(() => { j.hidden = true; }, 700); } snd.po({ vol: 0.95, pan: 0.6 }); snd.sting(); ctx.fx && ctx.fx.spook && ctx.fx.spook(0.8); fear.kick(1); }
+  }
+  function updateRideFx(dt) {
+    faceT = Math.max(0, faceT - dt); darkT = Math.max(0, darkT - dt);
+    if (hands && handsK > 0) { handsK = Math.min(1, handsK + dt * 0.5); hands.material.opacity = handsK * 0.9; }
+    const L = V.parts.vanLight; if (L) { L.userData.base = L.userData.base || L.intensity; const off = darkT > 0 && (darkT > 0.5 || Math.random() < 0.5); L.intensity = off ? (Math.random() < 0.15 ? L.userData.base * 0.3 : 0) : L.userData.base; }
   }
 
   // ---------------------------------------------------------------- set up once the world is built
@@ -423,6 +470,7 @@ export default function story(ext) {
     ctx = c; T = c.data.talk; snd = createSound(c); loadVoices();
     c.hk = { state: st, sound: snd };
     V = dressVillage(c);
+    fear = createFear(c);   // tremble, heartbeat, the dark edges (kit js/fear-fx.js, feedback 2026-11-01)
     H = makeHasshaku({ detail: 1 }); H.root.visible = false; c.scene.add(H.root);
     // the gate is held by its three turn-buttons until T_GATE is done (the standard door then opens)
     const gate = c.world.doors.get('D_GATE'); if (gate) { const base = gate.locked; gate.locked = () => !done('T_GATE') || base(); }
@@ -452,7 +500,7 @@ export default function story(ext) {
     c.hudStressHooks && c.hudStressHooks.push((onOff) => { el('hk-night').hidden = !onOff; });
     c.warmImages = [...(c.warmImages || []), 'assets/photos/face.webp', 'assets/photos/salt-scene.webp', 'assets/photos/encounter.webp'];
     // tests (window.__gf when ?qa / ?debug): jump the night or the ride, read the state
-    if (window.__gf || c.qa || c.debug) window.__hk = { st, nightClock, applyStage, skipNight: () => { st.night = NIGHT_SEC - 0.1; }, skipRide: () => { st.ride = RIDE_SEC - 0.1; }, ride: () => ({ ride: st.ride, curse: st.curse }) };
+    if (window.__gf || c.qa || c.debug) window.__hk = { st, nightClock, applyStage, skipNight: () => { st.night = NIGHT_SEC - 0.1; }, skipRide: () => { st.ride = RIDE_SEC - 0.1; }, ride: () => ({ ride: st.ride, curse: st.curse }), H: () => H };
   });
   function toggleLight(on) { if (!light) return; light.userData.auto = false; light.visible = on ?? !light.visible; ctx.ui.toast(light.visible ? '懐中電灯をつけた。' : '懐中電灯を消した。'); }
   ext.on('input:key', (k) => {
@@ -490,6 +538,22 @@ export default function story(ext) {
   });
   ext.on('item:pickup', ({ id }) => { if (id === 'I_OFUDA') say('Ｋさんの札は二枚。一枚を戸に、もう一枚を手元に。', 5); });
 
+
+  // fear on the body (feedback 2026-11-01 "八尺様にあった時ももう少し震えや心音"): how near and how much in view she is, 0..1
+  function fearLevel() {
+    if (dying) return 0;
+    const i = lvl(), cam = ctx.camera;
+    if (i === 0 && H && H.root.visible) {
+      if (st.seen) return H.seenT < 6.5 ? Math.max(0.35, 1 - Math.max(0, H.seenT - 4) / 2.5) : 0;
+      const d = H.root.position.distanceTo(cam.position); return Math.min(0.55, (H.gaze || 0) * 0.8 + Math.max(0, (30 - d) / 30) * 0.15);
+    }
+    if (i === 3) return (ctx.fxState && ctx.fxState.danger) || 0;
+    if (i === 4 && st.ride > 0 && !done('T_RIDE')) return 0.22 + st.curse * 0.75;
+    if (i === 2) return Math.min(0.5, Math.max(...Object.values(st.dark)) * 0.4);
+    return 0;
+  }
+  function updateFear(dt) { if (fear) fear.update(dt, fearLevel(), { heart: !(lvl() === 3 && ctx.fxState && ctx.fxState.chasing) }); }   // in the chase the monster pack beats the heart
+
   // ---------------------------------------------------------------- per frame
   ext.registerSystem('hasshaku-story', { update: (dt, c, active) => {
     if (!V) return;
@@ -497,6 +561,8 @@ export default function story(ext) {
     V.updatePeople(dt, c.camera);
     updateHouseFx(dt, t);
     if (light && light.visible) { light.position.copy(c.camera.position); const dir = new THREE.Vector3(); c.camera.getWorldDirection(dir); light.target.position.copy(c.camera.position).addScaledVector(dir, 6); }
+    if (V.parts.gateDials) V.parts.gateDials.forEach((d, i) => { const want = -(st.gate[i] || 0) * Math.PI / 2; d.rotation.z += (want - d.rotation.z) * Math.min(1, dt * 8); });
+    if (V.parts.boardPad && V.parts.boarding.visible) V.parts.boardPad.material.opacity = 0.28 + 0.2 * (0.5 + 0.5 * Math.sin(t * 3));
     if (V.parts.gate) { const G = V.parts.gate; G.open += ((G.target || 0) - G.open) * Math.min(1, dt * 2); G.left.rotation.y = -G.open * 1.6; G.right.rotation.y = G.open * 1.6; }
     if (!active) { if (lvl() === 4 && !dying && c.state.started && !c.wm.isOpen) { /* keep the seat even when the pointer is free */ } return; }
     st.played += dt;
@@ -507,6 +573,7 @@ export default function story(ext) {
     if (lookAt) { turnTo(lookAt.x, lookAt.y, lookAt.z, Math.min(1, dt * 4)); if ((lookAt.t -= dt) <= 0) lookAt = null; }
     updateNight(qdt);
     updateRide(qdt);
+    updateFear(dt);
     const room = c.data.plan.rooms.find((r) => r.id === c.state.room);
     if (V.prints) V.prints.visible = lvl() >= 3;   // W13: the footprints are there in the morning
     snd.update(dt, { level: lvl() === 4 && !st.ride ? 3 : lvl(), outdoor: !room || room.kind === 'outdoor' || lvl() === 4, insects: lvl() === 3 || lvl() === 4 ? 0.3 : 1, wind: lvl() === 2 ? 0.2 : 0.12 });

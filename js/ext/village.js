@@ -7,6 +7,7 @@
 //     the van, utility poles, lanterns, jizo, the rice field and the forest
 //   - people from the standard character (grandfather, Ｋさん, the shop keeper)
 // Everything stands on the floor it belongs to (W3): the y of each thing is its support height.
+import { dressOuterWalls } from '../kit/outer-walls.js';
 import * as THREE from 'three';
 import * as E from '../kit/env-props.js';
 import * as P from '../kit/props.js';
@@ -99,15 +100,16 @@ export function dressVillage(ctx) {
   const own = (id, o, fn) => ownReady.then((t) => { if (t && (t.catalog.textures || []).some((e) => e.id === id)) fn(t.material(id, o)); });
 
   // ---------------------------------------------------------------- ground, road, forest, mountains
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(260, 260), mat(0x26301f)); ground.rotation.x = -Math.PI / 2; ground.position.set(0, -0.12, -20); ground.receiveShadow = true; G.add(ground);
-  const road = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 104), mat(0x77756a)); road.rotation.x = -Math.PI / 2; road.position.set(0.5, 0.006, -21); road.receiveShadow = true; G.add(road);
-  const tracks = [-1.0, 2.0].map((x) => { const t = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 104), mat(0x55534b)); t.rotation.x = -Math.PI / 2; t.position.set(x, 0.008, -21); G.add(t); return t; });
-  texReady.then((tex) => { if (!tex) return; road.material = tex.material('gravel', { size: [5.6, 104] }); own('road_gravel_ruts', { size: [5.6, 104] }, (m) => { road.material = m; }); ground.material = tex.material('grass_dry', { size: [260, 260] }); void tracks; });
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(260, 420), mat(0x26301f)); ground.rotation.x = -Math.PI / 2; ground.position.set(0, -0.12, -100); ground.receiveShadow = true; G.add(ground);
+  const ROADLEN = 260, ROADZ = 31 - ROADLEN / 2;   // from the house (z 31) on past the border into the fog (feedback 2026-11-01: the road ended just past the van's stop)
+  const road = new THREE.Mesh(new THREE.PlaneGeometry(5.6, ROADLEN), mat(0x77756a)); road.rotation.x = -Math.PI / 2; road.position.set(0.5, 0.006, ROADZ); road.receiveShadow = true; G.add(road);
+  const tracks = [-1.0, 2.0].map((x) => { const t = new THREE.Mesh(new THREE.PlaneGeometry(0.4, ROADLEN), mat(0x55534b)); t.rotation.x = -Math.PI / 2; t.position.set(x, 0.008, ROADZ); G.add(t); return t; });
+  texReady.then((tex) => { if (!tex) return; road.material = tex.material('gravel', { size: [5.6, ROADLEN] }); own('road_gravel_ruts', { size: [5.6, ROADLEN] }, (m) => { road.material = m; }); ground.material = tex.material('grass_dry', { size: [260, 420] }); void tracks; });
 
   // trees: instanced cedars (trunk + three tiers) outside the walkable area, and a row along every outer edge
   const treeSpots = [];
   const rnd = (() => { let s = 20080815; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); })();
-  const inWalk = (x, z, pad = 1.2) => plan.rooms.some((r) => x > r.x - pad && x < r.x + r.w + pad && z > r.z - pad && z < r.z + r.d + pad) || (Math.abs(x - 0.5) < 5 && z < -40 && z > -80);
+  const inWalk = (x, z, pad = 1.2) => plan.rooms.some((r) => x > r.x - pad && x < r.x + r.w + pad && z > r.z - pad && z < r.z + r.d + pad) || (Math.abs(x - 0.5) < 5 && z < -40 && z > -230);
   for (const run of edgeRuns.filter((e) => !e.shared)) {
     const len = Math.hypot(run.x1 - run.x0, run.z1 - run.z0);
     const n = Math.max(1, Math.round(len / 2.6));
@@ -117,7 +119,7 @@ export function dressVillage(ctx) {
       if (!inWalk(x, z, 0.6)) treeSpots.push([x, z, 0.8 + rnd() * 0.5]);
     }
   }
-  for (let i = 0; i < 520 && treeSpots.length < 430; i++) { const x = -70 + rnd() * 140, z = -95 + rnd() * 140; if (!inWalk(x, z, 3.5)) treeSpots.push([x, z, 0.7 + rnd() * 0.7]); }
+  for (let i = 0; i < 900 && treeSpots.length < 620; i++) { const x = -70 + rnd() * 140, z = -200 + rnd() * 245; if (!inWalk(x, z, 3.5)) treeSpots.push([x, z, 0.7 + rnd() * 0.7]); }
   {
     const trunk = new THREE.CylinderGeometry(0.12, 0.2, 1, 6); trunk.translate(0, 0.5, 0);
     const tiers = [[1.6, 3.2, 2.6], [1.25, 2.8, 4.2], [0.8, 2.4, 5.6]].map(([r, h, y]) => { const g = new THREE.ConeGeometry(r, h, 7); g.translate(0, y, 0); return g; });
@@ -213,7 +215,7 @@ export function dressVillage(ctx) {
   }
 
   // ---------------------------------------------------------------- utility poles and wires, lanterns along the road
-  const poles = [[-3.0, 23], [-3.0, 0], [-3.0, -18], [-3.0, -40], [-3.0, -62]];
+  const poles = [[-3.0, 23], [-3.0, 0], [-3.0, -18], [-3.0, -40], [-3.0, -62], [-3.0, -84], [-3.0, -106], [-3.0, -128]];
   poles.forEach(([x, z], i) => { cyl(0.13, 0.16, 7.2, M.pole, x, 3.6, z, 8); box(1.6, 0.1, 0.1, M.darkWood, x, 6.6, z); addCol(x - 0.2, z - 0.2, x + 0.2, z + 0.2); if (i) { const [px, pz] = poles[i - 1]; for (const dx of [-0.7, 0.7]) { const curve = new THREE.QuadraticBezierCurve3(V3(px + dx, 6.6, pz), V3((px + x) / 2 + dx, 5.7, (pz + z) / 2), V3(x + dx, 6.6, z)); G.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(16)), M.wire)); } } });
   // a few lanterns (wooden post + paper light); only some carry a real light (lights cost)
   const lanterns = [[3.4, 21, true], [-3.6, 6, false], [3.4, -8, true], [-3.6, -21, false], [3.4, -28, true]];
@@ -468,22 +470,64 @@ export function dressVillage(ctx) {
     box(7.2, 0.2, 0.3, M.darkWood, 0, 2.6, 0, g);
     const leaf = (sx) => { const pivot = new THREE.Group(); pivot.position.set(sx * 3.1, 0, 0); g.add(pivot); const w = 3.05; for (const y of [0.4, 1.4]) box(w, 0.1, 0.08, M.wood, -sx * w / 2, y, 0, pivot); for (let i = 0; i < 6; i++) box(0.08, 1.4, 0.06, M.wood, -sx * (0.25 + i * 0.52), 0.9, 0, pivot); return pivot; };
     api.parts.gate = { left: leaf(-1), right: leaf(1), open: 0 };
+    // the box of the three turn-buttons on its post by the gate (feedback 2026-11-01: "put a box where it opens, so the gimmick reads"):
+    // an iron box with three round dials and an arrow each (story.js turns the arrows with the puzzle), under a small lamp
+    { const bx0 = new THREE.Group(); at(bx0, -1.6, 0, -23.45);
+      cyl(0.06, 0.07, 1.1, M.darkWood, 0, 0.55, 0, 8, bx0);
+      const iron = mat(0x3a3c3a, { metalness: 0.6, roughness: 0.45 });
+      box(0.78, 0.36, 0.16, iron, 0, 1.22, 0, bx0); box(0.84, 0.05, 0.22, M.roof, 0, 1.43, 0, bx0);
+      const dials = [];
+      for (let i = 0; i < 3; i++) {
+        const d = new THREE.Group(); d.position.set(-0.24 + i * 0.24, 1.22, 0.085); bx0.add(d);
+        const face = cyl(0.085, 0.085, 0.03, M.brass, 0, 0, 0, 16, d); face.rotation.x = Math.PI / 2;
+        const arrow = box(0.025, 0.11, 0.012, M.beam, 0, 0.035, 0.02, d); void arrow;
+        dials.push(d);
+      }
+      const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.12), new THREE.MeshStandardMaterial({ map: canvasTexture(['東　南　北'], { w: 512, h: 88, bg: '#2a2622', fg: '#e8dcc0', size: 50 }), roughness: 0.9 }));
+      tag.position.set(0, 1.07, 0.082); bx0.add(tag);
+      const glow = new THREE.PointLight(0xffd8a0, 2.2, 3.2, 1.6); glow.position.set(0, 1.7, 0.5); bx0.add(glow);
+      api.parts.gateDials = dials; }
     const notice = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.56), new THREE.MeshStandardMaterial({ map: canvasTexture(['三つの回し金', '朝日・正午・地蔵', '東・南・北'], { w: 256, h: 340, bg: '#ddd3b6', fg: '#2e2820', head: true }), roughness: 1 }));
     notice.position.set(-3.3 + 0.5, 1.5, -23.82); G.add(notice);
   }
   // fences along the far road (seen from the van) and the van itself
-  for (const s of [-1, 1]) for (let z = -48; z > -78; z -= 6) { const f = E.fence({ kind: 'rail', len: 6, h: 0.8 }); at(f, 0.5 + s * 3.8, 0, z - 3, Math.PI / 2); }
+  for (const s of [-1, 1]) for (let z = -48; z > -140; z -= 6) { const f = E.fence({ kind: 'rail', len: 6, h: 0.8 }); at(f, 0.5 + s * 3.8, 0, z - 3, Math.PI / 2); }
   {
     // the kit's van with its inside for the ride (standard 1.7); turned to face north (-z), so its right-hand seats are on +x
     const van = E.car({ kind: 'van', color: 0x3a514a, interior: true }); van.name = 'van'; at(van, 0.5, 0, -34.6, Math.PI); api.parts.van = van;
     api.parts.vanInside = van.userData.interior; api.parts.vanShell = van.userData.shell; api.parts.vanSeats = van.userData.seats;
     addCol(-0.45, -37.0, 1.45, -32.2, 0, 2.0);
+    // where to get in (feedback 2026-11-01: "hard to see where to board"): the side door slid open on the +x side, the lit inside showing
+    // through it, a step, and a pale square on the ground where to stand (api.parts.boarding: hidden once aboard)
+    { const bd = new THREE.Group(); bd.name = 'boarding'; G.add(bd); api.parts.boarding = bd;
+      const hole = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 1.25), new THREE.MeshStandardMaterial({ color: 0x1c1a16, emissive: 0x6a5232, emissiveIntensity: 0.55, roughness: 1 }));
+      hole.position.set(1.37, 1.05, -34.2); hole.rotation.y = Math.PI / 2; bd.add(hole);
+      box(0.04, 1.3, 0.95, mat(0x3a514a, { metalness: 0.5, roughness: 0.35 }), 1.42, 1.05, -33.1, bd);   // the slid-back door
+      box(0.35, 0.12, 0.9, M.stone, 1.6, 0.06, -34.2, bd);
+      const pad = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), new THREE.MeshBasicMaterial({ color: 0xffe6b0, transparent: true, opacity: 0.22, depthWrite: false }));
+      pad.rotation.x = -Math.PI / 2; pad.position.set(2.1, 0.03, -34.2); bd.add(pad); api.parts.boardPad = pad;
+      const inl = new THREE.PointLight(0xffc98a, 3.5, 4, 1.6); inl.position.set(0.9, 1.5, -34.2); bd.add(inl); }
     const hl = new THREE.SpotLight(0xffe2a4, 30, 30, 0.5, 0.6, 1.2); hl.position.set(0.5, 0.8, -37); hl.target.position.set(0.5, 0, -52); G.add(hl, hl.target); api.parts.vanLight = hl;
   }
 
   // the map board by the entrance (TH_MAPBOARD) and the shop's notice (TH_SHOPNOTE)
   { const g = new THREE.Group(); for (const dz of [-0.6, 0.6]) cyl(0.04, 0.04, 1.6, M.darkWood, 0, 0.8, dz, 6, g); const mp = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.86), new THREE.MeshStandardMaterial({ map: new THREE.TextureLoader().load('assets/photos/route-map.webp', (t) => { t.colorSpace = THREE.SRGBColorSpace; }), roughness: 0.9 })); mp.position.set(0.03, 1.25, 0); mp.rotation.y = Math.PI / 2; g.add(mp); box(0.05, 0.95, 1.3, M.darkWood, -0.01, 1.25, 0, g); at(g, -2.45, 0, 17.6); addCol(-2.55, 16.9, -2.35, 18.3, 0, 1.7); }
   { const n = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.56), new THREE.MeshStandardMaterial({ map: canvasTexture(['お知らせ', '夕方以降、畑の先で', '妙な声を聞いた方は', '真似をせず、まっすぐ', '帰宅してください', '区長'], { w: 300, h: 400, bg: '#e2d9bd', fg: '#2e2820', head: true }), roughness: 1 })); n.position.set(-9.1, 1.35, -11.0); n.rotation.y = -Math.PI / 2; G.add(n); }
+  // the village's missing (feedback 2026-11-01): a faded 尋ね人 poster on the shop front (TH_MISSING), a newspaper clipping inside the
+  // doma (TH_CLIPPING), and a moss-grown memorial stone by the shrine with the years they went (TH_STONE)
+  { const paper = (lines, o) => new THREE.MeshStandardMaterial({ map: canvasTexture(lines, o), roughness: 1 });
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.64), paper(['尋ね人', '佐伯みつ子（十六）', '昭和四十七年八月十四日', '北の農道付近で', '白い服の背の高い女の人と', 'お心当たりの方は駐在所へ'], { w: 300, h: 420, bg: '#cfc6a6', fg: '#3a2e24', head: true }));
+    p.position.set(-8.9, 1.45, -17.0); p.rotation.y = Math.PI / 2; p.rotation.z = 0.03; G.add(p);
+    const c = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.3), paper(['帰省中の男児', '行方不明', '祖父母宅近くの農道で', '一九九八年八月'], { w: 300, h: 250, bg: '#d6cba8', fg: '#2a2420', head: true }));
+    c.position.set(-10.0, 1.5, -17.88); c.rotation.y = 0; c.rotation.z = -0.04; G.add(c);
+    const g = new THREE.Group(); at(g, 7.4, 0, -9.6, Math.PI * 0.85);
+    box(1.1, 0.22, 0.7, M.stone, 0, 0.11, 0, g);
+    const slab = box(0.55, 1.45, 0.2, M.stone, 0, 0.94, -0.05, g); slab.rotation.z = 0.025;
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 1.2), new THREE.MeshStandardMaterial({ map: canvasTexture(['行方知れずの者之を祀る'], { w: 128, h: 400, bg: '#5d6258', fg: '#2a2c26', vertical: true, size: 34 }), roughness: 1 }));
+    face.position.set(0, 0.98, 0.052); face.rotation.z = 0.025; g.add(face);
+    box(0.57, 0.25, 0.22, M.moss, 0, 0.32, -0.05, g);   // moss creeping up the foot
+    cyl(0.04, 0.04, 0.26, M.wood, 0.36, 0.35, 0.22, 8, g); for (let i = 0; i < 3; i++) box(0.05, 0.05, 0.05, mat([0xd8d4c0, 0x9a5a7a, 0xd0b050][i]), 0.34 + i * 0.03, 0.5, 0.2 + i * 0.02, g);
+    addCol(6.85, -10.1, 7.95, -9.1, 0, 1.7); }
 
   // ---------------------------------------------------------------- people (standard characters)
   const person = (o, x, z, ry) => { const c = makeCharacter({ blob: true, ...o }); c.root.traverse((m) => { if (m.isMesh && m.name !== 'blob') m.castShadow = true; }); at(c.root, x, 0, z, ry); c.set('idle'); return c; };
@@ -514,6 +558,15 @@ export function dressVillage(ctx) {
     const made = new Map();
     for (const [m0, [id, scale, tint]] of look) if (has(id)) { const m = tex.material(id, { triplanar: scale }); m.color.set(tint); made.set(m0, m); }
     ctx.scene.traverse((o) => { if (o.isMesh && made.has(o.material)) o.material = made.get(o.material); });
+  });
+  // the outside faces of the house and shop walls are charred cedar boards (yakisugi), the inside stays clay (feedback 2026-11-01:
+  // "the house walls have no texture": clay_wall was nearly flat, and the outside showed the same plaster as the rooms)
+  // (run once the recipes have put the room's clay on the walls: story.js calls api.dressOuterWalls() before the shaders are compiled)
+  api.dressOuterWalls = () => texReady.then((tex) => {
+    if (!tex || api.outerDone || !(tex.catalog.textures || []).some((e) => e.id === 'wall_yakisugi')) return;
+    api.outerDone = true;
+    const outM = tex.material('wall_yakisugi', { triplanar: 1 }); outM.color.set(0xffffff); if (outM.emissive) outM.emissive.set(0x0c0a08);
+    dressOuterWalls(ctx, outM);   // kit js/outer-walls.js: the faces that look onto the yard
   });
   // every texture (the kit's and ours) is on its mesh: the boot step in story.js pre-compiles the shaders after this
   api.ready = Promise.all([texReady, ownReady]).then(() => new Promise((r) => setTimeout(r, 50)));

@@ -39,7 +39,41 @@ export function makeHasshaku(o = {}) {
   const dress = new THREE.Mesh(dressGeo, dressMat); dress.name = 'dress'; dress.castShadow = true;
   dress.scale.set(1, 1, 0.82); root.add(dress);
   root.traverse((m) => { if (m.isMesh && m.name !== 'blob') m.castShadow = true; });
-  return { root, character: c, hat, dress };
+  // the haze she stands in (feedback 2026-11-01 "モヤがかかってる感じ"): soft pale puffs around the body from the hem to the hat, drifting
+  // slowly upwards and breathing in and out; they move with her and fade in the fog like she does
+  const haze = new THREE.Group(); haze.name = 'haze'; root.add(haze);
+  const hz = hazeTexture(), puffs = [];
+  for (let i = 0; i < (o.detail === 1 ? 12 : 16); i++) {
+    const m = new THREE.SpriteMaterial({ map: hz, color: 0xdfe3da, transparent: true, opacity: 0, depthWrite: false, fog: true });
+    const s = new THREE.Sprite(m); const a = i * 2.39996, r = 0.28 + (i % 4) * 0.12, y = 0.2 + (i / 15) * 2.7;
+    s.userData = { a, r, y, k: 0.9 + (i % 3) * 0.35, ph: i * 0.7, base: 0.13 + (i % 5) * 0.025 }; s.renderOrder = 4; haze.add(s); puffs.push(s);
+  }
+  let ht = 0;
+  const upd = c.update.bind(c);
+  c.update = (dt) => {
+    upd(dt); ht += dt;
+    for (const s of puffs) {
+      const u = s.userData, rise = (ht * 0.12 + u.ph * 0.4) % 1;
+      s.position.set(Math.cos(u.a + ht * 0.15) * u.r, u.y + rise * 0.35, Math.sin(u.a + ht * 0.15) * u.r * 0.8);
+      const sc = (0.75 + u.k * 0.55) * (0.9 + 0.12 * Math.sin(ht * 0.8 + u.ph)); s.scale.set(sc, sc, 1);
+      s.material.opacity = u.base * Math.sin(Math.PI * rise) * (0.75 + 0.25 * Math.sin(ht * 1.3 + u.ph));
+    }
+  };
+  return { root, character: c, hat, dress, haze };
+}
+
+let hazeTex = null;
+function hazeTexture() {
+  if (hazeTex) return hazeTex;
+  if (typeof document === 'undefined') return null;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
+  for (let i = 0; i < 7; i++) {   // a few offset soft blobs, not one perfect disc
+    const x = 64 + Math.cos(i * 2.1) * 14, y = 64 + Math.sin(i * 2.1) * 12, gr = g.createRadialGradient(x, y, 2, x, y, 50);
+    gr.addColorStop(0, 'rgba(255,255,255,0.32)'); gr.addColorStop(0.55, 'rgba(255,255,255,0.12)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+  }
+  hazeTex = new THREE.CanvasTexture(cv); hazeTex.colorSpace = THREE.SRGBColorSpace;
+  return hazeTex;
 }
 
 // the look contract of monster-std: { root, update(dt, st, cam), respawn(), dispose() }
