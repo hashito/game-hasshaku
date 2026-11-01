@@ -187,7 +187,11 @@ monsters = {
 }
 
 # ---------------------------------------------------------------- release notes (Q10)
-notes = {'version': '1.1.8', 'notes': [
+notes = {'version': '1.1.9', 'notes': [
+    {'version': '1.1.9', 'date': '2026-11-01', 'title': '読み込みを軽くし、最初の出会いとＫさんの到着を分かりやすくしました', 'items': [
+        {'type': 'change', 'text': '写真と人物の絵を軽くしました（合計 約3.1MB → 約1.3MB）。始めるまでの読み込みが速くなります。'},
+        {'type': 'change', 'text': '最初に白い帽子を見たとき、主人公がそちらへ振り向き、目が釘付けになるように寄って見えるようにしました。'},
+        {'type': 'change', 'text': 'Ｋさんの到着：祖父が先に玄関の戸を閉め、閉じた戸が叩かれ、祖父が開けてＫさんを迎え入れる流れにしました。Ｋさんの姿も玄関に見えます。'}]},
     {'version': '1.1.8', 'date': '2026-11-01', 'title': '最初の説明に絵を付けました', 'items': [
         {'type': 'change', 'text': '最初の説明の各場面に写真を付けました（村のバス停、祖父の家、道の地図）。'},
         {'type': 'change', 'text': '塩を盛る・回し金を回すミニゲームを、ほかの作品でも使える共通の部品にしました。見た目は他の窓とそろえ、上寄せで開きます。'},
@@ -285,7 +289,10 @@ talk = {
         {'who': GP, 'text': '駐在には俺から連絡する。今は、戸を閉めて部屋を用意しよう。'},
     ],
     # after the report: the po right outside the window and the lamp flickering (js/ext/story.js), then a knock at the front door
+    # the front door is shut by the grandfather first, so the knock comes at a closed door (user: the open door made it unclear)
+    'gp_shut': '祖父が玄関の戸を閉めて、心張り棒をかけた。',
     'scare_window': '……窓のすぐ外で、ぽ、と鳴った。電灯が揺れている。祖父が、声を出すなと手で示した。',
+    'k_enter': '祖父が心張り棒を外して、玄関の戸を細く開けた。札の束を抱えた女の人が滑り込み、祖父はすぐに戸を閉めた。',
     'k_arrive': [
         {'who': GP, 'where': '居間', 'text': '……誰だ。'},
         {'who': K, 'where': '玄関の戸の向こう', 'text': 'Ｋです。札を持ってきました。開けてください。'},

@@ -6,7 +6,7 @@
 const NOTXT = 'no text, no letters, no writing, no signs, no logos, no labels';
 const ERA = 'rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours';
 const L = [1216, 832], PT = [832, 1216], SQ = [1024, 1024], DOOR = [576, 1216];
-const ph = (id, gen, look, prompt, extra = {}) => ({ id, kind: 'photo', model: 'flux', gen, out: 960, look, kb: 130, prompt: `${prompt}, ${extra.era === false ? '' : ERA + ', '}${NOTXT}`, ...extra });
+const ph = (id, gen, look, prompt, extra = {}) => ({ id, kind: 'photo', model: 'flux', gen, out: 720, look, kb: 60, prompt: `${prompt}, ${extra.era === false ? '' : ERA + ', '}${NOTXT}`, ...extra });
 const tx = (id, file, gen, prompt, extra = {}) => ({ id, kind: 'tex', model: 'flux', gen, file, out: 512, kb: 90, tile: 'xy', prompt: `${prompt}, ${NOTXT}`, ...extra });
 
 export const IMAGES = [
@@ -64,4 +64,6 @@ export const IMAGES = [
   // the decal: a large bare footprint in wet earth (alpha from the difference to the ground; W13)
   tx('fp_bare_large', 'decals/fp_bare_large.webp', [640, 1216], 'A single very large long narrow bare human footprint pressed deep into smooth flat wet grey-brown mud, only one footprint, centred, toes at the top, orthographic top-down view, even soft lighting, photographic', { tile: false, decal: true, out: 320, meters: [0.17, 0.4], roughness: 0.9 }),
 ];
+// light pictures (start speed): photos 720 px / 60 KB; the talk portraits (game.json portraits, shown about 150 px wide) 640 px / 45 KB
+for (const it of IMAGES) if (/^ph-(grandpa|k|lady|sumie|phone)$/.test(it.id)) Object.assign(it, { out: 640, kb: 45 });
 export const NEG = '';

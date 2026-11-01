@@ -128,15 +128,26 @@ export default function story(ext) {
     if (!st.seen) { st.seen = true; snd.sting(); flashPhoto('assets/photos/encounter.webp', '帰ってきた道の向こう。白い帽子が、塀の上を通り過ぎた。', 3); }
     if (H) H.root.visible = false;
     await talk(T.report, { title: '居間' });
-    // Issue #4: Ｋさん does not just appear. The po right outside the window, the lamp flickers, a long silence, then a knock at the front door
+    // Issue #4: Ｋさん does not just appear. The grandfather shuts the front door first (the knock must come at a closed door), the po
+    // right outside the window, the lamp flickers, a long silence, my eyes go to the front door, a knock; he opens it for her and shuts it
+    const genkan = ctx.world.doors.get('D_GENKAN'), G = { x: -4, y: 1.2, z: 15.6 };
+    if (genkan) { genkan.close(); snd.scrape({ vol: 0.25, pan: -0.3 }); say(T.gp_shut, 4); }
     if (!ctx.qa) {
+      await wait(1.8);
       const lamp = ctx.world.group.getObjectByName('lamp:IMA'), i0 = lamp ? lamp.intensity : 0;
       snd.po({ vol: 0.7, pan: -0.6 }); say(T.scare_window, 6);
       for (const [ms, k] of [[0, 0.15], [140, 1], [260, 0.05], [520, 0.8], [700, 0.1], [1100, 0.6], [1500, 1]]) setTimeout(() => { if (lamp) lamp.intensity = i0 * k; }, ms);
-      await wait(3.2); snd.knock({ n: 3, vol: 0.55, pan: 0.3 }); await wait(1.6);
+      await wait(3.2); lookAt = { ...G, t: 2.4 }; snd.knock({ n: 3, vol: 0.55, pan: 0.3 }); await wait(1.6);
     }
-    await talk(T.k_arrive, { title: '玄関' });
+    await talk(T.k_arrive.slice(0, 3), { title: '玄関' });
+    // she is seen coming in: standing just inside the front door, then (the talk over) at her place in the living room for the night's preparations
+    const K = V && V.people.k, GPa = V && V.people.grandpa;
+    if (GPa) { GPa.root.position.set(-4.9, 0, 16.5); GPa.root.rotation.y = Math.PI / 2; }   // he goes to the door himself
+    if (genkan) { genkan.open(); snd.scrape({ vol: 0.3, pan: -0.3 }); lookAt = { ...G, t: 2.2 }; say(T.k_enter, 5); if (!ctx.qa) await wait(1.0); if (K) { K.root.position.set(-4.7, 0, 15.6); K.root.rotation.y = -Math.PI / 2; K.root.visible = true; } if (!ctx.qa) await wait(1.4); genkan.close(); snd.scrape({ vol: 0.3, pan: -0.3 }); }
+    await talk(T.k_arrive.slice(3), { title: '玄関' });
     await talk(T.report_after, { title: '居間' });
+    if (K) { K.root.position.set(-10.6, 0, 15.0); K.root.rotation.y = Math.PI / 2; }
+    if (GPa) { GPa.root.position.set(-6.4, 0, 16.6); GPa.root.rotation.y = -Math.PI / 2; }
     return true;
   } });
   for (const k of BOWLS) ext.registerTask(`T_SALT_${k}`, {
@@ -264,6 +275,24 @@ export default function story(ext) {
   const SIGHT = { x: 18.95, z0: 3.0, z1: 21.5 };
   function showSighting() { if (!H) return; H.root.visible = true; H.root.position.set(SIGHT.x, 0, SIGHT.z0); H.root.rotation.y = -Math.PI / 2; H.walk = 0; H.seenT = 0; }
   const tmpV = new THREE.Vector3();
+  let lookAt = null;   // { x, y, z, t }: a staged glance (the knock at the front door)
+  // the moment she is seen (Issue #4 follow-up: "where is she?"): my head turns to the hat on the fence and the eyes fix on it (the view
+  // narrows to a zoom for about 2.5 s), then it lets go. The mouse can't fight it until it lets go.
+  let baseFov = 0;
+  // turn my eyes towards a point (k: 0..1 of the way this frame)
+  function turnTo(x, y, z, k) {
+    const cam = ctx.camera, fp = ctx.fp; if (!fp) return;
+    const dx = x - cam.position.x, dz = z - cam.position.z, ty = Math.atan2(-dx, -dz), tp = Math.atan2(y - cam.position.y, Math.hypot(dx, dz));
+    fp.yaw += Math.atan2(Math.sin(ty - fp.yaw), Math.cos(ty - fp.yaw)) * k; fp.pitch += (tp - fp.pitch) * k;
+  }
+  function noticeZoom(t, dt) {
+    const cam = ctx.camera;
+    if (!baseFov) baseFov = cam.fov;
+    if (t < 2.6) turnTo(H.root.position.x, 2.55, H.root.position.z, Math.min(1, dt * (t < 0.7 ? 6 : 12)));
+    const want = t > 0.5 && t < 2.6 ? baseFov * 0.32 : baseFov;
+    const f = cam.fov + (want - cam.fov) * Math.min(1, dt * (t < 2.6 ? 5 : 4));
+    if (Math.abs(f - cam.fov) > 0.01) { cam.fov = t > 3.6 ? baseFov : f; cam.updateProjectionMatrix(); }
+  }
   function updateSighting(dt) {
     if (!H || !H.root.visible || lvl() !== 0) return;
     const cam = ctx.camera, p = cam.position;
@@ -271,6 +300,7 @@ export default function story(ext) {
     // behind it (the hat goes), and a moment later the po sounds close by, from where nothing can be seen
     if (st.seen) {
       const t = (H.seenT += dt);
+      noticeZoom(t, dt);
       if (t < 2.6) { H.character.setSpeed(0); H.character.lookAt(cam); if (!H.glitched && t > 1.2) { H.glitched = true; ctx.fx && ctx.fx.glitch && ctx.fx.glitch(0.35, 0.4); } }
       else if (t < 4.2) { H.root.position.z += clamp(p.z - H.root.position.z, -1, 1) * dt * 2.4; H.character.setSpeed(1.2); }
       else if (t < 5.0) { H.root.position.y = Math.max(-1.6, H.root.position.y - dt * 2.2); H.character.setSpeed(0); }
@@ -474,6 +504,7 @@ export default function story(ext) {
     const now = performance.now(), wall = st.wallT ? Math.min(2, (now - st.wallT) / 1000) : dt; st.wallT = now;
     const qdt = c.qa && !window.__hkRealtime ? wall * 10 : dt;   // window.__hkRealtime: the playthrough test keeps game time
     updateSighting(dt);
+    if (lookAt) { turnTo(lookAt.x, lookAt.y, lookAt.z, Math.min(1, dt * 4)); if ((lookAt.t -= dt) <= 0) lookAt = null; }
     updateNight(qdt);
     updateRide(qdt);
     const room = c.data.plan.rooms.find((r) => r.id === c.state.room);
