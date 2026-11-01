@@ -1,5 +1,5 @@
 {
-  "kit": "c73b782",
+  "kit": "fe773f2",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -90,7 +90,8 @@
     "check-css-pairs.mjs",
     "check-no-emoji.mjs",
     "check-wording.mjs",
-    "check-escape.mjs"
+    "check-escape.mjs",
+    "check-traps.mjs"
   ],
   "hashes": {
     "js/kit/game-core.js": "c29bd1a4b570",
@@ -254,7 +255,8 @@
     "js\\kit\\mg-pour.js": "11f3d7486b85",
     "js\\kit\\mg-frame.js": "1e639b5179ca",
     "js\\kit\\mg-turn-dials.js": "194968af640e",
-    "js\\kit\\mg-library.js": "11235df522e1"
+    "js\\kit\\mg-library.js": "11235df522e1",
+    "tools/check-traps.mjs": "4390617a5164"
   },
   "textures": [
     "planks_worn",
