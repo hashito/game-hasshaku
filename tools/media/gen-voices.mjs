@@ -18,6 +18,8 @@ const CAST = {
   // the fake grandfather behind the door: the same voice, a touch lower and flatter (the wall filter does the rest)
   '戸の向こう': { speaker: 42, name: 'ちび式じい', speed: 0.86, pitch: -0.05, intonation: 0.55, preset: 'wall' },
   'Ｋさん': { speaker: 109, name: '東北イタコ', speed: 0.9, pitch: -0.06, intonation: 0.85 },
+  // the thing behind the sliding door in Ｋさん's voice (the night): flatter, a touch lower, through the wall
+  'Ｋさんの声': { speaker: 109, name: '東北イタコ', speed: 0.86, pitch: -0.09, intonation: 0.5, preset: 'wall' },
   '店のおばさん': { speaker: 20, name: 'もち子さん', speed: 0.95, pitch: -0.04, intonation: 1.0 },
   // 八尺様: a low female voice, slow and flat (compare with the synthesised po in js/ext/sound.js)
   '窓の外': { speaker: 14, name: '冥鳴ひまり', speed: 0.7, pitch: -0.12, intonation: 0.3, preset: 'wall' },

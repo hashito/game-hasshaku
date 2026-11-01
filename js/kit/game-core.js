@@ -1,4 +1,4 @@
-/* game-kit db1acab: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 7e552f9: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -29,7 +29,7 @@ import { ToastLane } from './toast-lane.js';
 import { ensureHudSlots, registerHudPart, layoutHudSlots, laneFree, hudTestHooks, schedule as scheduleHudLayout } from './hud-slots.js';
 import { Progression } from './progression.js';
 import { ProgressUI } from './progress-ui.js';
-import { createInventory } from './inventory-ui.js';
+import { createInventory, viewItemHtml } from './inventory-ui.js';
 import { createReleaseNotes } from './release-notes.js';
 import { Store } from './store.js';
 import { Audio } from './audio.js';
@@ -411,9 +411,9 @@ export function createGame(cfg) {
     station: { prompt: (o) => { const t = taskAtStation(tasks, o.id, state.tasks); return t ? `[E] ${t.title}` : o.label || '（いまは何もない）'; },
       run: (o) => { const t = taskAtStation(tasks, o.id, state.tasks); if (!t) { const open = tasks.find((x) => x.station === o.id && !state.tasks.includes(x.id)); return ui.say(esc(open ? ctx.canStart(open) : 'ここでの作業は、もう終わっています。')); } return ctx.startTask(t.id); } },
     item: { prompt: (o) => `[E] 拾う：${items.find((i) => i.id === o.id).name}`,
-      run: (o) => { const it = items.find((i) => i.id === o.id); remove('item', o.id); state.inv.push(o.id); sound('pickup'); ui.toast(`入手：${esc(it.name)}`); ui.say(esc(it.feeling)); bus.emit('item:pickup', { id: o.id }); ctx.save(); checkEndings(); } },
+      run: (o) => { const it = items.find((i) => i.id === o.id); remove('item', o.id); state.inv.push(o.id); sound('pickup'); if (it.photo) lane.push({ kind: 'card', cls: 'tl-lookcard tl-pickcard', key: `pickup:${it.id}`, ttl: 6000, html: viewItemHtml({ photo: it.photo, title: `入手：${it.name}` }) }); else ui.toast(`入手：${esc(it.name)}`); ui.say(esc(it.feeling));   /* an item with a photo shows its picture card (the feeling stays in the thought band) */ bus.emit('item:pickup', { id: o.id }); ctx.save(); checkEndings(); } },
     doc: { prompt: (o) => `[E] 読む：${docs.find((d) => d.id === o.id).title}`,
-      run: (o) => { const d = docs.find((x) => x.id === o.id); if (!state.docsRead.includes(o.id)) state.docsRead.push(o.id); sound('paper'); wm.open('doc', { title: d.title, size: 's', render: (el) => { el.innerHTML = `${d.text.split('\n').map((p) => `<p>${esc(p)}</p>`).join('')}${d.feeling ? `<p class="iv-feel">${esc(d.feeling)}</p>` : ''}`; } }); bus.emit('doc:read', { id: o.id }); ctx.save(); } },
+      run: (o) => { const d = docs.find((x) => x.id === o.id); if (!state.docsRead.includes(o.id)) state.docsRead.push(o.id); sound('paper'); wm.open('doc', { title: d.title, size: 's', render: (el) => { el.innerHTML = `${d.photo ? `<img class="gf-doc-img" src="${esc(d.photo)}" alt="">` : ''}${d.text.split('\n').map((p) => `<p>${esc(p)}</p>`).join('')}${d.feeling ? `<p class="iv-feel">${esc(d.feeling)}</p>` : ''}`; } }); bus.emit('doc:read', { id: o.id }); ctx.save(); } },
     stairs: { prompt: (o) => (o.locked && o.locked() ? lockedLabel(o.label || '階段', 'いまは使えません') : `[E] ${o.label || '階段を使う'}`), run: (o) => ctx.useStairs(o) },
   };
   function remove(kind, id) { const m = pickups.get(`${kind}:${id}`); if (!m) return; m.visible = false; world.group.remove(m); const i = world.interactables.indexOf(m); if (i >= 0) world.interactables.splice(i, 1); pickups.delete(`${kind}:${id}`); }
@@ -603,7 +603,7 @@ export function createGame(cfg) {
   ctx.systems = systems;
   ctx.monologue = (text, sec = 2.2) => ui.say(esc(text), sec);   // the protagonist's thought line (U23); monster hints ("走れ") go through it
   // the conversation window and the choice (js/talk-ui.js, standard 1.7): ctx.talk(lines | 'key of data/talk.json', o), ctx.choose({ who, text, options })
-  { const T = createTalk({ wm, qa: !!ctx.qa, data: data.talk || null, log: (ctx.talkLog = []), voice: (L) => ctx.voiceLine(L.voice, L.vfx || null) }); ctx.talk = T.talk; ctx.choose = T.choose; }
+  { const T = createTalk({ wm, qa: !!ctx.qa, data: data.talk || null, portraits: manifest.portraits || null, log: (ctx.talkLog = []), voice: (L) => ctx.voiceLine(L.voice, L.vfx || null) }); ctx.talk = T.talk; ctx.choose = T.choose; }
   if (manifest.things && data.things && cfg.mods && cfg.mods.things) cfg.mods.things.installThings(ctx);   // data/things.json: [E] examine -> card + thought + journal (standard 1.5)
   if (data.terminals && cfg.mods && cfg.mods.terminals) cfg.mods.terminals.installTerminals(ctx);   // data/terminals.json: the 'terminal' screen kind (standard 1.5)
   if (data.monsters && cfg.mods && cfg.mods.monsters) { const ms = cfg.mods.monsters.installMonsters(ctx); if (ms) systems.push({ id: 'monsters', def: { update: (dt, c, active) => ms.update(dt, c, active) }, inst: ms }); }   // the default monster pack (data/monsters.json, standard 1.5)

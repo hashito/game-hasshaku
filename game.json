@@ -2,7 +2,7 @@
   "id": "hasshaku",
   "title": "八尺様 ― 境の夜",
   "subtitle": "朝まで、誰の声にも返事をしてはいけない",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "standard": "1.7",
   "theme": "dark-industrial hasshaku",
   "preset": {
@@ -133,5 +133,10 @@
     "textures": "assets/textures/"
   },
   "things": true,
-  "voice": true
+  "voice": true,
+  "portraits": {
+    "祖父": "assets/photos/ph-grandpa.webp",
+    "Ｋさん": "assets/photos/ph-k.webp",
+    "店のおばさん": "assets/photos/ph-lady.webp"
+  }
 }

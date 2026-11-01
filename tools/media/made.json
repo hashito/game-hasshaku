@@ -116,6 +116,15 @@
   "seed": 788279241,
   "prompt": "A faded 1990s colour print snapshot of a Japanese family of four standing in a row in front of a tall green hedge of a rural house in summer, an old man, an old woman, a young mother holding the hand of a small child, all small in the frame and seen from a distance, faces soft and blurred, the young mother looks upward above the camera, overexposed sky, yellowed print, no text, no letters, no writing, no signs, no logos, no labels"
  },
+ "ph-fence": {
+  "file": "assets/photos/ph-fence.webp",
+  "bytes": 89792,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 648524977,
+  "prompt": "A tall weathered dark wooden board fence of an abandoned rural Japanese house at dusk, seen from the levee path of a rice paddy, the flat top edge of the fence higher than a man against a pale evening sky, the old tiled roof of the empty house behind it, utility wires, empty and quiet, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
  "ph-flashlight": {
   "file": "assets/photos/ph-flashlight.webp",
   "bytes": 93554,
@@ -205,6 +214,15 @@
   "model": "flux1-dev-fp8 (ComfyUI, local)",
   "seed": 387300447,
   "prompt": "A traditional Japanese plastered clay kamado cooking stove in an old farmhouse kitchen with an earthen floor, two black iron pots with wooden lids on top, faint wisps of steam, firewood stacked beside it, dim evening light from a small wooden window, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
+ "ph-lady": {
+  "file": "assets/photos/ph-lady.webp",
+  "bytes": 112688,
+  "size": "657x960",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 757479552,
+  "prompt": "Portrait of a plump Japanese woman in her sixties behind the wooden counter of a small old village general store at dusk, permed short grey hair, a faded apron over a cardigan, a friendly face with a hint of unease, shelves of goods behind her softly out of focus, warm fluorescent light, waist up, no other people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
  },
  "ph-letter": {
   "file": "assets/photos/ph-letter.webp",

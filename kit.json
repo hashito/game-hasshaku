@@ -1,5 +1,5 @@
 {
-  "kit": "98e1e92",
+  "kit": "8926c18",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -147,7 +147,7 @@
     "js/kit/prop-batch.js": "abd03dfc3b79",
     "js/kit/env-props.js": "8173704023b6",
     "js/kit/text-contrast.js": "7fee755af57a",
-    "css/kit.css": "5231bda597c5",
+    "css/kit.css": "55c4d3583f0a",
     "css/theme.css": "ebaca1cab248",
     "css/shell.css": "69c16bee0f93",
     "schema/chat-story.schema.json": "e24a86e49bb9",
@@ -198,13 +198,13 @@
     "js\\kit\\text-contrast.js": "7fee755af57a",
     "js\\kit\\monster-nav.js": "aa4dd24b4872",
     "js\\kit\\monster-escape.js": "4a9e4dd0e05d",
-    "js\\kit\\game-core.js": "e9f0033432a2",
+    "js\\kit\\game-core.js": "79c4f9053084",
     "js\\kit\\item-kinds.js": "170ca47c72cb",
     "js\\kit\\item-models.js": "611975f171a7",
     "js\\kit\\prop-geo.js": "b7d46c577d9a",
     "js\\kit\\prop-mats.js": "159402abaed9",
     "js\\kit\\media.js": "197602270916",
-    "js\\kit\\talk-ui.js": "cc174c6a83f3",
+    "js\\kit\\talk-ui.js": "3993fe8a407d",
     "js\\kit\\render-presets.js": "094218521a36",
     "js\\kit\\render-budget.js": "9b0b2e2f7313",
     "js\\kit\\controller.js": "77c00840908d",
@@ -246,7 +246,7 @@
     "js\\kit\\env-props.js": "8173704023b6",
     "js\\kit\\texture-library.js": "b28d6322f0be",
     "css\\theme.css": "ebaca1cab248",
-    "css\\shell.css": "76295c8af2a7"
+    "css\\shell.css": "8730c4644182"
   },
   "textures": [
     "planks_worn",

@@ -17,21 +17,21 @@
   "feeling": "裏道まで描いてある。たかが買い物なのに。"
  },
  {
-  "id": "TH_HEDGE",
-  "room": "O_FRONT",
+  "id": "TH_FENCE",
+  "room": "O_FIELD",
   "position": [
-   4.0,
-   13.0
+   17.55,
+   12.0
   ],
   "y": 1.2,
-  "label": "田んぼの生垣",
-  "photo": "assets/photos/ph-hedge.webp",
+  "label": "空き家の板塀",
+  "photo": "assets/photos/ph-fence.webp",
   "size": 1,
   "text": [
-   "大人の背より高い生垣。向こうは田んぼだ。",
-   "生垣の上に、何かが乗っていた跡はない。"
+   "大人の背より高い板塀。向こうは空き家だ。",
+   "塀の上に、何かが乗っていた跡はない。"
   ],
-  "feeling": "あの帽子は、この上を歩いていた。"
+  "feeling": "あの帽子は、この塀の向こうを歩いていた。"
  },
  {
   "id": "TH_POLE",

@@ -1,4 +1,4 @@
-/* game-kit 98e1e92: css/kit.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 8926c18: css/kit.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: shared styles for first-person browser games (windows, HUD, buttons, touch controls,
    status chips, steppers, kanban, app-like software screens, tabs, stamps, share buttons; at the end
    progression pg-*, sim UI nt-/tb-/dl-/ch-*, journal jr-* / stream veil st-* / hiding hd-*, chat cx-*).
@@ -3021,6 +3021,11 @@ html[data-gf-no-flash="1"] .wm-layer { animation: none; }
 /* ---- the 3D conversation window and choice (js/talk-ui.js, standard 1.7) ---- */
 .gf-talk { display: flex; flex-direction: column; gap: var(--gf-space-3, 12px); min-height: 100%; color: var(--gf-text, #e8e6df); }
 .gf-talk-img { width: 100%; max-height: 44vh; object-fit: cover; border: 1px solid var(--gf-border, rgba(255,255,255,.2)); border-radius: var(--gf-radius, 4px); }
+.gf-talk-row { display: flex; gap: var(--gf-space-3, 12px); align-items: flex-start; }
+.gf-talk-face { flex: none; width: clamp(84px, 22%, 150px); aspect-ratio: 2 / 3; object-fit: cover; object-position: top; border: 1px solid var(--gf-border, rgba(255,255,255,.2)); border-radius: var(--gf-radius, 4px); }
+.gf-talk-words { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--gf-space-2, 8px); }
+.gf-talk-img + .gf-talk-row .gf-talk-face { width: clamp(64px, 14%, 96px); }
+.gf-talk-img:has(+ .gf-talk-row) { max-height: 22vh; }   /* a scene picture with a face under it: both fit without scrolling */
 .gf-talk-who { margin: 0; color: var(--gf-accent, #d9b46a); font-size: var(--gf-text-sm, 13px); letter-spacing: 0.12em; }
 .gf-talk-who span { color: var(--gf-text-dim, #b8b4a8); margin-left: 0.4em; letter-spacing: 0; }
 .gf-talk--me .gf-talk-who { color: var(--gf-text-dim, #b8b4a8); }

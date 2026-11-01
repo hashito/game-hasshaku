@@ -86,10 +86,11 @@ export default function story(ext) {
     serialize: () => ({ seen: st.seen, genkan: st.genkan, zashiki: st.zashiki, gate: st.gate, deaths: st.deaths, played: st.played }),
     restore: (j) => { Object.assign(st, { seen: false, genkan: false, zashiki: false, gate: [0, 0, 0], deaths: 0, played: 0 }, j || {}); resetStageLocal(); },
   });
-  function resetStageLocal() { st.night = 0; st.dark = { NW: 0, NE: 0, SW: 0, SE: 0 }; st.warned = false; st.fired = []; st.ride = 0; st.curse = 0; }
+  function resetStageLocal() { st.fakeClock = false; st.night = 0; st.dark = { NW: 0, NE: 0, SW: 0, SE: 0 }; st.warned = false; st.fired = []; st.ride = 0; st.curse = 0; }
 
   // ---------------------------------------------------------------- conversations: the standard window (ctx.talk / ctx.choose, standard 1.7)
   const talk = (lines, o = {}) => ctx.talk(lines, o);
+  const wait = (sec) => new Promise((r) => setTimeout(r, sec * 1000));
   // a found picture at the top of the screen (U14: things above, thoughts below)
   function flashPhoto(src, caption, sec = 2.2) {
     const el = document.getElementById('hk-photo'); if (!el) return;
@@ -119,9 +120,18 @@ export default function story(ext) {
     return true;
   }, onDone: () => { say('醤油と電池を受け取った。来た道を戻って、祖父の家へ。', 5); showSighting(); } });
   ext.registerTask('T_REPORT', { run: async () => {
-    if (!st.seen) { st.seen = true; snd.sting(); flashPhoto('assets/photos/encounter.webp', '帰ってきた道の向こう。白い帽子が、生垣の上を通り過ぎた。', 3); }
+    if (!st.seen) { st.seen = true; snd.sting(); flashPhoto('assets/photos/encounter.webp', '帰ってきた道の向こう。白い帽子が、塀の上を通り過ぎた。', 3); }
     if (H) H.root.visible = false;
     await talk(T.report, { title: '居間' });
+    // Issue #4: Ｋさん does not just appear. The po right outside the window, the lamp flickers, a long silence, then a knock at the front door
+    if (!ctx.qa) {
+      const lamp = ctx.world.group.getObjectByName('lamp:IMA'), i0 = lamp ? lamp.intensity : 0;
+      snd.po({ vol: 0.7, pan: -0.6 }); say(T.scare_window, 6);
+      for (const [ms, k] of [[0, 0.15], [140, 1], [260, 0.05], [520, 0.8], [700, 0.1], [1100, 0.6], [1500, 1]]) setTimeout(() => { if (lamp) lamp.intensity = i0 * k; }, ms);
+      await wait(3.2); snd.knock({ n: 3, vol: 0.55, pan: 0.3 }); await wait(1.6);
+    }
+    await talk(T.k_arrive, { title: '玄関' });
+    await talk(T.report_after, { title: '居間' });
     return true;
   } });
   for (const k of BOWLS) ext.registerTask(`T_SALT_${k}`, {
@@ -245,19 +255,32 @@ export default function story(ext) {
   const el = (id) => document.getElementById(id) || {};
 
   // ---------------------------------------------------------------- L1: the sighting
-  function showSighting() { if (!H) return; H.root.visible = true; H.root.position.set(6.3, 0, 12.5); H.root.rotation.y = -Math.PI / 2; H.walk = 0; }
+  // she walks behind the empty house's board fence across the rice field (1.7 m: only the hat and the top of the head show over it)
+  const SIGHT = { x: 18.95, z0: 3.0, z1: 21.5 };
+  function showSighting() { if (!H) return; H.root.visible = true; H.root.position.set(SIGHT.x, 0, SIGHT.z0); H.root.rotation.y = -Math.PI / 2; H.walk = 0; H.seenT = 0; }
   const tmpV = new THREE.Vector3();
   function updateSighting(dt) {
     if (!H || !H.root.visible || lvl() !== 0) return;
     const cam = ctx.camera, p = cam.position;
-    H.root.position.z = Math.min(21.5, H.root.position.z + dt * 0.22); H.character.setSpeed(0.22); H.character.update(dt);
-    if (st.seen) { if (ctx.state.room === 'IMA' || H.root.position.z >= 21.5) H.root.visible = false; return; }
+    // once seen (Issue #4: the first meeting must frighten): she stops and stares, then hurries along the fence towards you, sinks
+    // behind it (the hat goes), and a moment later the po sounds close by, from where nothing can be seen
+    if (st.seen) {
+      const t = (H.seenT += dt);
+      if (t < 2.6) { H.character.setSpeed(0); H.character.lookAt(cam); if (!H.glitched && t > 1.2) { H.glitched = true; ctx.fx && ctx.fx.glitch && ctx.fx.glitch(0.35, 0.4); } }
+      else if (t < 4.2) { H.root.position.z += clamp(p.z - H.root.position.z, -1, 1) * dt * 2.4; H.character.setSpeed(1.2); }
+      else if (t < 5.0) { H.root.position.y = Math.max(-1.6, H.root.position.y - dt * 2.2); H.character.setSpeed(0); }
+      else if (!H.near) { H.near = true; H.root.visible = false; H.root.position.y = 0; ctx.fx && ctx.fx.spook && ctx.fx.spook(0.6); snd.po({ vol: 0.85, pan: clamp((SIGHT.x - p.x) / 6, -1, 1) * 0.4 }); snd.sting(); say(T.seen_near, 6); }
+      H.character.update(dt);
+      return;
+    }
+    H.root.position.z = Math.min(SIGHT.z1, H.root.position.z + dt * 0.22); H.character.setSpeed(0.22); H.character.update(dt);
+    if (H.root.position.z >= SIGHT.z1) { H.root.position.z = SIGHT.z0; }
     const head = tmpV.copy(H.root.position).setY(2.6), d = head.distanceTo(p);
     const look = new THREE.Vector3(); cam.getWorldDirection(look);
     const dot = look.dot(head.clone().sub(p).normalize());
-    H.gaze = (H.gaze || 0) + (d < 24 && dot > 0.8 ? dt : -dt * 0.5); H.gaze = Math.max(0, H.gaze);
+    H.gaze = (H.gaze || 0) + (d < 26 && dot > 0.8 ? dt : -dt * 0.5); H.gaze = Math.max(0, H.gaze);
     if (H.gaze > 0.6 || (p.z > 8.5 && p.x > -4.2 && p.x < 5)) {
-      st.seen = true; snd.po({ vol: 0.55, pan: clamp((H.root.position.x - p.x) / 8, -1, 1) }); snd.sting();
+      st.seen = true; H.seenT = 0; snd.po({ vol: 0.55, pan: clamp((H.root.position.x - p.x) / 8, -1, 1) }); snd.sting();
       H.character.lookAt(cam);
       say(T.seen, 8);
     }
@@ -274,6 +297,8 @@ export default function story(ext) {
         if (who === '私') say(text, 5.5); else voice(who, text, 5.5);
         if (fx === 'knock') { snd.knock({ pan: 0.2 }); shake(1.6); }
         if (fx === 'knockFinal') { snd.knock({ n: 5, vol: 0.9, pan: 0.1 }); snd.sting(); shake(3.5); }
+        if (fx === 'fakeDawn') { st.fakeClock = true; snd.knock({ n: 2, vol: 0.3 }); }   // the HUD clock shows 07:00 until fakeEnd
+        if (fx === 'fakeEnd') { st.fakeClock = false; snd.po({ vol: 0.7, pan: 0.1 }); snd.sting(); shake(2.5); }
         if (fx === 'po') { snd.po({ vol: 0.5, pan: -0.2 }); shadow(7); flashPhoto('assets/photos/ph-window-shadow.webp', '', 2.6); }
       }
     }
@@ -290,7 +315,7 @@ export default function story(ext) {
     if (worst > 0.85 && !st.warned) { st.warned = true; snd.po({ vol: 0.4, pan: 0 }); ctx.ui.toast('塩が黒くなっている。黒ずんだ皿に近づいて、[E] で替えよう。'); flashPhoto('assets/photos/salt-scene.webp', '', 1.2); }
     if (worst >= 1.35) return ctx.die('salt');
     // the HUD: the clock and the four plates
-    const c = el('hk-night-clock'); if (c.textContent !== `午前 ${nightClock(st.night)}`) c.textContent = `午前 ${nightClock(st.night)}`;
+    const c = el('hk-night-clock'), shown = `午前 ${st.fakeClock ? '07:00' : nightClock(st.night)}`; if (c.textContent !== shown) c.textContent = shown;
     for (const k of BOWLS) { const b = el(`hk-pip-${k}`); if (b.dataset) b.dataset.state = st.dark[k] > 0.9 ? 'critical' : st.dark[k] > 0.35 ? 'tainted' : 'ok'; }
     el('hk-night-help').textContent = worst > 0.6 ? '黒くなった皿に近づいて、[E] で塩を替える' : '誰の声でも、七時までは戸を開けない';
     if (V.parts.clockHand) V.parts.clockHand.rotation.z = -(st.night / NIGHT_SEC) * Math.PI;
@@ -349,7 +374,7 @@ export default function story(ext) {
     let el = null;
     const go = () => {
       if (el || c.qa) return;
-      el = new Audio('assets/audio/music-title.mp3'); el.volume = 0.55 * (c.settings ? c.settings.volume : 0.8);
+      el = new Audio('assets/audio/music-title.mp3'); el.volume = 0.35 * (c.settings ? c.settings.volume : 0.8);
       el.play().catch(() => {});
     };
     addEventListener('pointerdown', go, { once: true }); addEventListener('keydown', go, { once: true });

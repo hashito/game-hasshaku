@@ -53,21 +53,51 @@
   "who": "祖父",
   "preset": null
  },
- "v-report-7": {
-  "key": "report",
-  "index": 7,
+ "v-k-arrive-0": {
+  "key": "k_arrive",
+  "index": 0,
   "who": "祖父",
   "preset": null
  },
- "v-report-8": {
-  "key": "report",
-  "index": 8,
+ "v-k-arrive-1": {
+  "key": "k_arrive",
+  "index": 1,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-k-arrive-2": {
+  "key": "k_arrive",
+  "index": 2,
   "who": "祖父",
   "preset": null
  },
- "v-report-10": {
-  "key": "report",
-  "index": 10,
+ "v-k-arrive-3": {
+  "key": "k_arrive",
+  "index": 3,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-k-arrive-5": {
+  "key": "k_arrive",
+  "index": 5,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-report-after-0": {
+  "key": "report_after",
+  "index": 0,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-report-after-1": {
+  "key": "report_after",
+  "index": 1,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-report-after-3": {
+  "key": "report_after",
+  "index": 3,
   "who": "祖父",
   "preset": null
  },
@@ -98,19 +128,31 @@
  "v-night-2": {
   "key": "night",
   "index": 2,
-  "who": "戸の向こう",
+  "who": "Ｋさんの声",
   "preset": "wall"
  },
  "v-night-4": {
   "key": "night",
   "index": 4,
-  "who": "窓の外",
+  "who": "戸の向こう",
   "preset": "wall"
  },
  "v-night-6": {
   "key": "night",
   "index": 6,
+  "who": "窓の外",
+  "preset": "wall"
+ },
+ "v-night-8": {
+  "key": "night",
+  "index": 8,
   "who": "戸の向こう",
+  "preset": "wall"
+ },
+ "v-night-9": {
+  "key": "night",
+  "index": 9,
+  "who": "Ｋさんの声",
   "preset": "wall"
  },
  "v-dawn-0": {

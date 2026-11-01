@@ -66,6 +66,7 @@ export function createSound(ctx) {
   // recorded beds (Issue #1, ACE-Step loops in assets/audio/, listed in its manifest.json): one per stage, the night bed has an indoor
   // (muffled) twin and the two cross-fade with outdoor / indoor. Until they are decoded (or if they fail) the synthesized bed plays.
   const BEDS = [['amb-dusk-village'], ['amb-night-insects', 'amb-night-indoor'], ['amb-night-insects', 'amb-night-indoor'], ['amb-dawn-fog'], ['amb-van']];
+  const BED_GAIN = 0.45;   // the beds sit under the voices, the po and the footsteps (they were too loud at 1)
   const loops = {}; let loopsAsked = false;
   function loadLoops() {
     const ac = A(); if (!ac || loopsAsked) return; loopsAsked = true;
@@ -86,12 +87,12 @@ export function createSound(ctx) {
     if (want.length && want.every((id) => loops[id])) {
       for (const [id, g] of Object.entries(loops)) {
         const on = want[0] === id ? (want[1] && !o.outdoor ? 0 : 1) : want[1] === id && !o.outdoor ? 1 : 0;
-        g.gain.setTargetAtTime(vol * on, t, 1.2);
+        g.gain.setTargetAtTime(vol * on * BED_GAIN, t, 1.2);
       }
       b.g.gain.setTargetAtTime(0, t, 0.4);
       return;
     }
-    b.g.gain.setTargetAtTime(vol * (o.outdoor ? 0.9 : 0.22), t, 0.4);
+    b.g.gain.setTargetAtTime(vol * BED_GAIN * (o.outdoor ? 0.9 : 0.22), t, 0.4);
     b.lp.frequency.setTargetAtTime(o.outdoor ? 9000 : 700, t, 0.4);
     b.ins.gain.setTargetAtTime(o.insects ?? 1, t, 1.5);
     b.wg.gain.setTargetAtTime(o.wind ?? 0.12, t, 1.5);

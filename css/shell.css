@@ -1,4 +1,4 @@
-/* game-kit f3a18d2: css/shell.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit c7a7c2b: css/shell.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: the standard 3D shell (js/game-core.js): title screen, prompt, endings, pause menu, custom mini-game layer.
    Tokens only (css/theme.css); loaded after kit.css and theme.css. A game restyles it through tokens in css/theme-game.css. */
 #title { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; text-align: center; padding: var(--gf-win-margin, 16px); overflow-y: auto; overscroll-behavior: contain;
@@ -18,7 +18,7 @@
 .gf-menu-btn { min-height: var(--gf-hit, 44px); margin: 0; }
 .gf-set { display: flex; align-items: center; gap: var(--gf-space-3, 12px); margin: var(--gf-space-2, 8px) 0; min-height: var(--gf-hit, 44px); }
 .gf-set input[type=range] { flex: 1; }
-.gf-ending-img { display: block; max-width: 100%; max-height: 40vh; margin: 0 auto var(--gf-space-3, 12px); border-radius: var(--gf-radius, 10px); }
+.gf-ending-img, .gf-doc-img { display: block; max-width: 100%; max-height: 40vh; margin: 0 auto var(--gf-space-3, 12px); border-radius: var(--gf-radius, 10px); }
 .gf-overlay { position: fixed; inset: 0; z-index: 24; display: flex; align-items: center; justify-content: center; background: var(--gf-overlay-strong, rgba(0, 0, 0, 0.72)); color: var(--gf-text, #eee); padding: var(--gf-win-margin, 16px); }
 .gf-scanlines { display: none; }
 [data-theme] .gf-scanlines { display: block; }
@@ -153,6 +153,10 @@ body.touch #hud-right { top: calc(max(12px, var(--gf-safe-t, 0px)) + 52px); }   
 .tl-lookcard .iv-photo { width: 84px; flex: none; max-height: 56px; }
 .tl-lookcard .iv-photo.iv-nopic { display: none; }
 .tl-lookcard .iv-voice { margin-top: 4px; }
+/* the pickup card (an item with a photo just taken): the picture large on top, the name and the one line under it */
+.tl-lookcard.tl-pickcard .iv-photocard { flex-direction: column; align-items: stretch; }
+.tl-lookcard.tl-pickcard .iv-photo { width: 280px; max-width: 100%; max-height: 28vh; aspect-ratio: 4 / 3; border-radius: var(--gf-radius, 8px); }
+@media (max-height: 520px) { .tl-lookcard.tl-pickcard .iv-photo { max-width: 180px; } }
 .tl-quest-note, .tl-ok { border-left-color: var(--gf-ok, #2e7a4a); }
 .tl-card { border-left-color: var(--gf-accent-2, #e8a040); }
 .tl-prompt { border-left-color: var(--gf-accent-2, #e8a040); font-weight: 700; }
