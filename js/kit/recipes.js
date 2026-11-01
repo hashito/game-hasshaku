@@ -1,9 +1,10 @@
-/* game-kit 08f1905: js/recipes.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 77ebe23: js/recipes.js — edit in game-kit and run tools/kit-sync.js */
 // The recipes of the standard, switched on from game.json "recipes" (standard 1.5; pure side + docs in js/recipes-data.js):
 //   props       plan.furniture[] { kind, x, z, rot, args, opts } -> js/props.js / js/env-props.js objects in the world, with colliders
 //   openables   props with userData.drawers (lockers, fridges, cabinets): [E] opens / closes, the state is saved (ext.openables)
 //   textures    js/texture-library.js: plan.rooms[].floorTex / wallTex dress the floors and walls (or the room type's, js/room-types.js)
 //   (1.7) a room with a `type` also gets furniture against its free walls (autoFurniture) unless "furnish": false
+//   buildings   js/building.js: plan.buildings[] (houses with roofs that never come into the rooms, trees, forests kept off rooms and houses)
 //   ambience    js/ambience.js: outdoor beds that go quiet and muffled behind doors (model from the plan), started with the first sound
 // game-core imports this module only when game.json has "recipes" (loadGame), kit-sync copies what each switch needs (tools/kit-features.cjs).
 import { PROP_KINDS, furnitureOf, ambienceModelFromPlan } from './recipes-data.js';
@@ -38,8 +39,12 @@ export async function installRecipes(ctx, cfg = {}) {
       world.place(obj, f.room, f.x, f.z);
       api.props.set(f.id, obj);
       if (cfg.props) world.colliders.push(...propColliders(obj));
-      if (op && obj.userData && obj.userData.drawers && obj.userData.drawers.length) {
+      const parts = (obj.userData && obj.userData.drawers) || [];
+      if (op && parts.length === 1) {
         try { op.add(f.id, obj); obj.userData.interact = { kind: 'openable', id: f.id }; world.interactables.push(obj); } catch { /* nothing opens */ }
+      } else if (op && parts.length > 1) {
+        // a tansu / a cabinet with two doors: each drawer or door is its own openable (<id>:<n>), the one you look at opens (2026-11-01)
+        parts.forEach((p, i) => { try { const id = `${f.id}:${i}`; op.add(id, [p]); p.obj.userData.interact = { kind: 'openable', id }; world.interactables.push(p.obj); api.props.set(id, obj); } catch { /* nothing opens */ } });
       }
     }
     if (op) {
@@ -61,6 +66,34 @@ export async function installRecipes(ctx, cfg = {}) {
         if (L.wallTex && has(L.wallTex) && r.kind !== 'outdoor') world.group.traverse((o) => { if (o.name && o.name.startsWith(`wall:${r.id}:`)) o.material = tex.material(L.wallTex, { triplanar: true }); });
       }
     } catch (e) { console.warn(`recipes.textures: ${e.message}`); }
+  }
+
+  // ---- buildings (2026-11-01): plan.buildings[] -> js/building.js houses / trees / forests with colliders ----
+  //   { id, kind: 'house', room?, x, z, rot, w, d, wallH, roof: { type, pitch, overhang }, doors, windows, tex: { wall, roof, floor, ceiling } }
+  //   { id, kind: 'forest', area: { minX, maxX, minZ, maxZ }, n, seed, kinds, keepOut?: [...] }   (indoor rooms and houses are kept out on their own)
+  //   { id, kind: 'tree', x, z, h, treeKind }
+  if (cfg.buildings) {
+    const Bm = await import('./building.js'), { propColliders: pc } = await import('./prop-batch.js');
+    const tex = api.textures || ctx.textures, T = (id) => { try { return id && tex ? tex.material(id, { triplanar: true }) : null; } catch { return null; } };
+    const rect = (b) => { const r = ((b.rot || 0) % 180) ? [b.d, b.w] : [b.w, b.d]; return { minX: b.x - r[0] / 2, maxX: b.x + r[0] / 2, minZ: b.z - r[1] / 2, maxZ: b.z + r[1] / 2 }; };
+    const list = plan.buildings || [], houses = list.filter((b) => (b.kind || 'house') === 'house');
+    const indoor = (plan.rooms || []).filter((r) => r.kind !== 'outdoor').map((r) => ({ minX: r.x, maxX: r.x + r.w, minZ: r.z, maxZ: r.z + r.d }));
+    api.buildings = new Map();
+    for (const b of list) {
+      const kind = b.kind || 'house', tx = b.tex || {};
+      const mats = { wall: T(tx.wall), roof: T(tx.roof), floor: T(tx.floor), ceiling: T(tx.ceiling), bark: T(tx.bark), bough: T(tx.bough) };
+      let obj;
+      try {
+        if (kind === 'forest') obj = Bm.forest({ ...b, keepOut: [...indoor, ...houses.map(rect), ...(b.keepOut || [])], mats });
+        else if (kind === 'tree') { obj = Bm.tree({ ...b, kind: b.treeKind || 'cedar', keepOut: [...indoor, ...houses.map(rect)].map((r) => ({ minX: r.minX - b.x, maxX: r.maxX - b.x, minZ: r.minZ - b.z, maxZ: r.maxZ - b.z })), mats }); obj.position.set(b.x, 0, b.z); }
+        else if (kind === 'gate') { obj = Bm.gate({ ...b, mats: { post: T(tx.post), leaf: T(tx.leaf), roof: mats.roof } }); obj.position.set(b.x, 0, b.z); obj.rotation.y = ((b.rot || 0) * Math.PI) / 180; }
+        else { obj = Bm.house({ ...b, mats }); obj.position.set(b.x, 0, b.z); obj.rotation.y = ((b.rot || 0) * Math.PI) / 180; }
+      } catch (e) { console.warn(`recipes.buildings: ${b.id} (${kind}): ${e.message}`); continue; }
+      obj.name = `building:${b.id}`;
+      const R = b.room && world.rooms && world.rooms.get && world.rooms.get(b.room); if (R) obj.position.y += R.y || 0;
+      world.group.add(obj); api.buildings.set(b.id, obj);
+      world.colliders.push(...pc(obj, { tag: kind }));
+    }
   }
 
   // ---- ambience ----

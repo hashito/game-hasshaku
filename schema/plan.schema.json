@@ -62,6 +62,10 @@
           "floorTex": {
             "type": "string"
           },
+          "step": {
+            "enum": ["lino", "wax", "wood", "tatami", "carpet", "tile", "concrete", "gravel", "grass", "dirt", "snow", "mud", "water", "metal", "grating"],
+            "description": "the footstep surface here (js/step-sound.js); default: from floorTex, then kind"
+          },
           "wallTex": {
             "type": "string"
           },
@@ -192,6 +196,11 @@
           }
         }
       }
+    },
+    "buildings": {
+      "type": "array",
+      "description": "recipes.buildings (js/building.js): { id, kind: house | gate | tree | forest, x, z, rot, w, d, wallH, roof { type gable|shed|flat, pitch, overhang }, doors [{ side, at, w, leaf: fusuma|shoji|glass|wood }], windows, tex { wall, roof, floor, ceiling, bark, bough, post, leaf } (catalog ids) }; forests keep off indoor rooms and houses",
+      "items": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" }, "kind": { "enum": ["house", "gate", "tree", "forest"] } } }
     },
     "furniture": {
       "type": "array",

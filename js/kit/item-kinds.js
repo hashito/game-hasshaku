@@ -1,4 +1,4 @@
-/* game-kit 08f1905: js/item-kinds.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 77ebe23: js/item-kinds.js — edit in game-kit and run tools/kit-sync.js */
 // Item kinds (standard 1.7, "置くだけ"): an item or a document with a `kind` is shown as a model of that thing instead of a coloured box,
 // resting on what is under it (a desk, a shelf board, the floor; W3), slightly larger than life so it reads from 1-3 m (W11).
 //   items.json  { "id": "I1", "kind": "key", "room": "R1", "x": 2, "z": 3 }              -> a key on the desk at (2, 3)
@@ -72,7 +72,33 @@ export function topsIn(colliders, room, floorY = 0) {
     if (h < 0.5 || h > 1.2 || w < 0.3 || d < 0.3 || b.min.y > floorY + 0.3) continue;
     const x = (b.min.x + b.max.x) / 2, z = (b.min.z + b.max.z) / 2;
     if (x < room.x || x > room.x + room.w || z < room.z || z > room.z + room.d) continue;
-    out.push({ x, z, y: b.max.y, area: w * d });
+    out.push({ x, z, y: b.max.y, area: w * d, minX: b.min.x, maxX: b.max.x, minZ: b.min.z, maxZ: b.max.z });
   }
   return out.sort((a, b) => b.area - a.area);
+}
+
+// Things on a desk must not stick out (2026-11-01, user: 机の上の物が飛び出す). Both pure:
+// seatOn: rest a thing of footprint w x d near (x, z) on the highest top under it, moved inward so the whole footprint stays on the top
+// (EDGE m from each edge); a top smaller than the thing gets it centred. No top under it = the floor, (x, z) unchanged.
+export const EDGE = 0.03;
+export function seatOn(colliders, x, z, w = 0.2, d = 0.2, floorY = 0, maxH = 1.4) {
+  let best = null;
+  for (const c of colliders || []) {
+    if (c.off) continue;
+    const b = c.box, top = b.max.y;
+    if (x < b.min.x || x > b.max.x || z < b.min.z || z > b.max.z) continue;
+    if (top > floorY + 0.02 && top <= floorY + maxH && b.min.y <= floorY + 0.3 && (!best || top > best.max.y)) best = b;
+  }
+  if (!best) return { x, z, y: floorY, top: null };
+  const fit = (v, lo, hi, s) => (hi - lo <= s + 2 * EDGE ? (lo + hi) / 2 : Math.min(hi - EDGE - s / 2, Math.max(lo + EDGE + s / 2, v)));
+  return { x: fit(x, best.min.x, best.max.x, w), z: fit(z, best.min.z, best.max.z, d), y: best.max.y, top: best };
+}
+// slotOn: where the n-th thing (0-based) of footprint w x d goes on a top from topsIn (a row along the long side, then the next row);
+// null when the top is full, so the caller moves on to the next top instead of pushing things over the edge
+export function slotOn(top, n, w = 0.2, d = 0.2, gap = 0.06) {
+  const long = top.maxX - top.minX >= top.maxZ - top.minZ, L = long ? top.maxX - top.minX : top.maxZ - top.minZ, S = long ? top.maxZ - top.minZ : top.maxX - top.minX;
+  const a = long ? w : d, b = long ? d : w, per = Math.max(0, Math.floor((L - 2 * EDGE + gap) / (a + gap))), rows = Math.max(0, Math.floor((S - 2 * EDGE + gap) / (b + gap)));
+  if (!per || !rows || n >= per * rows) return null;
+  const i = n % per, j = Math.floor(n / per), u = -((per - 1) * (a + gap)) / 2 + i * (a + gap), v = -((rows - 1) * (b + gap)) / 2 + j * (b + gap);
+  return long ? { x: top.x + u, z: top.z + v, y: top.y } : { x: top.x + v, z: top.z + u, y: top.y };
 }

@@ -1,5 +1,6 @@
-/* game-kit 3f1a7d2: js/audio.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 77ebe23: js/audio.js — edit in game-kit and run tools/kit-sync.js */
 import { muffle as muffleOf } from './audio-at.js';
+import { stepParts, noiseParts } from './step-sound.js';
 // Procedural sound (Web Audio API). The engine (noise bursts, tones, positional output, generated
 // reverb, loops, footsteps, door / paper / beep sounds) is reused from みる風車 (game-miru-fusha,
 // js/audio.js); the station sounds (fluorescent hum, phone, printer, kitchen on the line, stamp,
@@ -191,14 +192,19 @@ export class Audio {
   }
 
   // ---- one-shots -----------------------------------------------------------------------------
-  step(surface = 'lino') {
-    if (surface === 'wax') {
-      this.noiseBurst({ dur: 0.06, freq: 520, q: 1.5, gain: 0.13, type: 'lowpass', wet: 0.6 });
-      this.noiseBurst({ dur: 0.018, freq: 3200, q: 3, gain: 0.06, wet: 0.8 }); // rubber squeak / heel
-    } else {
-      this.noiseBurst({ dur: 0.07, freq: 380, q: 1.5, gain: 0.14, type: 'lowpass', wet: 0.3 });
-      this.noiseBurst({ dur: 0.02, freq: 2400, q: 2, gain: 0.045, wet: 0.3 });
-    }
+  // footsteps by the floor underfoot (js/step-sound.js: lino wax wood tatami carpet tile concrete gravel grass dirt snow mud water metal grating)
+  step(surface = 'lino', { run = false, crouch = false, pos = null } = {}) {
+    for (const p of stepParts(surface, { run, crouch })) this.part(p, pos);
+  }
+
+  // a house noise from js/step-sound.js NOISES (knock thud rattle scrape slide creakFloor drip tap rustle splash)
+  noise(name, { pos = null, n, gap, gain } = {}) {
+    for (const p of noiseParts(name, { n, gap, gain })) this.part(p, pos);
+  }
+
+  part(p, pos) {
+    const { tone, ...o } = p;
+    if (tone) this.tone({ ...o, pos }); else this.noiseBurst({ ...o, pos });
   }
 
   // quiet on purpose: walking through doors is constant, so it sits just above a pickup (user: ドアを通る時の音が大きくて気になります)

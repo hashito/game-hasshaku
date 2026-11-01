@@ -1,4 +1,4 @@
-/* game-kit 7e552f9: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 77ebe23: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -19,7 +19,8 @@
 //
 // Known coupling left: progress-ui's level-up / briefing dialogs still open as KitUI windows (TODO: move them to win-manager).
 import * as THREE from 'three';
-import { makeItemModel, supportY, topsIn, DOC_KIND } from './item-kinds.js';
+import { makeItemModel, topsIn, seatOn, slotOn, DOC_KIND } from './item-kinds.js';
+import { stepSurfaceOf } from './step-sound.js';
 import { createTalk } from './talk-ui.js';
 import { createRenderer, applyPreset, extendPreset, QualityTier } from './render-presets.js';
 import { browserEnv } from './render-budget.js';
@@ -54,7 +55,7 @@ import { gfRegister, gfOk, gfFail, gfUnknown } from './gf-test.js';
 import { createExtensions } from './ext.js';
 import { buildProgressionDef, taskAtStation, pickEnding } from './game-data.js';
 
-export const CORE_VERSION = '1.7.0';
+export const CORE_VERSION = '1.8.0';
 const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(typeof location !== 'undefined' ? location.search : '');
 const safe = (fn, d = null) => { try { return fn(); } catch { return d; } };
@@ -213,7 +214,7 @@ export function createGame(cfg) {
     if (model) {
       const b = new THREE.Box3().setFromObject(model), sz = b.getSize(new THREE.Vector3());
       mesh = new THREE.Mesh(new THREE.BoxGeometry(Math.max(0.12, sz.x + 0.06), Math.max(0.06, sz.y + 0.04), Math.max(0.12, sz.z + 0.06)), hidden);
-      model.position.y = -mesh.geometry.parameters.height / 2; mesh.add(model); mesh.userData.model = model;
+      model.position.y = -mesh.geometry.parameters.height / 2; mesh.add(model); mesh.userData.model = model; mesh.userData.foot = [sz.x, sz.z];
     } else mesh = new THREE.Mesh(new THREE.BoxGeometry(kind === 'doc' ? 0.32 : 0.26, kind === 'doc' ? 0.02 : 0.2, kind === 'doc' ? 0.24 : 0.26), new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(hue(x.id) / 360, 0.35, kind === 'doc' ? 0.8 : 0.45), emissive: new THREE.Color().setHSL(hue(x.id) / 360, 0.5, 0.18), roughness: 0.7 }));
     mesh.position.y = 0.85; mesh.name = `${kind}:${x.id}`; mesh.userData.interact = { kind, id: x.id }; mesh.userData.def = x;
     world.place(mesh, x.room, x.x, x.z); world.interactables.push(mesh); pickups.set(`${kind}:${x.id}`, mesh);
@@ -221,18 +222,18 @@ export function createGame(cfg) {
   if (!(wdef && wdef.pickups === 'self')) { items.filter((i) => !i.start && !i.given).forEach((i) => addPickup('item', i)); docs.forEach((d) => addPickup('doc', d)); }
   // put each pickup on its support (a desk top, a shelf board, the floor): x.y wins; run again after the recipes have placed the furniture
   ctx.seatPickups = () => {
-    const usedTops = new Map();
+    const used = new Map();   // top -> things on it
     for (const mesh of pickups.values()) {
       const x = mesh.userData.def || {}, R = world.rooms && world.rooms.get && world.rooms.get(x.room), fy = R ? R.y || 0 : 0;
-      // no x / z in the data: put it on a desk or table top of its room when there is one (one thing per top), else where the world placed it
+      const p = mesh.geometry.parameters, [w, d] = mesh.userData.foot || [p.width || 0.2, p.depth || 0.2], h = p.height || 0.2;
+      // no x / z in the data: the next free slot on a desk or table top of its room (a row along the long side; a full top passes to the next)
       if ((x.x == null || x.z == null) && x.y == null && R && R.room) {
-        const r = R.room, n = usedTops.get(x.room) || 0;
-        const tops = topsIn(world.colliders, r, fy);
-        if (tops.length) { const t = tops[n % tops.length]; mesh.position.x = t.x + (n >= tops.length ? 0.2 : 0); mesh.position.z = t.z; usedTops.set(x.room, n + 1); }
+        for (const t of topsIn(world.colliders, R.room, fy)) { const k = `${t.minX},${t.minZ},${t.y}`, n = used.get(k) || 0, s = slotOn(t, n, w, d); if (s) { mesh.position.x = s.x; mesh.position.z = s.z; used.set(k, n + 1); break; } }
       }
-      const h = mesh.geometry.parameters.height || 0.2;
-      const y = x.y != null ? fy + x.y : supportY(world.colliders, mesh.position.x, mesh.position.z, fy);
-      mesh.position.y = y + h / 2;
+      if (x.y != null) { mesh.position.y = fy + x.y + h / 2; continue; }
+      // on whatever is under it, moved inward so nothing sticks out over the edge (seatOn)
+      const s = seatOn(world.colliders, mesh.position.x, mesh.position.z, w, d, fy);
+      mesh.position.x = s.x; mesh.position.z = s.z; mesh.position.y = s.y + h / 2;
     }
   };
   ctx.seatPickups();
@@ -244,6 +245,11 @@ export function createGame(cfg) {
   addEventListener('pointerdown', unlockAudio, { once: true }); addEventListener('keydown', unlockAudio, { once: true });
   const sound = (name, ...a) => safe(() => ctx.audio[name] && ctx.audio[name](...a));
   ctx.sound = sound;
+  // standard 1.8: the footstep follows the floor of the room (plan room step / floorTex / kind, game.json controls.step, js/step-sound.js);
+  // a game with its own ground (snow outside, a wet corridor) sets ctx.stepSurfaceOf = (room, pos) => 'snow' | null
+  { const cache = new Map(), def = (manifest.controls || {}).step;
+    ctx.stepSurface = () => { const own = ctx.stepSurfaceOf && ctx.stepSurfaceOf(state.room, ctx.camera && ctx.camera.position); if (own) return own;
+      if (!cache.has(state.room)) cache.set(state.room, stepSurfaceOf(plan.rooms.find((r) => r.id === state.room), { def })); return cache.get(state.room); }; }
   // positional cues behind walls are muffled (audio.at(pos).door(), js/audio-at.js): the occlusion of a position = the doors between its room and the listener's room
   { let g = null; audio.occlusionOf = (pos) => { g = g || roomGraph(plan); return occlusion(g, state.room, roomOf(g, pos.x, pos.z, ctx.floor), (id) => { const d = world.doors && world.doors.get(id); return d ? (d.isOpen ? 1 : 0) : 1; }); }; }
   // in-world voices (rule S15): ctx.playVoice(src, 'phone' | 'pa' | 'radio' | 'wall', { pos, intensity }) -> js/voice-fx.js (manifest "voice": true)
@@ -274,7 +280,7 @@ export function createGame(cfg) {
   ctx.blocked = blocked;
   const fpOpts = {
     colliders: world.colliders, bounds: world.bounds, isBlocked: blocked, sensitivity: settings.sensitivity, eye: EYE,
-    onStep: () => sound('step', 'lino'), onUnlock: () => state.started && !blocked() && pm.open(),
+    onStep: (run) => sound('step', ctx.stepSurface(), { run, crouch: !!ctx.fp?.crouching }), onUnlock: () => state.started && !blocked() && pm.open(),
     touch: $('t-stick') ? { stick: $('t-stick'), knob: $('t-knob'), look: $('t-look') } : undefined,
     onTap: (x, y) => ctx.tapSelect && ctx.tapSelect(x, y),   // W18: tap-to-interact on touch
     externalLook: controls.lookInput !== false,   // the mouse goes through LookInput below (pointer lock, drag-look when the lock is refused, click-to-resume)

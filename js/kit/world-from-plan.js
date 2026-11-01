@@ -1,4 +1,4 @@
-/* game-kit 08f1905: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 77ebe23: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
 // The standard world builder (docs/standard-3d.md, layer "world"): plan.json (rooms, corridors, doors, stations) -> THREE objects,
 // colliders, doors that open and a room lookup. Boxes only: floors, ceilings, walls with door gaps and lintels, door panels, task
 // stations. The look is a flat palette per room kind + the preset lighting; richer looks (texture-library, props, env-props) are added
@@ -237,7 +237,9 @@ function candidatesOf(camera, interactables, reach) {
   const out = [];
   for (const o of interactables) {
     if (!o.visible) continue;
-    if (Math.abs(o.position.x - camera.position.x) > reach + 3 || Math.abs(o.position.z - camera.position.z) > reach + 3) continue;
+    // the world position (matrixWorld), not o.position: a part of a prop (a drawer, a cabinet door) has a local position
+    const e = o.matrixWorld.elements, wx = o.parent ? e[12] : o.position.x, wz = o.parent ? e[14] : o.position.z;
+    if (Math.abs(wx - camera.position.x) > reach + 3 || Math.abs(wz - camera.position.z) > reach + 3) continue;
     _bx.setFromObject(o);
     if (_bx.isEmpty()) continue;
     out.push({ id: o.id, min: [_bx.min.x, _bx.min.y, _bx.min.z], max: [_bx.max.x, _bx.max.y, _bx.max.z], obj: o });

@@ -7,5 +7,5 @@ module.exports = [
   { id: 'things', when: (g) => !!(g.things && g.data && g.data.things), modules: ['things', 'things-data'] },
   { id: 'terminals', when: (g) => !!(g.data && g.data.terminals), modules: ['terminal-screen', 'terminal-data'] },
   { id: 'voice', when: (g) => !!g.voice, modules: ['voice-fx'] },
-  { id: 'recipes', when: (g) => !!g.recipes, modules: ['recipes', 'recipes-data'], dynamic: (g) => [(g.recipes.props || g.recipes.openables) && 'props', (g.recipes.props || g.recipes.openables) && 'env-props', (g.recipes.props || g.recipes.openables) && 'prop-batch', g.recipes.openables && 'openables', g.recipes.textures && 'texture-library', g.recipes.ambience && 'ambience'].filter(Boolean) },
+  { id: 'recipes', when: (g) => !!g.recipes, modules: ['recipes', 'recipes-data'], dynamic: (g) => [(g.recipes.props || g.recipes.openables) && 'props', (g.recipes.props || g.recipes.openables) && 'env-props', (g.recipes.props || g.recipes.openables) && 'prop-batch', g.recipes.openables && 'openables', g.recipes.buildings && 'building', g.recipes.buildings && 'prop-batch', g.recipes.textures && 'texture-library', g.recipes.ambience && 'ambience'].filter(Boolean) },
 ];

@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/props.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 77ebe23: js/props.js — edit in game-kit and run tools/kit-sync.js */
 // Procedural props. The general helpers and the desk / locker / telephone / bin / cardboard box are
 // reused from みる風車 (game-miru-fusha, js/props.js); the office furniture below them (steel desk,
 // chairs, shelves, monitor, printer, vending machine, ...) was added for the police station.
@@ -65,7 +65,8 @@ function add(group, geo, mat, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) {
   return m;
 }
 
-// Wooden desk with legs, drawer and handle. Origin = floor centre.
+// Wooden desk with legs and a drawer that opens (2026-11-01: it was a solid box). Origin = floor centre, front = +z.
+// userData.drawers = [{ obj, kind: 'drawer', travel }] (openables.js; plan.furniture with recipes.openables opens it with [E]).
 export function desk(T, w = 1.4, d = 0.7, h = 0.76) {
   const g = new THREE.Group();
   const wood = TM(T, 'wood', 'wood', 0x6a4a30);
@@ -78,10 +79,19 @@ export function desk(T, w = 1.4, d = 0.7, h = 0.76) {
     [1, 1],
   ])
     add(g, bb(0.05, h - 0.05, 0.05), dark, x * (w / 2 - 0.05), (h - 0.05) / 2, z * (d / 2 - 0.05));
-  add(g, bb(w * 0.4, 0.16, d - 0.1), wood, w * 0.22, h - 0.14, 0);
-  add(g, bb(0.1, 0.02, 0.02), pm('steel', 0xb0a080), w * 0.22, h - 0.14, d / 2 - 0.04);
+  // the drawer case under the top: sides, bottom and back (hollow, so the drawer slides out of it)
+  const cw = w * 0.4, cx = w * 0.22, ch = 0.16, cd = d - 0.1;
+  for (const sx of [-1, 1]) add(g, bb(0.015, ch, cd), wood, cx + sx * (cw / 2 - 0.0075), h - 0.05 - ch / 2, 0);
+  add(g, bb(cw, 0.012, cd), wood, cx, h - 0.05 - ch + 0.006, 0);
+  add(g, bb(cw, ch, 0.012), wood, cx, h - 0.05 - ch / 2, -cd / 2 + 0.006);
   add(g, bb(w - 0.1, 0.3, 0.02), dark, 0, h - 0.25, -d / 2 + 0.04); // modesty panel
-  return finish(g, [boxFrom(w, h, d)], 'desk');
+  const out = finish(g, [boxFrom(w, h, d)], 'desk');
+  const dr = drawer(cw - 0.034, ch - 0.02, cd - 0.05, wood, pm('steel', 0xb0a080));
+  dr.position.set(cx, h - 0.05 - ch / 2, cd / 2 + 0.01);
+  dr.userData.keep = true;
+  out.add(dr);
+  out.userData.drawers = [{ obj: dr, kind: 'drawer', travel: cd * 0.65 }];
+  return out;
 }
 
 // Steel locker with vents, handle and number plate; the door opens on its hinge. o.hinge: 'left' (default,
@@ -399,7 +409,7 @@ function strut(group, a, b, r, mat, seg = 8) {
 
 // Seat height (top of the seat) of the chairs below, in metres. A person built with
 // buildPerson({ pose: 'sit', seatH }) at the chair's origin and rotation sits on it.
-export const SEAT_H = { pipeChair: 0.47, officeChair: 0.47 };
+export const SEAT_H = { pipeChair: 0.47, officeChair: 0.47, woodenChair: 0.45, bed: 0.5 };
 
 // Folding steel chair. Origin = floor centre under the seat; faces +z (the backrest is on -z).
 // Two raked rear posts run from the floor to the top of the backrest, the front legs end under the
@@ -672,4 +682,82 @@ export function crateBox(T) {
   const g = new THREE.Group();
   add(g, bb(0.6, 0.6, 0.6), TM(T, 'wood', 'wood', 0x8a6a40, { roughness: 0.8 }), 0, 0.3, 0);
   return g;
+}
+
+// ---- 2026-11-01: more standard furniture (the games built these themselves: cabinetWithDoors x4, bed x3, chair x3) ----
+// Every opening part is its own entry of userData.drawers (recipes registers each one apart when there are several: one drawer
+// of a tansu opens, not all of them). Origin = floor centre, front = +z, colliders in userData.colliders.
+
+// Cabinet with hinged doors (戸棚 / 物入れ / 衣装棚 when tall). o: { w: 0.9, h: 1.8, d: 0.45, doors: 2 | 1, shelves: 3, color, wood: true, angle }
+export function cabinet(T, o = {}) {
+  const w = o.w ?? 0.9, h = o.h ?? 1.8, d = o.d ?? 0.45, n = o.doors ?? (w > 0.6 ? 2 : 1), wood = o.wood ?? true;
+  const body = wood ? TM(T, 'wood', 'wood', o.color ?? 0x6a4c34) : TM(T, 'metal', 'paint', o.color ?? 0x8a8e88, { metalness: 0.3 });
+  const inner = M(0x3a3430, { roughness: 0.9 }), handle = pm('steel', 0xa89a80);
+  const g = new THREE.Group();
+  for (const sx of [-1, 1]) add(g, bb(0.02, h, d), body, sx * (w / 2 - 0.01), h / 2, 0);
+  add(g, bb(w, 0.02, d), body, 0, h - 0.01, 0);
+  add(g, bb(w, 0.06, d), body, 0, 0.03, 0);
+  add(g, bb(w - 0.04, h - 0.08, 0.012), inner, 0, h / 2, -d / 2 + 0.006);
+  const shelves = o.shelves ?? Math.max(1, Math.round(h / 0.45) - 1);
+  for (let i = 1; i <= shelves; i++) add(g, bb(w - 0.04, 0.018, d - 0.04), inner, 0, 0.06 + (i * (h - 0.08)) / (shelves + 1), -0.01);
+  const out = finish(g, [boxFrom(w, h, d)], 'cabinet');
+  out.userData.drawers = [];
+  const dw = (w - 0.01) / n, open = o.angle ?? 1.7;
+  for (let i = 0; i < n; i++) {
+    const right = n === 2 ? i === 1 : o.hinge === 'right', side = right ? 1 : -1, x0 = -w / 2 + 0.005 + i * dw;
+    const hinge = new THREE.Group(); hinge.userData.keep = true; hinge.name = 'cabinetHinge';
+    hinge.position.set(right ? x0 + dw : x0, 0, d / 2 + 0.01);
+    const leaf = new THREE.Group();
+    add(leaf, bb(dw - 0.006, h - 0.1, 0.02), body, 0, h / 2 + 0.01, 0);
+    add(leaf, bb(0.02, 0.12, 0.02), handle, -side * (dw / 2 - 0.05), h * 0.5, 0.018);
+    const m = mergeProps(leaf); m.position.x = -side * (dw / 2); hinge.add(m); out.add(hinge);
+    out.userData.drawers.push({ obj: hinge, kind: 'door', angle: side * open, hinge: right ? 'right' : 'left' });
+  }
+  return out;
+}
+
+// Chest of drawers (たんす / 整理棚): rows of drawers that each open on their own. o: { w: 0.9, h: 1.0, d: 0.45, rows: 4, cols: 1 | 2, color }
+export function tansu(T, o = {}) {
+  const w = o.w ?? 0.9, h = o.h ?? 1.0, d = o.d ?? 0.45, rows = o.rows ?? Math.max(2, Math.round(h / 0.24)), cols = o.cols ?? 1;
+  const body = TM(T, 'wood', 'wood', o.color ?? 0x5a3c26), front = TM(T, 'wood', 'wood', o.front ?? 0x6e4a2e), handle = pm('steel', 0x2a2620);
+  const g = new THREE.Group();
+  for (const sx of [-1, 1]) add(g, bb(0.02, h, d), body, sx * (w / 2 - 0.01), h / 2, 0);
+  add(g, bb(w, 0.025, d), body, 0, h - 0.0125, 0);
+  add(g, bb(w, 0.05, d), body, 0, 0.025, 0);
+  add(g, bb(w - 0.04, h - 0.07, 0.012), body, 0, h / 2, -d / 2 + 0.006);
+  const out = finish(g, [boxFrom(w, h, d)], 'tansu');
+  out.userData.drawers = [];
+  const dh = (h - 0.08) / rows, dw = (w - 0.04) / cols;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const dr = drawer(dw - 0.008, dh - 0.008, d - 0.06, front, handle);
+    dr.position.set(-w / 2 + 0.02 + (c + 0.5) * dw, h - 0.03 - (r + 0.5) * dh, d / 2 + 0.005);
+    dr.userData.keep = true; out.add(dr);
+    out.userData.drawers.push({ obj: dr, kind: 'drawer', travel: (d - 0.06) * 0.7 });
+  }
+  return out;
+}
+
+// Bed: frame, mattress, pillow and a folded blanket. o: { w: 1.0, l: 2.0, h: 0.5 (mattress top), color, sheet, blanket, headboard: true }
+// The long side runs along z, the head at -z.
+export function bed(T, o = {}) {
+  const w = o.w ?? 1.0, l = o.l ?? 2.0, top = o.h ?? SEAT_H.bed, wood = TM(T, 'wood', 'wood', o.color ?? 0x5e4430);
+  const cloth = (c) => pm('fabric', c);
+  const g = new THREE.Group(), frameH = top - 0.18;
+  add(g, bb(w, 0.06, l), wood, 0, frameH - 0.03, 0);
+  for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) add(g, bb(0.06, frameH - 0.06, 0.06), wood, x * (w / 2 - 0.03), (frameH - 0.06) / 2, z * (l / 2 - 0.03));
+  add(g, bb(w - 0.04, 0.18, l - 0.04, 0.03, 2), cloth(o.sheet ?? 0xd8d4c8), 0, frameH + 0.09, 0);
+  add(g, bb(w * 0.6, 0.1, 0.32, 0.04, 2), cloth(0xe6e2d8), 0, top + 0.05, -l / 2 + 0.24);
+  add(g, bb(w - 0.02, 0.05, l * 0.55, 0.02, 2), cloth(o.blanket ?? 0x5a6a78), 0, top + 0.025, l * 0.2);
+  if (o.headboard ?? true) add(g, bb(w, 0.5, 0.04), wood, 0, top + 0.18, -l / 2 + 0.02);
+  return finish(g, [boxFrom(w, top + 0.1, l)], 'bed');
+}
+
+// Wooden chair (台所・学校・民家). Origin = floor centre, the seat faces +z. SEAT_H.woodenChair = seat top.
+export function woodenChair(T = {}, o = {}) {
+  const sh = SEAT_H.woodenChair, wood = TM(T, 'wood', 'wood', o.color ?? 0x7a5a3c), g = new THREE.Group();
+  add(g, bb(0.42, 0.03, 0.4, 0.006), wood, 0, sh - 0.015, 0);
+  for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) add(g, bb(0.035, sh - 0.03, 0.035), wood, x * 0.18, (sh - 0.03) / 2, z * 0.17);
+  for (const x of [-1, 1]) add(g, bb(0.035, 0.45, 0.035), wood, x * 0.18, sh + 0.225, -0.17);
+  for (const y of [0.18, 0.36]) add(g, bb(0.36, 0.05, 0.02), wood, 0, sh + y, -0.17);
+  return finish(g, [boxFrom(0.42, sh, 0.4)], 'chair');
 }
