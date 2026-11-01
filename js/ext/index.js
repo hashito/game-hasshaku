@@ -2,7 +2,7 @@
 //   hasshaku.js   her look (standard character + hat and a long dress), the monster look "hasshaku"
 //   village.js    the village, the house and the people dressed on top of the standard world
 //   story.js      the five stages: conversations, the night in the sealed room, the van to the border, death and the ending
-//   minigames.js  the salt heap and the gate's three turn-buttons; sound.js the synthesized sounds
+//   sound.js the synthesized sounds (the salt heap and the gate dials are the kit library mg-pour / mg-turn-dials)
 import { hasshakuLook } from './hasshaku.js';
 import story from './story.js';
 

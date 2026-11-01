@@ -1,5 +1,5 @@
 {
-  "kit": "8926c18",
+  "kit": "c73b782",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -65,7 +65,11 @@
     "item-models",
     "talk-ui",
     "room-types",
-    "interior-finish"
+    "interior-finish",
+    "mg-pour",
+    "mg-frame",
+    "mg-turn-dials",
+    "mg-library"
   ],
   "css": "css/kit.css",
   "cssExtra": [
@@ -147,7 +151,7 @@
     "js/kit/prop-batch.js": "abd03dfc3b79",
     "js/kit/env-props.js": "8173704023b6",
     "js/kit/text-contrast.js": "7fee755af57a",
-    "css/kit.css": "55c4d3583f0a",
+    "css/kit.css": "044223f93c87",
     "css/theme.css": "ebaca1cab248",
     "css/shell.css": "69c16bee0f93",
     "schema/chat-story.schema.json": "e24a86e49bb9",
@@ -246,7 +250,11 @@
     "js\\kit\\env-props.js": "8173704023b6",
     "js\\kit\\texture-library.js": "b28d6322f0be",
     "css\\theme.css": "ebaca1cab248",
-    "css\\shell.css": "8730c4644182"
+    "css\\shell.css": "8730c4644182",
+    "js\\kit\\mg-pour.js": "11f3d7486b85",
+    "js\\kit\\mg-frame.js": "1e639b5179ca",
+    "js\\kit\\mg-turn-dials.js": "194968af640e",
+    "js\\kit\\mg-library.js": "11235df522e1"
   },
   "textures": [
     "planks_worn",

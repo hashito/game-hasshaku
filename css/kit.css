@@ -1,4 +1,4 @@
-/* game-kit 8926c18: css/kit.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit c73b782: css/kit.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: shared styles for first-person browser games (windows, HUD, buttons, touch controls,
    status chips, steppers, kanban, app-like software screens, tabs, stamps, share buttons; at the end
    progression pg-*, sim UI nt-/tb-/dl-/ch-*, journal jr-* / stream veil st-* / hiding hd-*, chat cx-*).
@@ -3020,7 +3020,7 @@ html[data-gf-no-flash="1"] .wm-layer { animation: none; }
 
 /* ---- the 3D conversation window and choice (js/talk-ui.js, standard 1.7) ---- */
 .gf-talk { display: flex; flex-direction: column; gap: var(--gf-space-3, 12px); min-height: 100%; color: var(--gf-text, #e8e6df); }
-.gf-talk-img { width: 100%; max-height: 44vh; object-fit: cover; border: 1px solid var(--gf-border, rgba(255,255,255,.2)); border-radius: var(--gf-radius, 4px); }
+.gf-talk-img { width: 100%; max-height: 30vh; object-fit: cover; border: 1px solid var(--gf-border, rgba(255,255,255,.2)); border-radius: var(--gf-radius, 4px); }
 .gf-talk-row { display: flex; gap: var(--gf-space-3, 12px); align-items: flex-start; }
 .gf-talk-face { flex: none; width: clamp(84px, 22%, 150px); aspect-ratio: 2 / 3; object-fit: cover; object-position: top; border: 1px solid var(--gf-border, rgba(255,255,255,.2)); border-radius: var(--gf-radius, 4px); }
 .gf-talk-words { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--gf-space-2, 8px); }
@@ -3038,3 +3038,27 @@ html[data-gf-no-flash="1"] .wm-layer { animation: none; }
 /* ---- pre-paint of the standard windows (js/ui-warm.js): really laid out and painted, but invisible and inert. opacity .001 (not 0: Chrome skips painting at 0) ---- */
 body.gf-warming .wm-layer, body.gf-warming .rn-wrap, body.gf-warming #mg, body.gf-warming .gf-overlay { opacity: 0.001 !important; pointer-events: none !important; animation: none !important; transition: none !important; }
 
+
+/*@section minigame-library*/
+/* ---- the mini game library (js/mg-frame.js, js/mg-pour.js, js/mg-turn-dials.js; docs/minigame-library.md): top-anchored like every window ---- */
+.mgx { position: fixed; left: 50%; top: max(var(--gf-space-5, 24px), min(9vh, 80px), env(safe-area-inset-top, 0px)); transform: translateX(-50%); width: min(520px, calc(100vw - 24px)); max-height: calc(100vh - min(9vh, 80px) - 24px); overflow: auto; z-index: calc(var(--gf-z-window, 60) + 5);
+  box-sizing: border-box; background: var(--gf-surface, var(--panel, #fffdf6)); border: 1px solid var(--gf-border-strong, var(--line, #b8b0a0)); border-radius: var(--gf-radius-lg, 12px); padding: var(--gf-space-5, 20px); color: var(--gf-text, var(--ink, #23302c)); box-shadow: var(--gf-shadow, 0 10px 40px rgba(0, 0, 0, 0.35)); }
+.mgx-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.mgx-head b { font-size: 18px; color: var(--gf-heading, var(--gf-accent, #2f5e46)); }
+.mgx-help { color: var(--gf-text-dim, var(--dim, #5c6662)); line-height: 1.7; }
+.mgx-msg { min-height: 1.7em; color: var(--gf-accent-hover, var(--gf-accent, #2f5e46)); }
+.mgx-close, .mgx-row .btn { min-height: var(--gf-hit, 44px); }
+.mgx-row { display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
+.mgx-pour { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.mgx-pour-dish { position: relative; width: 140px; height: 180px; border: 1px solid var(--gf-border, #d8d2c2); border-radius: 4px; background: var(--gf-surface-2, #ece6d6); display: flex; align-items: flex-end; overflow: hidden; }
+.mgx-pour-heap { width: 100%; height: 0; background: linear-gradient(#f4f0e4, #d8d2c0); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.mgx-pour--water .mgx-pour-heap { background: linear-gradient(#7fb0d0, #3a6a8a); clip-path: none; }
+.mgx-pour--sand .mgx-pour-heap { background: linear-gradient(#d8c08a, #a88a50); }
+.mgx-pour-band { position: absolute; left: 0; right: 0; border-top: 2px dashed var(--gf-accent, #3a7a5a); border-bottom: 2px dashed var(--gf-accent, #3a7a5a); }
+.mgx-pour-btn { min-height: 56px; min-width: 220px; touch-action: none; user-select: none; }
+.mgx-dials { display: flex; justify-content: center; gap: 14px; margin: 8px 0 16px; flex-wrap: wrap; }
+.mgx-dial { width: 96px; min-height: 120px; border: 1px solid var(--gf-border-strong, #b8b0a0); border-radius: 8px; background: var(--gf-surface-2, #ece6d6); color: var(--gf-text, inherit); font: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+.mgx-dial-arrow { width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 30px solid var(--gf-accent, #3a7a5a); transition: transform 0.2s; }
+.mgx-dial-dir { font-size: 22px; }
+.mgx-dial small { color: var(--gf-text-dim, #5c6662); }
+@media (prefers-reduced-motion: reduce) { .mgx-dial-arrow { transition: none; } }

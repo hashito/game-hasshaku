@@ -13,7 +13,9 @@ import { register as mgRegister } from '../kit/task-minigames.js';
 import { dressVillage } from './village.js';
 import { makeHasshaku } from './hasshaku.js';
 import { createSound } from './sound.js';
-import { saltGame, gateGame } from './minigames.js';
+import pour from '../kit/mg-pour.js';
+import turnDials from '../kit/mg-turn-dials.js';
+import { useMinigames } from '../kit/mg-library.js';
 import { prewarm } from '../kit/frame-guard.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -74,8 +76,11 @@ export default function story(ext) {
     }
   }
 
-  ext.registerMinigame('salt', saltGame);
-  ext.registerMinigame('gate', gateGame);
+  // our two mini games live in the kit's library now (pour, turn-dials), named salt / gate here
+  const MGX = useMinigames(ext, [
+    [pour, { type: 'salt', hooks: { sound: () => snd && snd.salt() } }],
+    [turnDials, { type: 'gate', hooks: { get: () => st.gate, set: (v) => (st.gate = v), sound: (n) => snd && snd.knock(n === 'bad' ? { n: 2, vol: 0.4 } : { n: 1, vol: 0.25, pan: 0 }) } }],
+  ]);
   ext.registerUi('title', {
     kicker: 'HASSHAKU ／ A FIRST-PERSON FOLK HORROR',
     tagline: '祖父に頼まれた、夕暮れの買い物。店までの地図をたどった帰り道で、見てはいけないものを見た。',
@@ -105,7 +110,7 @@ export default function story(ext) {
       if (ctx.qa) return true;
       const host = document.createElement('div'); host.id = 'mg-custom'; host.className = 'gf-overlay'; document.body.appendChild(host);
       ctx.fp.release();
-      try { return !!(await (mg.type === 'salt' ? saltGame : gateGame).mount(host, mg.cfg || {}, ctx)); } finally { host.remove(); }
+      try { return !!(await MGX[mg.type].mount(host, mg.cfg || {}, ctx)); } finally { host.remove(); }
     }
     mgRegister(task.id, mg.type, { title: task.title, help: task.hint || '', ...(mg.cfg || {}) });
     return ctx.minigame(task.id);

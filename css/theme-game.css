@@ -78,25 +78,6 @@ body:not(.touch) .hk-grip::after { content: "（Space・E）"; font-size: 12px; 
 .hk-death-text, .hk-ending p { margin: 0; font-family: var(--hk-serif); line-height: 1.9; }
 .hk-ending-stats { color: var(--gf-text-dim); font-family: var(--gf-font) !important; font-size: 13px; }
 
-/* the two mini games */
-.hk-mg { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(520px, 92vw); max-height: 88vh; overflow: auto; z-index: 60;
-  background: var(--gf-panel); border: 1px solid var(--gf-border-strong); border-radius: var(--gf-radius-lg, 8px); padding: var(--gf-space-5, 24px); color: var(--gf-text); }
-.hk-mg-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.hk-mg-head b { font-family: var(--hk-serif); font-size: 18px; color: var(--gf-heading); }
-.hk-mg-help { color: var(--gf-text-dim); line-height: 1.7; }
-.hk-mg-msg { min-height: 1.7em; color: var(--gf-accent-hover); }
-.hk-salt { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.hk-salt-dish { /* pair-ok */ position: relative; width: 140px; height: 180px; border: 1px solid var(--gf-border); border-radius: 4px; background: var(--gf-surface-2); display: flex; align-items: flex-end; overflow: hidden; }
-.hk-salt-heap { /* pair-ok */ width: 100%; height: 0; background: linear-gradient(#f4f0e4, #d8d2c0); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
-.hk-salt-band { position: absolute; left: 0; right: 0; bottom: 62%; height: 18%; border-top: 2px dashed var(--gf-accent); border-bottom: 2px dashed var(--gf-accent); }
-.hk-salt-pour { min-height: 56px; min-width: 220px; touch-action: none; user-select: none; }
-.hk-gate { display: flex; justify-content: center; gap: 14px; margin: 8px 0 16px; }
-.hk-dial { width: 96px; height: 120px; border: 1px solid var(--gf-border-strong); border-radius: 8px; background: var(--gf-surface-2); color: var(--gf-text); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
-.hk-dial-arrow { width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 30px solid var(--gf-accent); transition: transform 0.2s; }
-.hk-dial-dir { font-family: var(--hk-serif); font-size: 22px; }
-.hk-dial small { color: var(--gf-text-dim); }
-.hk-gate-row { display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
-.hk-gate-row .btn, .hk-mg-close { min-height: var(--gf-hit, 44px); }
 @media (prefers-reduced-motion: reduce) { .hk-jump { animation: none; display: none; } }
 
 /* hidden parts stay hidden (their display rules above would override the attribute) */

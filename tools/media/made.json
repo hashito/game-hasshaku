@@ -53,6 +53,15 @@
   "seed": 630489197,
   "prompt": "Seamless top-down texture of a flooded Japanese rice paddy in summer, rows of young green rice seedlings standing in shallow muddy water that reflects a grey evening sky, orthographic overhead view filling the frame, even lighting, photographic, no text, no letters, no writing, no signs, no logos, no labels"
  },
+ "ph-arrival": {
+  "file": "assets/photos/ph-arrival.webp",
+  "bytes": 107540,
+  "size": "960x657",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 359624685,
+  "prompt": "An old rural bus stop with a small weathered wooden waiting shelter beside a narrow village road on a summer evening in Japan in 2008, green rice fields, dark cedar-covered mountains close behind, a single travel bag left on the bench, low golden light, quiet and empty, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
  "ph-butsudan": {
   "file": "assets/photos/ph-butsudan.webp",
   "bytes": 102418,
