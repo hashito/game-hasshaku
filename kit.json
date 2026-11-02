@@ -1,5 +1,5 @@
 {
-  "kit": "fc5f160",
+  "kit": "9a50101",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -234,7 +234,7 @@
     "js\\kit\\store.js": "e2695a9cb831",
     "js\\kit\\audio.js": "af85c06339a1",
     "js\\kit\\audio-at.js": "f573fa6e4e01",
-    "js\\kit\\world-from-plan.js": "0c0743421aa4",
+    "js\\kit\\world-from-plan.js": "47b2ebcf5616",
     "js\\kit\\room-types.js": "a2993c599dea",
     "js\\kit\\win-manager.js": "e4be6f8184e9",
     "js\\kit\\tab-menu.js": "27550d2cd73b",

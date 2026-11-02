@@ -1,4 +1,4 @@
-/* game-kit fc5f160: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 9a50101: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
 // The standard world builder (docs/standard-3d.md, layer "world"): plan.json (rooms, corridors, doors, stations) -> THREE objects,
 // colliders, doors that open and a room lookup. Boxes only: floors, ceilings, walls with door gaps and lintels, door panels, task
 // stations. The look is a flat palette per room kind + the preset lighting; richer looks (texture-library, props, env-props) are added
@@ -200,7 +200,7 @@ export function buildWorld(plan, o = {}) {
     // a wide opening (1.5 m and more) gets two leaves: a pair of doors swinging from both jambs, or two sliding apart
     const sliding = look !== 'swing', pair = w >= 1.5, lw = pair ? w / 2 : w, leaves = [];
     for (const side of pair ? [-1, 1] : [1]) {
-      const leaf = makeLeaf(lw), hold = new THREE.Group(); hold.add(leaf); G.add(hold);
+      const leaf = makeLeaf(sliding ? lw + 0.07 : lw), hold = new THREE.Group();   /* a sliding leaf runs in front of the wall: a little wider, so a pair overlaps in the middle and no light shows through */ hold.add(leaf); G.add(hold);
       if (sliding) { hold.position.set(pair ? side * lw / 2 : 0, 0, sIn * (T / 2 + 0.035 + (pair && side > 0 ? 0.045 : 0))); }   // runs on room a's face of the wall (the second leaf on its own track)
       else { leaf.position.x = -side * (lw / 2 - 0.015); if (side > 0) leaf.rotation.y = Math.PI; hold.position.x = side * (w / 2 - 0.015); }   // hinged at its jamb, the knob on the far edge
       leaves.push({ hold, side, base: hold.position.x });
