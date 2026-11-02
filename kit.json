@@ -1,5 +1,5 @@
 {
-  "kit": "9a50101",
+  "kit": "b995134",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -165,7 +165,7 @@
     "js/kit/prop-batch.js": "abd03dfc3b79",
     "js/kit/env-props.js": "8173704023b6",
     "js/kit/text-contrast.js": "7fee755af57a",
-    "css/kit.css": "ba8952797b81",
+    "css/kit.css": "f321828063f8",
     "css/theme.css": "ebaca1cab248",
     "css/shell.css": "69c16bee0f93",
     "schema/chat-story.schema.json": "e24a86e49bb9",
@@ -201,7 +201,7 @@
     "js/kit/room-types.js": "a2993c599dea",
     "js\\kit\\interior-finish.js": "e788aa5c208b",
     "js\\kit\\plan-check.js": "90ff7161541b",
-    "js\\kit\\schema-check.js": "23dd88b67b60",
+    "js\\kit\\schema-check.js": "ebccf998c09b",
     "js\\kit\\monster-ai.js": "6b12618090ae",
     "js\\kit\\things-data.js": "cf0796317eae",
     "js\\kit\\terminal-data.js": "b17f0493a17c",
@@ -216,7 +216,7 @@
     "js\\kit\\text-contrast.js": "7fee755af57a",
     "js\\kit\\monster-nav.js": "aa4dd24b4872",
     "js\\kit\\monster-escape.js": "4a9e4dd0e05d",
-    "js\\kit\\game-core.js": "393540a4477c",
+    "js\\kit\\game-core.js": "420e27b8743e",
     "js\\kit\\item-kinds.js": "42b609ccaa9a",
     "js\\kit\\item-models.js": "611975f171a7",
     "js\\kit\\prop-geo.js": "b7d46c577d9a",
@@ -243,7 +243,7 @@
     "js\\kit\\map-svg.js": "179edbb99b92",
     "js\\kit\\step-guide.js": "729b38a3b12e",
     "js\\kit\\frame-guard.js": "52467509d109",
-    "js\\kit\\ui-warm.js": "a7e7b47cd96b",
+    "js\\kit\\ui-warm.js": "0dfaca7a2016",
     "js\\kit\\boot.js": "d0a0ba121841",
     "js\\kit\\analytics.js": "55e823220125",
     "js\\kit\\look-input.js": "acebad92f70f",
@@ -280,9 +280,9 @@
     "js\\kit\\spot-fx.js": "8a39e8f580c5",
     "js\\kit\\stage-look.js": "d685af90272f",
     "js\\kit\\ambience.js": "a0b5090d9d05",
-    "js\\kit\\flavor.js": "8662e9bed0e1",
-    "tools/review-shots.mjs": "0607446e3242",
-    "tools/smoke.mjs": "0fb6ac716f86"
+    "js\\kit\\flavor.js": "1e4371c2baf8",
+    "tools/review-shots.mjs": "5498ba6d5e1c",
+    "tools/smoke.mjs": "3d4da51af2a6"
   },
   "textures": [
     "planks_worn",
