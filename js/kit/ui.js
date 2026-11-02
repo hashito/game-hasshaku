@@ -1,4 +1,4 @@
-/* game-kit 5feba9d: js/ui.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit fc5f160: js/ui.js — edit in game-kit and run tools/kit-sync.js */
 // Windows and short messages over a first-person game (style: css/kit.css). From ひだまり薬局 js/ui.js.
 // One window at a time; while one is open the controller should not move (pass `isBlocked: () => !!ui.open`).
 //
@@ -24,7 +24,8 @@ function ensure(id, parent = document.body) {
 // line that arrives while another is still being read waits for it (a short queue) instead of replacing it mid-sentence; a repeated line
 // only extends the one showing. o.urgent shows at once ("走れ"). Pure: the clock and the timers are injected (test/say-line.test.mjs).
 export const sayText = (html) => String(html).replace(/<[^>]*>/g, "").replace(/&[a-z]+;/g, " ");
-export const readSec = (html) => Math.min(12, 1.6 + sayText(html).length * 0.11);
+// slow enough to read while walking (feedback 2026-11-02 「文章が一瞬しか表示されず、思ったことや会話が流れる」): 2.4 s + 0.15 s a character, up to 15 s
+export const readSec = (html) => Math.min(15, 2.4 + sayText(html).length * 0.15);
 // a line longer than `max` visible characters becomes pages shown one after another (split after 。！？, then 、, then hard), so the band
 // never needs more than about 4 lines on a phone; a leading speaker tag (<span class="who">…</span>) is repeated on every page
 export function splitSay(html, max = 60) {
@@ -40,12 +41,23 @@ export function splitSay(html, max = 60) {
   if (rest) pages.push(rest);
   return pages.map((p) => head + p);
 }
+// key names in a line follow the device (W18; feedback 2026-11-02, コトリバコ's step cards said 「近づいて [E]」 on a phone): touch -> タップ /
+// the menu, a gamepad -> [A]; the keyboard keeps the text (pure: test/say-line.test.mjs)
+export function keyText(text, input = 'mouse') {
+  const t = String(text);
+  if (input === 'pad') return t.replace(/\[E\]/g, '[A]');
+  if (input !== 'touch') return t;
+  return t.replace(/ ?\[E\] ?/g, 'タップ').replace(/（Tab）/g, '（右上のメニュー）').replace(/Tab（手帳）か M/g, '右上のメニュー').replace(/Tab で手帳、M で地図を開ける/g, '右上のメニューで手帳と地図を開ける');
+}
+
 export class SayLine {
   // timer / clear are wrapped: a browser throws "Illegal invocation" when setTimeout is called as a method of another object (this.timer(...))
   constructor({ show, hide, now = () => performance.now() / 1000, timer = (f, ms) => setTimeout(f, ms), clear = (h) => clearTimeout(h), max = 6 } = {}) {
     Object.assign(this, { show, hide, now, timer, clear, max });
     this.q = []; this.cur = null; this.hideT = null; this.waitT = null;
+    this.log = [];   // every line shown, oldest first (the last 60): the 言葉の記録 tab reads it, so nothing said is lost
   }
+  remember(html) { const last = this.log[this.log.length - 1]; if (last && last.html === html) return; this.log.push({ html, at: Date.now() }); if (this.log.length > 60) this.log.shift(); }
   push(html, sec = 4.5, o = {}) {
     const pages = splitSay(html, o.max ?? this.pageMax ?? 60);
     if (pages.length > 1) { pages.forEach((pg, i) => this.push(pg, Math.max(readSec(pg), sec / pages.length), { ...o, urgent: o.urgent && i === 0, max: Infinity })); return; }
@@ -54,7 +66,7 @@ export class SayLine {
     this.q = this.q.filter((x) => x.html !== html);
     if (o.urgent) { this.q.unshift({ html, dur }); this.clear(this.waitT); this.waitT = null; this.next(true); return; }
     this.q.push({ html, dur });
-    if (this.q.length > this.max) this.q.splice(0, this.q.length - this.max);
+    while (this.q.length > this.max) { const i = this.q.findIndex((x) => !/class="who"/.test(x.html)); this.q.splice(i >= 0 ? i : 0, 1); }   // a crowded queue drops a thought before a spoken line
     this.next();
   }
   next(force = false) {
@@ -65,7 +77,7 @@ export class SayLine {
     }
     const n = this.q.shift(); if (!n) return;
     this.cur = { html: n.html, readyAt: t + Math.min(n.dur, readSec(n.html)), hideAt: t + n.dur };
-    this.show(n.html, sayText(n.html).length);
+    this.show(n.html, sayText(n.html).length); this.remember(n.html);
     this.arm();
     if (this.q.length) this.next();
   }
@@ -148,7 +160,7 @@ export class KitUI {
 
   // the thought line: queued, never cut while it is being read (SayLine). o.urgent shows at once
   say(html, sec = 4.5, o = {}) {
-    this.sayLine.push(html, sec, o);
+    this.sayLine.push(this.keys ? keyText(html, this.keys()) : html, sec, o);   // keys: () => 'mouse' | 'touch' | 'pad' (game-core sets it)
   }
 
   toast(html, cls = "", max = 4) {

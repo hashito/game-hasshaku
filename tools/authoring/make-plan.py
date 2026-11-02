@@ -34,13 +34,13 @@ def door(id, a, b, x, z, width=1.0, **k):
 
 doors = [
     # house
-    door('D_GENKAN', 'IMA', 'O_FRONT', -4, 15.6, 1.4, label='玄関の木戸'),
-    door('D_FUSUMA', 'ZASHIKI', 'IMA', -8.0, 11, 1.8, label='北の座敷の襖', reason='minka: rooms open into each other through fusuma', unlock='prep', hint='北の座敷は閉め切ってある。今は、居間の祖父に話すのが先だ。'),
-    door('D_DAIDOKORO', 'DAIDOKORO', 'IMA', -12, 15.0, 1.2, label='台所の引き戸', reason='minka: the kitchen opens off the living room', unlock='prep', hint='今は、居間の祖父に話すのが先だ。'),
-    door('D_NANDO', 'NANDO', 'DAIDOKORO', -16.0, 11, 1.2, label='納戸の障子戸', reason='minka: the store room behind the kitchen', unlock='prep', hint='今は、居間の祖父に話すのが先だ。'),
-    door('D_KATTE', 'DAIDOKORO', 'O_BACK', -20, 16.6, 1.1, label='勝手口', unlock='dawn', hint='勝手口は、外から閂が掛けてある。'),
+    door('D_GENKAN', 'IMA', 'O_FRONT', -4, 15.6, 1.4, label='玄関の木戸', look='slide'),
+    door('D_FUSUMA', 'ZASHIKI', 'IMA', -8.0, 11, 1.8, label='北の座敷の襖', reason='minka: rooms open into each other through fusuma', unlock='prep', hint='北の座敷は閉め切ってある。今は、居間の祖父に話すのが先だ。', look='fusuma'),
+    door('D_DAIDOKORO', 'DAIDOKORO', 'IMA', -12, 15.0, 1.2, label='台所の引き戸', reason='minka: the kitchen opens off the living room', unlock='prep', hint='今は、居間の祖父に話すのが先だ。', look='slide'),
+    door('D_NANDO', 'NANDO', 'DAIDOKORO', -16.0, 11, 1.2, label='納戸の障子戸', reason='minka: the store room behind the kitchen', unlock='prep', hint='今は、居間の祖父に話すのが先だ。', look='slide'),
+    door('D_KATTE', 'DAIDOKORO', 'O_BACK', -20, 16.6, 1.1, label='勝手口', unlock='dawn', hint='勝手口は、外から閂が掛けてある。', look='swing'),
     # shop
-    door('D_SHOP', 'SHOP_DOMA', 'O_SHOPFRONT', -9, -13.5, 1.6, label='商店の引き戸'),
+    door('D_SHOP', 'SHOP_DOMA', 'O_SHOPFRONT', -9, -13.5, 1.6, label='商店の引き戸', look='glass'),
     door('G_SHOP_DOMA', 'SHOP', 'SHOP_DOMA', -11, -13.5, 3.0, open=True),
     # outdoor openings (no panel; the extension removes it)
     door('G_FRONT_GARDEN', 'O_FRONT', 'O_GARDEN', -4, 23, 7.6, open=True),

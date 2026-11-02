@@ -1,4 +1,4 @@
-/* game-kit 3557bda: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit fc5f160: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -29,7 +29,7 @@ import { createTalk } from './talk-ui.js';
 import { createRenderer, applyPreset, extendPreset, QualityTier } from './render-presets.js';
 import { browserEnv } from './render-budget.js';
 import { FirstPersonController } from './controller.js';
-import { KitUI, esc } from './ui.js';
+import { KitUI, esc, keyText } from './ui.js';
 import { ToastLane } from './toast-lane.js';
 import { ensureHudSlots, registerHudPart, layoutHudSlots, laneFree, hudTestHooks, schedule as scheduleHudLayout } from './hud-slots.js';
 import { Progression } from './progression.js';
@@ -60,7 +60,7 @@ import { createExtensions } from './ext.js';
 import { buildProgressionDef, taskAtStation, pickEnding } from './game-data.js';
 import { showEndingScene, foundEndings } from './ending-scene.js';
 
-export const CORE_VERSION = '1.10.0';
+export const CORE_VERSION = '1.10.2';
 const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(typeof location !== 'undefined' ? location.search : '');
 const safe = (fn, d = null) => { try { return fn(); } catch { return d; } };
@@ -294,7 +294,7 @@ export function createGame(cfg) {
   wm.on('open', (id) => bus.emit('ui:open', { name: id })); wm.on('close', (id) => bus.emit('ui:close', { name: id }));
   function onUiOpen(n) { ctx.fp && ctx.fp.release(); bus.emit('ui:open', { name: n }); }
   function onUiClose(n) { if (!state.ended && state.started && !wm.isOpen && !blocked()) ctx.fp.lock(); bus.emit('ui:close', { name: n }); }
-  const blocked = () => !state.started || !!ui.open || wm.isOpen || MG.isActive() || !!state.ended || ctx.rnOpen || ctx.blockers.some((f) => f());
+  const blocked = () => !state.started || !!ui.open || wm.isOpen || MG.isActive() || !!ctx.mgOpen || !!state.ended || ctx.rnOpen || ctx.blockers.some((f) => f());
   ctx.blocked = blocked;
   const fpOpts = {
     colliders: world.colliders, bounds: world.bounds, isBlocked: blocked, sensitivity: settings.sensitivity, eye: EYE,
@@ -369,8 +369,8 @@ export function createGame(cfg) {
     if (!custom) throw new Error(`task ${task.id}: unknown mini game type "${type}"`);
     if (ctx.qa) return true;
     const host = document.createElement('div'); host.id = 'mg-custom'; host.className = 'gf-overlay'; body.appendChild(host);
-    fp.release();
-    try { return !!(await custom.mount(host, { title: task.title, help: task.hint || '', ...(mgDef.cfg || {}) }, ctx)); } finally { host.remove(); }
+    fp.release(); ctx.mgOpen = true;   // a library mini game blocks the game like a kit one (the look hint hides, the world waits)
+    try { return !!(await custom.mount(host, { title: task.title, help: task.hint || '', ...(mgDef.cfg || {}) }, ctx)); } finally { ctx.mgOpen = false; host.remove(); }
   }
   // a task's own run() can open a mini game in the middle of its story (talk, then the mini game, then more talk): resolves true when it was done
   ctx.runMinigame = (task, mgDef = task && task.minigame) => (mgDef ? runMinigame(task, mgDef) : Promise.resolve(true));
@@ -499,6 +499,8 @@ export function createGame(cfg) {
   // step guide: STEP cards for the first task that can be started and has "steps" (U22/U23); the hint is the protagonist's line
   let guide = null, guideTask = null;
   const glow = (key, on) => { const m = world.interactables.find((o) => key && o.userData.interact && `${o.userData.interact.kind}:${o.userData.interact.id}` === key); if (m && m.material && m.material.emissiveIntensity != null) m.material.emissiveIntensity = on ? 1.8 : 0.55; };
+  const kt = (x) => (x == null ? x : keyText(x, ctx.input === 'pad' ? 'pad' : ctx.isTouch ? 'touch' : 'mouse'));   // the step card's key names follow the device
+  ctx.keyText = kt; ui.keys = () => (ctx.input === 'pad' ? 'pad' : ctx.isTouch ? 'touch' : 'mouse');
   function refreshGuide() {
     const t = tasks.find((x) => x.steps && x.steps.length && ctx.canStart(x) === true) || null;
     if ((t && guideTask && t.id === guideTask.id) || (!t && !guideTask)) return;
@@ -510,7 +512,7 @@ export function createGame(cfg) {
       container: $('guide'), getState: () => state, say: (text) => ui.say(esc(text)), storage: safe(() => localStorage), key: `${manifest.id}.guide.${t.id}`, calm: settings.calm,
       onEmphasize: (tg, on) => { if (gd.onEmphasize) return gd.onEmphasize(tg, on, ctx); glow(tg && tg.game, on); return true; },
       steps: t.steps.map((s, i) => ({
-        id: `${t.id}.${i}`, title: s.text, body: s.body || '', hint: s.hint || (i === 0 ? t.hint : undefined), emphasize: 'glow', target: s.emphasis ? { game: s.emphasis } : undefined,
+        id: `${t.id}.${i}`, title: kt(s.text), body: kt(s.body || ''), hint: kt(s.hint || (i === 0 ? t.hint : undefined)), emphasize: 'glow', target: s.emphasis ? { game: s.emphasis } : undefined,
         done: s.done === 'room' ? () => state.room === t.room : s.done === 'look' ? () => !!ctx.target && `${ctx.target.kind}:${ctx.target.id}` === s.emphasis : s.done === 'task' ? () => state.tasks.includes(t.id) : undefined,
       })),
     });
@@ -530,6 +532,7 @@ export function createGame(cfg) {
     else if (controls.flashlight && e.code === 'KeyF') ctx.setLight(!ctx.lightOn);
     else if (e.code === 'KeyI') tm.open('items');
     else if (e.code === 'KeyM') tm.open('map');
+    else if (e.code === 'KeyL') tm.open('log');
   });
   const tb = $('touch');
   if (tb) {
@@ -559,7 +562,7 @@ export function createGame(cfg) {
   ctx.pad = new PadInput({
     getPads: () => ctx.fakePads || (navigator.getGamepads ? navigator.getGamepads() : []), always: true, onUse: () => inputMode.set('pad'),
     buttons: (controls.pad || {}).buttons,   // controls.pad.buttons: { "2": "KeyG" } = a button's key while walking (a game's own keys)
-    windowOpen: () => wm.isOpen || !!ui.open || MG.isActive() || !!ctx.rnOpen || ctx.padOpen.some((f) => f()), blocked: () => !state.started || !!state.ended || ctx.blockers.some((f) => f()),
+    windowOpen: () => wm.isOpen || !!ui.open || MG.isActive() || !!ctx.mgOpen || !!ctx.rnOpen || ctx.padOpen.some((f) => f()), blocked: () => !state.started || !!state.ended || ctx.blockers.some((f) => f()),
     onMove: (x, y) => { fp.stick.x = x; fp.stick.y = y; }, onLook: (dx, dy) => fp.look(dx * settings.sensitivity, dy * settings.sensitivity), onRun: (on) => (on ? fp.keys.add('ShiftLeft') : fp.keys.delete('ShiftLeft')),
     onKey: (code, down) => {
       const pk = { code, down, handled: false };   // 'pad:key': a game with its own screen (a terminal, an intro card) takes the pad key by setting handled
@@ -633,7 +636,13 @@ export function createGame(cfg) {
   ctx.systems = systems;
   ctx.monologue = (text, sec = 2.2, o) => ui.say(esc(text), sec, o);   // the protagonist's thought line (U23); monster hints ("走れ") go through it
   // the conversation window and the choice (js/talk-ui.js, standard 1.7): ctx.talk(lines | 'key of data/talk.json', o), ctx.choose({ who, text, options })
-  { const T = createTalk({ wm, qa: !!ctx.qa, data: data.talk || null, portraits: manifest.portraits || null, log: (ctx.talkLog = []), voice: (L) => ctx.voiceLine(L.voice, L.vfx || null) }); ctx.talk = T.talk; ctx.choose = T.choose; }
+  { const T = createTalk({ wm, qa: !!ctx.qa, data: data.talk || null, portraits: manifest.portraits || null, log: (ctx.talkLog = []), said: (L) => ui.sayLine.remember(`<span class="who">${esc(L.who || '')}</span>${esc(L.text || '')}`), voice: (L) => ctx.voiceLine(L.voice, L.vfx || null) }); ctx.talk = T.talk; ctx.choose = T.choose; }
+  // 言葉の記録 (feedback 2026-11-02 「思ったことや会話が流れる」): every thought and spoken line since the start, newest first, in the menu;
+  // L opens it, and on a phone a tap on the thought band does
+  tm.registerTab({ id: 'log', label: uiDef('tabs').labels?.log || '言葉の記録', icon: 'notes', render: (el) => {
+    const L = ui.sayLine.log.slice().reverse();
+    el.innerHTML = `<div class="gf-saylog"><p class="gf-saylog-help">${ctx.isTouch ? '画面下の文をタップしても開けます。' : '[L] でいつでも開けます。'}新しい順です。</p>${L.length ? `<ol>${L.map((x) => `<li>${x.html}</li>`).join('')}</ol>` : '<p class="tm-empty">まだ何もありません。</p>'}</div>`; } });
+  { const sayEl = document.getElementById('say'); if (sayEl) sayEl.addEventListener('pointerdown', (e) => { if (ctx.isTouch && state.started) { e.preventDefault(); e.stopPropagation(); tm.open('log'); } }); }
   if (manifest.things && data.things && cfg.mods && cfg.mods.things) cfg.mods.things.installThings(ctx);   // data/things.json: [E] examine -> card + thought + journal (standard 1.5)
   if (data.terminals && cfg.mods && cfg.mods.terminals) cfg.mods.terminals.installTerminals(ctx);   // data/terminals.json: the 'terminal' screen kind (standard 1.5)
   if (data.flavor && cfg.mods && cfg.mods.flavor) { const fl = ctx.flavor = cfg.mods.flavor.installFlavor(ctx, data.flavor); systems.push({ id: 'flavor', def: { update: fl.update }, inst: fl }); }   // mood lines in the thought band (docs/flavor.md)
@@ -674,7 +683,7 @@ export function createGame(cfg) {
         Object.assign(state, { inv: snap.inv || [...startInv], docsRead: snap.docsRead || [], doors: snap.doors || [], visited: snap.visited || [] });
         prog.restore(snap.prog);
         state.tasks = [...(snap.tasks || [])]; state.flags = [...(snap.flags || [])];
-        for (const id of state.doors) world.doors.get(id) && world.doors.get(id).open();
+        for (const id of state.doors) { const d = world.doors.get(id); if (d && d.open() && d.snap) d.snap(); }   // a restored door is already open (no swing on load)
         for (const id of state.inv) remove('item', id);
         if (snap.pos) { placeCamera(snap.pos.x, snap.pos.z, snap.pos.floor || 0); fp.yaw = snap.pos.yaw || 0; }
       } else if (!o.keepSave) store.clear();

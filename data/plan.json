@@ -175,6 +175,7 @@
  "doors": [
   {
    "id": "D_GENKAN",
+   "look": "slide",
    "a": "IMA",
    "b": "O_FRONT",
    "x": -4,
@@ -184,6 +185,7 @@
   },
   {
    "id": "D_FUSUMA",
+   "look": "fusuma",
    "a": "ZASHIKI",
    "b": "IMA",
    "x": -8.0,
@@ -196,6 +198,7 @@
   },
   {
    "id": "D_DAIDOKORO",
+   "look": "slide",
    "a": "DAIDOKORO",
    "b": "IMA",
    "x": -12,
@@ -208,6 +211,7 @@
   },
   {
    "id": "D_NANDO",
+   "look": "slide",
    "a": "NANDO",
    "b": "DAIDOKORO",
    "x": -16.0,
@@ -220,6 +224,7 @@
   },
   {
    "id": "D_KATTE",
+   "look": "swing",
    "a": "DAIDOKORO",
    "b": "O_BACK",
    "x": -20,
@@ -231,6 +236,7 @@
   },
   {
    "id": "D_SHOP",
+   "look": "glass",
    "a": "SHOP_DOMA",
    "b": "O_SHOPFRONT",
    "x": -9,
