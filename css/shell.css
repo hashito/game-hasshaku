@@ -1,4 +1,4 @@
-/* game-kit b71afe5: css/shell.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 96bae95: css/shell.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: the standard 3D shell (js/game-core.js): title screen, prompt, endings, pause menu, custom mini-game layer.
    Tokens only (css/theme.css); loaded after kit.css and theme.css. A game restyles it through tokens in css/theme-game.css. */
 #title { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; text-align: center; padding: var(--gf-win-margin, 16px); overflow-y: auto; overscroll-behavior: contain;
@@ -191,6 +191,8 @@ body.touch #say { bottom: max(12px, var(--gf-safe-b, 0px)); }
 .gf-ending-title { font-family: var(--hk-serif, serif); font-size: clamp(26px, 6vw, 40px); font-weight: 600; letter-spacing: 0.08em; }
 .gf-ending-line { font-family: var(--hk-serif, serif); font-size: clamp(15px, 2.4vw, 18px); line-height: 2; }
 .gf-ending-stats { font-size: 13px; color: #bdb5a4; }
+.gf-ending-found { font-size: 13px; color: #bdb5a4; line-height: 1.7; }  /* pair-ok: on the dark shade */
+.gf-ending-found b { color: #f4ecd8; }  /* pair-ok */
 .gf-ending-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px !important; }
 .gf-ending.all .gf-ending-text > *, .gf-ending.still .gf-ending-text > * { animation: none; opacity: 1; }
 .gf-ending.still .gf-ending-photo { animation: none; }

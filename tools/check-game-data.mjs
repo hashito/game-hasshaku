@@ -35,10 +35,20 @@ for (const [key, file] of Object.entries(game.data || {})) {
   data[key === 'releaseNotes' ? 'notes' : key] = v;
 }
 if (!errors.length) {
-  const r = checkGameData(data, { minigameTypes: TYPES, themes: ['dark-industrial', 'paper-light', 'retro-crt'] });
+  const r = checkGameData(data, { minigameTypes: TYPES, themes: ['dark-industrial', 'paper-light', 'retro-crt', 'shrine-night', 'summer-rural', 'hospital-cold', 'school-dusk', 'vhs-tape', 'snow-silence', 'deep-water', 'blood-washi', 'office-night', 'candle-room', 'fog-forest', 'pencil-diary'] });
   errors.push(...r.errors); warns.push(...r.warns);
   if (data.notes && game.version && data.notes.version !== game.version) errors.push(`release-notes.json version ${data.notes.version} differs from game.json version ${game.version}`);
   if (data.notes && data.notes.notes && data.notes.notes[0] && data.notes.notes[0].version !== data.notes.version) errors.push(`release-notes.json: newest entry ${data.notes.notes[0].version} differs from version ${data.notes.version}`);
+}
+// data/flavor.json (standard 1.10): rooms and stages it names must exist, every line has text, and a game with it says enough to matter
+if (data.flavor) {
+  const F = data.flavor, rooms = new Set(((data.plan || {}).rooms || []).map((r) => r.id)), stages = new Set((((data.stages || {}).levels) || []).map((l) => l.id));
+  const txt = (l) => (typeof l === 'string' ? l : l && l.text);
+  for (const r of Object.keys(F.rooms || {})) if (rooms.size && !rooms.has(r)) errors.push(`flavor.json: room "${r}" is not in plan.json`);
+  for (const st of Object.keys(F.stages || {})) if (stages.size && !stages.has(st)) errors.push(`flavor.json: stage "${st}" is not in stages.json`);
+  const all = [...Object.values(F.rooms || {}).flat(), ...Object.values(F.stages || {}).flat(), ...(F.idle || []), ...(F.spots || []).flatMap((s) => (s.text ? [s.text] : s.lines || []))];
+  for (const l of all) if (!txt(l)) errors.push('flavor.json: a line without text');
+  if (all.length < 12) warns.push(`flavor.json: only ${all.length} lines (12 or more keep the mood from repeating)`);
 }
 if (flag('media')) {
   const lists = [['item', data.items], ['doc', data.docs], ['ending', data.endings], ...(game.things ? [['thing', data.things]] : [])];
@@ -54,7 +64,7 @@ if (fs.existsSync(path.join(dir, 'kit.json'))) {
   try { features = (await import('node:module')).createRequire(import.meta.url)('./kit-features.cjs'); } catch { /* a game whose tools folder has no kit-features.cjs: not checked */ }
   for (const f of features) {
     if (!f.when(game)) continue;
-    for (const m of [...f.modules, ...(f.dynamic ? f.dynamic(game) : [])]) if (!fs.existsSync(path.join(dir, dest, `${m}.js`))) errors.push(`game.json uses "${f.id}" but ${dest}/${m}.js is missing: run node ../game-kit/tools/kit-sync.js .`);
+    for (const m of [...(f.modules || []), ...(f.dynamic ? f.dynamic(game) : [])]) if (!fs.existsSync(path.join(dir, dest, `${m}.js`))) errors.push(`game.json uses "${f.id}" but ${dest}/${m}.js is missing: run node ../game-kit/tools/kit-sync.js .`);
   }
 }
 if (flag('json')) console.log(JSON.stringify({ errors, warns }, null, 1));

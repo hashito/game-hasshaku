@@ -1,4 +1,4 @@
-/* game-kit 695f291: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 3557bda: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -19,7 +19,11 @@
 //
 // Known coupling left: progress-ui's level-up / briefing dialogs still open as KitUI windows (TODO: move them to win-manager).
 import * as THREE from 'three';
-import { makeItemModel, topsIn, seatOn, slotOn, DOC_KIND } from './item-kinds.js';
+import { makeItemModel, registerItemKind, topsIn, seatOn, slotOn, DOC_KIND } from './item-kinds.js';
+import { makeTheme, applyTheme } from './theme-make.js';
+import { THEME_PRESETS } from './theme-presets.js';
+import { createSpotFx } from './spot-fx.js';
+import { createStageLook } from './stage-look.js';
 import { stepSurfaceOf } from './step-sound.js';
 import { createTalk } from './talk-ui.js';
 import { createRenderer, applyPreset, extendPreset, QualityTier } from './render-presets.js';
@@ -54,8 +58,9 @@ import { roomGraph, roomOf, occlusion } from './audio-at.js';
 import { gfRegister, gfOk, gfFail, gfUnknown } from './gf-test.js';
 import { createExtensions } from './ext.js';
 import { buildProgressionDef, taskAtStation, pickEnding } from './game-data.js';
+import { showEndingScene, foundEndings } from './ending-scene.js';
 
-export const CORE_VERSION = '1.8.1';
+export const CORE_VERSION = '1.10.0';
 const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(typeof location !== 'undefined' ? location.search : '');
 const safe = (fn, d = null) => { try { return fn(); } catch { return d; } };
@@ -80,6 +85,7 @@ export async function loadGame(manifestUrl = 'game.json', o = {}) {
   if (manifest.things && data.things && !mods.things) mods.things = await import('./things.js');   // opt-in: a game's own legacy things.json (other format) is not touched
   if (data.terminals && !mods.terminals) mods.terminals = await import('./terminal-screen.js');
   if (manifest.voice && !mods.voice) mods.voice = await import('./voice-fx.js');
+  if (data.flavor && !mods.flavor) mods.flavor = await import('./flavor.js');   // data/flavor.json: mood lines (standard 1.10)
   const ctx = createGame({ manifest, data, ext, ...o, mods });
   if (manifest.recipes) await (await import('./recipes.js')).installRecipes(ctx, manifest.recipes);
   ctx.seatPickups && ctx.seatPickups();   // the furniture is in: put the pickups on it (standard 1.7)   // props / openables / textures / ambience, switched on from game.json (standard 1.5)
@@ -105,6 +111,11 @@ export function createGame(cfg) {
   // ---- theme ----
   const root = document.documentElement;
   root.dataset.theme = manifest.theme;
+  // standard 1.9: a theme from a few colours (game.json "themeColors", optionally "from" a mood theme), AA-fitted by js/theme-make.js
+  if (manifest.themeColors) {
+    const { from, ...own } = manifest.themeColors;
+    ctx.themeTokens = applyTheme(root, makeTheme({ ...(from ? THEME_PRESETS[from] || {} : {}), ...own }));
+  }
   for (const th of ext.reg.theme.list()) {
     if (th.css) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = th.css; document.head.appendChild(l); }
     if (th.tokens) for (const [k, v] of Object.entries(th.tokens)) root.style.setProperty(k, v);
@@ -167,7 +178,7 @@ export function createGame(cfg) {
   ctx.isTouch = inputMode.touch; ctx.input = inputMode.mode;
   // HUD slots + toast lane (rule U27, docs/hud-slots.md): one region per HUD part; every short notification is an item of the lane (top centre, below the top stacks)
   const slots = ensureHudSlots(hud);
-  const lane = ctx.lane = new ToastLane({ el: slots.lane, calm: () => ctx.calm || document.documentElement.hasAttribute('data-gf-calm'), fit: () => { layoutHudSlots(); return laneFree(); }, onChange: scheduleHudLayout });
+  const lane = ctx.lane = new ToastLane({ el: slots.lane, paused: () => !!((ctx.wm && ctx.wm.isOpen) || (ctx.ui && ctx.ui.open)), calm: () => ctx.calm || document.documentElement.hasAttribute('data-gf-calm'), fit: () => { layoutHudSlots(); return laneFree(); }, onChange: scheduleHudLayout });
   ctx.registerHudPart = registerHudPart;
   registerHudPart('prompt', { slot: 'prompt' });
   if ($('t-menu')) registerHudPart('pause-menu', { slot: 'tr', order: -20, move: false });
@@ -205,11 +216,12 @@ export function createGame(cfg) {
   // pickups (items, docs): a model of the item's `kind` (js/item-kinds.js; docs default to paper) resting on what is under it, or a coloured box
   // for an item without a kind; a world that places its own pickups says so (registerWorld({ pickups: 'self' })). Items with "given": <task id>
   // are not placed: the task gives them (standard 1.7).
+  for (const d of ext.reg.itemKind.list()) registerItemKind(d.id, d.make, d.label);   // a game's own kinds (standard 1.9)
   const pickups = new Map();
   const hidden = new THREE.MeshBasicMaterial({ visible: false });
   const addPickup = (kind, x) => {
     const k = x.kind || (kind === 'doc' ? DOC_KIND : null);
-    const model = k ? makeItemModel(k, { scale: x.scale }) : null;
+    const model = k ? makeItemModel(k, { scale: x.scale, color: x.color }) : null;
     let mesh;
     if (model) {
       const b = new THREE.Box3().setFromObject(model), sz = b.getSize(new THREE.Vector3());
@@ -245,6 +257,12 @@ export function createGame(cfg) {
   addEventListener('pointerdown', unlockAudio, { once: true }); addEventListener('keydown', unlockAudio, { once: true });
   const sound = (name, ...a) => safe(() => ctx.audio[name] && ctx.audio[name](...a));
   ctx.sound = sound;
+  // standard 1.9: the 'it saw you' effects (js/spot-fx.js): game.json "spotFx" for every monster, monsters.json "spotFx" per monster
+  { const sfx = createSpotFx(ctx, manifest.spotFx || null); ctx.spotFx = (spec, o) => sfx.play(spec, o); }
+  // the look of each stage from data: stages.json levels[].look + "show" rules, game.json "music" / "stationsWhenDone" (js/stage-look.js; more per stage: ext.on('stage:look'))
+  const stageLook = ctx.stageLook = createStageLook(ctx, { levels: data.stages.levels || [], rules: data.stages.show || [], music: manifest.music || null, stationsWhenDone: manifest.stationsWhenDone || 'keep', stations: plan.stations || [], tasks });
+  for (const ev of ['game:start', 'stage:up', 'task:done', 'flag:set', 'state:sync']) bus.on(ev, () => safe(() => stageLook.apply()));
+  bus.on('settings:change', () => stageLook.setVolume());
   // standard 1.8: the footstep follows the floor of the room (plan room step / floorTex / kind, game.json controls.step, js/step-sound.js);
   // a game with its own ground (snow outside, a wet corridor) sets ctx.stepSurfaceOf = (room, pos) => 'snow' | null
   { const cache = new Map(), def = (manifest.controls || {}).step;
@@ -352,8 +370,10 @@ export function createGame(cfg) {
     if (ctx.qa) return true;
     const host = document.createElement('div'); host.id = 'mg-custom'; host.className = 'gf-overlay'; body.appendChild(host);
     fp.release();
-    try { return !!(await custom.mount(host, mgDef.cfg || {}, ctx)); } finally { host.remove(); }
+    try { return !!(await custom.mount(host, { title: task.title, help: task.hint || '', ...(mgDef.cfg || {}) }, ctx)); } finally { host.remove(); }
   }
+  // a task's own run() can open a mini game in the middle of its story (talk, then the mini game, then more talk): resolves true when it was done
+  ctx.runMinigame = (task, mgDef = task && task.minigame) => (mgDef ? runMinigame(task, mgDef) : Promise.resolve(true));
 
   // ---- tasks ----
   ctx.levelIndex = (stage) => prog.levels.findIndex((l) => l.id === stage);
@@ -379,7 +399,7 @@ export function createGame(cfg) {
   };
   ctx.startTask = async (id) => {
     const task = taskById.get(id), ok = ctx.canStart(task);
-    if (ok !== true) return ui.say(esc(ok));
+    if (ok !== true) return ui.say(esc(ok), 5, { urgent: true });
     bus.emit('task:start', { id });
     const reg = ext.reg.task.get(id) || {};
     const mgDef = reg.minigame || task.minigame;
@@ -404,23 +424,27 @@ export function createGame(cfg) {
     if (!(screen && screen.keepSave)) store.clear();
     Store.write(`${manifest.id}.endings.v1`, [...new Set([...(Store.read(`${manifest.id}.endings.v1`) || []), e.id])]);
     if (screen) screen.open(ctx, e);   // the game's own presentation (sequence, result card, share buttons)
-    else wm.open('ending', { title: e.title, size: 's', locked: true, render: (el) => { el.innerHTML = `${e.photo ? `<img class="gf-ending-img" src="${esc(e.photo)}" alt="">` : ''}${e.text.split('\n').map((p) => `<p>${esc(p)}</p>`).join('')}<p><button class="btn primary" data-again>最初から</button></p>`; el.querySelector('[data-again]').onclick = () => location.reload(); } });
+    // standard 1.8.2 (F10): with no screen of its own a game still ends on the scene - the picture, the lines, the endings found so far
+    else showEndingScene(ctx, { photo: e.photo, kicker: e.kicker, title: e.title, text: e.text, endings: { all: endings, current: e.id }, buttons: [{ label: '最初から', primary: true, fn: () => location.reload() }] });
     bus.emit('ending:reach', { id: e.id });
   }
   ctx.checkEndings = checkEndings;
+  ctx.foundEndings = () => foundEndings(manifest.id);   // the endings this player has reached (standard 1.8.2)
   ctx.setFlag = (key, o = {}) => { if (!state.flags.includes(key)) { state.flags.push(key); prog.flag(key); bus.emit('flag:set', { key }); if (!o.silent) checkEndings(); else setTimeout(checkEndings, 0); } };
 
   // ---- interaction ----
   const builtin = {
-    door: { prompt: (o) => { const d = world.doors.get(o.id); return d.isOpen ? '' : d.locked() ? lockedLabel('扉', '鍵がかかっている') : '[E] 扉を開ける'; },
-      run: (o) => { const d = world.doors.get(o.id); if (d.open()) { sound('door'); state.doors.push(o.id); bus.emit('door:open', { id: o.id }); } else if (d.locked()) { ui.say(esc(d.def.hint || prog.lockText(d.def.unlock) || 'いまは開きません。鍵や手がかりを探してみましょう。')); bus.emit('door:locked', { id: o.id, unlock: d.def.unlock }); } } },
+    door: { prompt: (o) => { const d = world.doors.get(o.id); return d.isOpen ? '' : d.locked() ? `[E] ${lockedLabel('扉', '鍵がかかっている')}` : '[E] 扉を開ける'; },   // [E] on a locked door says why (its hint)
+      run: (o) => { const d = world.doors.get(o.id); if (d.open()) { sound('door'); state.doors.push(o.id); bus.emit('door:open', { id: o.id }); } else if (d.locked()) { ui.say(esc(d.def.hint || prog.lockText(d.def.unlock) || 'いまは開きません。鍵や手がかりを探してみましょう。'), 5, { urgent: true }); /* the answer to [E]: at once, not after a queued line */ bus.emit('door:locked', { id: o.id, unlock: d.def.unlock }); } } },
     station: { prompt: (o) => { const t = taskAtStation(tasks, o.id, state.tasks); return t ? `[E] ${t.title}` : o.label || '（いまは何もない）'; },
       run: (o) => { const t = taskAtStation(tasks, o.id, state.tasks); if (!t) { const open = tasks.find((x) => x.station === o.id && !state.tasks.includes(x.id)); return ui.say(esc(open ? ctx.canStart(open) : 'ここでの作業は、もう終わっています。')); } return ctx.startTask(t.id); } },
     item: { prompt: (o) => `[E] 拾う：${items.find((i) => i.id === o.id).name}`,
       run: (o) => { const it = items.find((i) => i.id === o.id); remove('item', o.id); state.inv.push(o.id); sound('pickup'); if (it.photo) lane.push({ kind: 'card', cls: 'tl-lookcard tl-pickcard', key: `pickup:${it.id}`, ttl: 6000, html: viewItemHtml({ photo: it.photo, title: `入手：${it.name}` }) }); else ui.toast(`入手：${esc(it.name)}`); ui.say(esc(it.feeling));   /* an item with a photo shows its picture card (the feeling stays in the thought band) */ bus.emit('item:pickup', { id: o.id }); ctx.save(); checkEndings(); } },
     doc: { prompt: (o) => `[E] 読む：${docs.find((d) => d.id === o.id).title}`,
       run: (o) => { const d = docs.find((x) => x.id === o.id); if (!state.docsRead.includes(o.id)) state.docsRead.push(o.id); sound('paper'); wm.open('doc', { title: d.title, size: 's', render: (el) => { el.innerHTML = `${d.photo ? `<img class="gf-doc-img" src="${esc(d.photo)}" alt="">` : ''}${d.text.split('\n').map((p) => `<p>${esc(p)}</p>`).join('')}${d.feeling ? `<p class="iv-feel">${esc(d.feeling)}</p>` : ''}`; } }); bus.emit('doc:read', { id: o.id }); ctx.save(); } },
-    stairs: { prompt: (o) => (o.locked && o.locked() ? lockedLabel(o.label || '階段', 'いまは使えません') : `[E] ${o.label || '階段を使う'}`), run: (o) => ctx.useStairs(o) },
+    // locked stairs say why (the plan's hint, else the progression's lock text) and stay shut: [E] gives the reason in the thought band (1.9.1)
+    stairs: { prompt: (o) => (o.locked && o.locked() ? `[E] ${lockedLabel(o.label || '階段', 'いまは使えません')}` : `[E] ${o.label || '階段を使う'}`),
+      run: (o) => { if (o.locked && o.locked()) { ui.say(esc(o.hint || prog.lockText(o.unlock) || 'いまは、この階段を使えません。先に、いまの目標を進めましょう。'), 6, { urgent: true }); bus.emit('stairs:locked', { id: o.id, unlock: o.unlock }); return; } ctx.useStairs(o); } },
   };
   function remove(kind, id) { const m = pickups.get(`${kind}:${id}`); if (!m) return; m.visible = false; world.group.remove(m); const i = world.interactables.indexOf(m); if (i >= 0) world.interactables.splice(i, 1); pickups.delete(`${kind}:${id}`); }
   ctx.removePickup = remove;
@@ -612,6 +636,7 @@ export function createGame(cfg) {
   { const T = createTalk({ wm, qa: !!ctx.qa, data: data.talk || null, portraits: manifest.portraits || null, log: (ctx.talkLog = []), voice: (L) => ctx.voiceLine(L.voice, L.vfx || null) }); ctx.talk = T.talk; ctx.choose = T.choose; }
   if (manifest.things && data.things && cfg.mods && cfg.mods.things) cfg.mods.things.installThings(ctx);   // data/things.json: [E] examine -> card + thought + journal (standard 1.5)
   if (data.terminals && cfg.mods && cfg.mods.terminals) cfg.mods.terminals.installTerminals(ctx);   // data/terminals.json: the 'terminal' screen kind (standard 1.5)
+  if (data.flavor && cfg.mods && cfg.mods.flavor) { const fl = ctx.flavor = cfg.mods.flavor.installFlavor(ctx, data.flavor); systems.push({ id: 'flavor', def: { update: fl.update }, inst: fl }); }   // mood lines in the thought band (docs/flavor.md)
   if (data.monsters && cfg.mods && cfg.mods.monsters) { const ms = cfg.mods.monsters.installMonsters(ctx); if (ms) systems.push({ id: 'monsters', def: { update: (dt, c, active) => ms.update(dt, c, active) }, inst: ms }); }   // the default monster pack (data/monsters.json, standard 1.5)
 
   // ---- title ----
@@ -705,7 +730,7 @@ export function createGame(cfg) {
     target = ctx.target = state.started && !blocked() ? pickNow() : null;
     const h = target && handlerOf(target.kind);
     let text = h ? (h.prompt ? h.prompt(target, ctx) : '') : '';
-    if (ctx.input === 'pad') text = text.replace(/[E]/g, '[A]');   // the key hint follows the device in use
+    if (ctx.input === 'pad') text = text.replace(/\[E\]/g, '[A]'); else if (ctx.isTouch) text = text.replace(/\[E\] ?/g, 'タップ：');   // the key hint follows the device in use (touch: tap the thing, W18)
     const pe = $('prompt'); if (pe.dataset.t !== text) { pe.dataset.t = text; if (/<[a-z]/i.test(text)) pe.innerHTML = text; else pe.textContent = text; }
     $('crosshair').classList.toggle('on', !!text); $('crosshair').classList.toggle('aim', !!text);
     for (const m of monsters) m.inst && m.inst.update && m.inst.update(dt, ctx);
@@ -721,6 +746,7 @@ export function createGame(cfg) {
   // test / QA hooks (docs/hud-slots.md): the overlap checker spawns every notification kind at once through stress()
   ctx.hudStressHooks = [];   // a game adds (on) => show / hide its own HUD parts (clock, sensors ...)
   if (ctx.debug || ctx.qa || window.__gf) window.__gfHud = hudTestHooks({ lane, ui, hooks: ctx.hudStressHooks });
+  safe(() => { stageLook.apply(); if (!state.started) stageLook.title(); });   // the first stage's look on the title too; the title music waits for the first click / key
   bus.emit('game:ready', ctx);
   return ctx;
 }

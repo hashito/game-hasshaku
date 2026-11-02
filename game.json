@@ -2,7 +2,7 @@
   "id": "hasshaku",
   "title": "八尺様 ― 境の夜",
   "subtitle": "朝まで、誰の声にも返事をしてはいけない",
-  "version": "1.1.11",
+  "version": "1.2.0",
   "standard": "1.7",
   "theme": "dark-industrial hasshaku",
   "preset": {
@@ -113,6 +113,7 @@
     "js/ext/index.js"
   ],
   "data": {
+    "flavor": "data/flavor.json",
     "plan": "data/plan.json",
     "items": "data/items.json",
     "docs": "data/docs.json",

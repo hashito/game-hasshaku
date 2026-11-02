@@ -1,4 +1,4 @@
-/* game-kit 08f1905: js/ext.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 96bae95: js/ext.js — edit in game-kit and run tools/kit-sync.js */
 // Extension points of the standard 3D first-person game (docs/standard-3d.md). Pure (no DOM, no THREE): runs in Node.
 // One events bus + small registries. Game-specific code lives in js/ext/*.js of the game and ONLY talks to the standard
 // through these (module-boundary rule: no module touches another module's DOM; use the bus and the data schemas).
@@ -21,12 +21,20 @@
 //   ext.registerUi('inventory', { tabs, labels, decorate(item, ctx), actions, onUse, onExamine, onPick })   // 'inventory' | 'journal' | 'progress' | 'map' | 'guide' | 'title'
 //   ext.registerDeath({ run(ctx, reason) })                                            // replaces the default die() (camera back to the checkpoint)
 //   ext.registerLook('hasshaku', (o) => ({ root, update(dt, st, cam), respawn(), dispose() }))   // a monster look of the game; monsters.json "look": "hasshaku" (standard 1.7)
+//   ext.registerSpotFx('my-fx', (host, step, env) => ms)                               // an effect for game.json / monsters.json "spotFx" (standard 1.9)
+//   ext.registerItemKind('urn', (o) => THREE.Group)                                    // a model for items.json "kind": "urn" (list it in game.json "itemKinds"; standard 1.9)
+//   ext.registerNoise('gong', { parts: [{ tone: true, dur: 2, freq: 110 }] })          // audio.noise('gong') like the standard noises (js/step-sound.js; standard 1.9)
+//   ext.registerBed('cave', (ctx, dest) => ({ stop() {} }))                            // an ambience bed kind (js/ambience.js; standard 1.9)
+//   ext.on('stage:look', ({ index, level, look }) => …)                                 // after the kit set a stage's fog / light / shown objects (js/stage-look.js)
 //   ctx.syncOwned({ items, docs, tasks, flags, visited })                               // an external rules engine pushes its state; core emits the diff events
 //
 // TASK def: { run?(ctx, task) -> Promise<boolean>|boolean   // replaces the default "play the mini game, then done"
 //             minigame?: { type, cfg }                       // a kit type (task-minigames.TYPES) or a registered one
 //             canStart?(ctx, task) -> true | 'reason text'   // gate in code (data gates: tasks.json "needs")
 //             onDone?(ctx, task) }                           // after the standard done handling (flag, progress, bus)
+import { registerSpotFx } from './spot-fx.js';
+import { registerNoise } from './step-sound.js';
+import { registerBed } from './ambience.js';
 export const EVENTS = {
   'game:ready': 'everything is built (payload: ctx)', 'game:start': 'the player pressed start / the first frame runs',
   'game:pause': '{ reason }', 'game:resume': '{}', 'game:save': '{ state }',
@@ -104,6 +112,7 @@ export function createExtensions() {
     ui: createRegistry('ui', () => null),
     death: createRegistry('death', (d) => fn(d, 'run')),
     look: createRegistry('look', (d) => fn(d, 'create')),
+    itemKind: createRegistry('itemKind', (d) => fn(d, 'make')),
   };
   return {
     bus, reg, ...bus,
@@ -121,6 +130,10 @@ export function createExtensions() {
     registerTitleButton: (id, d) => reg.title.register(id, { order: 100, ...d }),
     registerUi: (section, d) => reg.ui.register(section, d),
     registerDeath: (d) => reg.death.register('death', d),
+    registerItemKind: (kind, d) => reg.itemKind.register(kind, typeof d === 'function' ? { make: d } : d),   // standard 1.9: a game's own item model (game.json itemKinds lists it)
+    registerSpotFx: (name, make, label) => registerSpotFx(name, make, label),   // standard 1.9: a game's own 'it saw you' effect (js/spot-fx.js)
+    registerNoise: (name, def) => registerNoise(name, def),   // standard 1.9: a game's own audio.noise (js/step-sound.js)
+    registerBed: (name, build) => registerBed(name, build),   // standard 1.9: a game's own ambience bed kind (js/ambience.js)
     registerLook: (name, d) => reg.look.register(name, typeof d === 'function' ? { create: d } : d),
     titleButtons: () => reg.title.list().sort((a, b) => a.order - b.order),
     uiOf: (section) => reg.ui.get(section) || {},

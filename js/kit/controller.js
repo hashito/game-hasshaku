@@ -1,4 +1,4 @@
-/* game-kit 08f1905: js/controller.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 96bae95: js/controller.js — edit in game-kit and run tools/kit-sync.js */
 // First-person controller: pointer lock + mouse look, WASD / arrows + Shift to run, a touch stick and
 // swipe-to-look for phones, circle-vs-box collisions, footstep callbacks.
 // Extracted from ひだまり薬局 (game-yakkyoku, js/game.js); the same scheme runs 未然調書 and the police game.
@@ -74,6 +74,16 @@ export class FirstPersonController {
     return !this.crouching && (this.keys.has("ShiftLeft") || this.keys.has("ShiftRight") || this.runToggle);
   }
 
+  // standard 1.8.2: a game's player overrides these instead of copying bind() (ten games copied it to add 'not while blind / dead / hiding'
+  // and their own sensitivity setting)
+  canLook() {
+    return !this.blocked;
+  }
+
+  lookScale() {
+    return this.o.sensitivity;
+  }
+
   bind() {
     addEventListener("keydown", (e) => {
       if (this.blocked) return;
@@ -93,8 +103,8 @@ export class FirstPersonController {
         if (!this.blocked && !this.isTouch && this.o.onUnlock) this.o.onUnlock();
       });
       addEventListener("mousemove", (e) => {
-        if (document.pointerLockElement !== this.canvas || this.blocked) return;
-        const k = 0.0022 * this.o.sensitivity;
+        if (document.pointerLockElement !== this.canvas || !this.canLook()) return;
+        const k = 0.0022 * this.lookScale();
         this.look(e.movementX * k, e.movementY * k);
       });
     }
@@ -138,9 +148,9 @@ export class FirstPersonController {
         t.look.setPointerCapture(e.pointerId);
       });
       t.look.addEventListener("pointermove", (e) => {
-        if (e.pointerId !== id || this.blocked) return;
+        if (e.pointerId !== id || !this.canLook()) return;
         if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 12) down.far = true;
-        const k = 0.005 * this.o.sensitivity;
+        const k = 0.005 * this.lookScale();
         this.look((e.clientX - last[0]) * k, (e.clientY - last[1]) * k);
         last = [e.clientX, e.clientY];
       });

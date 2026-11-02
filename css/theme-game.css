@@ -60,7 +60,7 @@
 .hk-pip[data-state="tainted"] { border-color: var(--gf-accent); color: var(--gf-accent-hover); }
 .hk-pip[data-state="critical"] { border-color: var(--gf-danger); color: var(--gf-text); background: #3a1712; }
 .hk-panel-help { margin: 8px 0 0; font-size: 12px; color: var(--gf-text-dim); max-width: 240px; line-height: 1.6; }
-.hk-ride { position: fixed; left: 50%; bottom: calc(26% + var(--gf-safe-bottom, 0px)); transform: translateX(-50%); z-index: 30; width: min(440px, 88vw);
+.hk-ride { position: fixed; left: 50%; bottom: calc(132px + var(--gf-safe-bottom, 0px)); transform: translateX(-50%); z-index: 30; width: min(440px, 88vw);
   background: var(--gf-panel-soft); border: 1px solid var(--gf-border); border-radius: var(--gf-radius, 4px); padding: 10px 14px; color: var(--gf-text); text-align: center; }
 .hk-bar { /* pair-ok */ height: 6px; background: var(--gf-surface-2); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
 .hk-bar i { /* pair-ok */ display: block; height: 100%; width: 0; background: var(--gf-accent); transition: width 0.2s linear; }
@@ -85,3 +85,6 @@ body:not(.touch) .hk-grip::after { content: "（Space・E）"; font-size: 12px; 
 
 /* the first-load text sits on the title art: a dark pill under it (U30) */
 [data-theme~="hasshaku"] #boot span { color: var(--gf-text); background: rgba(9, 20, 22, 0.86); padding: 4px 10px; border-radius: 3px; }
+.hk-jump.long { animation-duration: 2.4s; }
+/* a short (landscape phone) screen: the photo goes small to the left, clear of the ride panel and its hold button */
+@media (max-height: 500px) { .hk-photo { left: calc(8px + var(--gf-safe-left, 0px)); transform: none; top: calc(56px + var(--gf-safe-top, 0px)); width: min(200px, 26vw); } .hk-photo img { max-height: 30vh; } .hk-photo p { font-size: 12px; line-height: 1.5; } }

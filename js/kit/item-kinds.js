@@ -1,4 +1,4 @@
-/* game-kit 77ebe23: js/item-kinds.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 96bae95: js/item-kinds.js — edit in game-kit and run tools/kit-sync.js */
 // Item kinds (standard 1.7, "置くだけ"): an item or a document with a `kind` is shown as a model of that thing instead of a coloured box,
 // resting on what is under it (a desk, a shelf board, the floor; W3), slightly larger than life so it reads from 1-3 m (W11).
 //   items.json  { "id": "I1", "kind": "key", "room": "R1", "x": 2, "z": 3 }              -> a key on the desk at (2, 3)
@@ -8,6 +8,7 @@
 // supportY(colliders, x, z, floorY, maxH) is pure: the highest collider top under (x, z) that a hand could reach (default <= 1.4 m).
 import * as THREE from 'three';
 import * as IM from './item-models.js';
+import { ITEM_RECIPES, ITEM_MATERIALS, BASIC_KINDS, ITEM_GROUPS, itemGroup } from './item-catalog.js';
 
 const mat = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.8, ...o });
 const box = (g, w, h, d, m, x = 0, y = 0, z = 0) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y + h / 2, z); b.castShadow = true; g.add(b); return b; };
@@ -36,6 +37,64 @@ export const ITEM_KINDS = {
   battery: { label: '電池', make: grp((g, o) => { for (let i = 0; i < (o.n ?? 4); i++) { const c = cyl(g, 0.007, 0.007, 0.05, mat(i % 2 ? 0x2a2a2a : 0xb08a3a, { metalness: 0.5 }), i * 0.016 - 0.024, 0.007); c.rotation.z = Math.PI / 2; } }) },
 };
 export const DOC_KIND = 'paper';
+
+// ---- standard 1.9: the recipe kinds of js/item-catalog.js (174 more) ----
+// item textures: assets/textures/item/<tex>.webp next to the page (kit-sync copies the ones a game's items use). setItemTextureBase() for another place;
+// a texture that does not load leaves the material's own colour, so a kind always shows (also in Node, where nothing is loaded).
+let texBase = 'assets/textures/';
+export const setItemTextureBase = (url) => { texBase = url.endsWith('/') ? url : `${url}/`; };
+const texCache = new Map(), matCache = new Map();
+function itemTexture(id, onLoad) {
+  if (typeof document === 'undefined') return null;
+  let e = texCache.get(id);
+  if (!e) {
+    e = { tex: null, ok: false, wait: [] }; texCache.set(id, e);
+    e.tex = new THREE.TextureLoader().load(`${texBase}item/${id}.webp`, () => { e.ok = true; e.wait.splice(0).forEach((f) => f(e.tex)); }, undefined, () => { e.wait.length = 0; });
+    e.tex.colorSpace = THREE.SRGBColorSpace; e.tex.anisotropy = 4;
+  }
+  if (e.ok) onLoad(e.tex); else e.wait.push(onLoad);
+  return e.tex;
+}
+/** a material for a recipe part: a name of ITEM_MATERIALS (shared), '#rrggbb', or '$' (the item's colour) */
+export function itemMaterial(m, main = '#8a8a88') {
+  if (m === '$') m = main;
+  if (typeof m === 'string' && m.startsWith('#')) { const k = `c:${m}`; if (!matCache.has(k)) matCache.set(k, mat(m)); return matCache.get(k); }
+  if (matCache.has(m)) return matCache.get(m);
+  const d = ITEM_MATERIALS[m] || { c: '#ff00ff' };
+  const o = { roughness: d.r ?? 0.8, metalness: d.m ?? 0 };
+  if (d.o != null) Object.assign(o, { transparent: true, opacity: d.o, depthWrite: false });
+  if (d.e) Object.assign(o, { emissive: new THREE.Color(d.e), emissiveIntensity: 0.8 });
+  const M = mat(d.c, o);
+  if (d.tex) itemTexture(d.tex, (t) => { M.map = t; M.color.set(d.e ? d.c : '#ffffff'); M.needsUpdate = true; });
+  matCache.set(m, M);
+  return M;
+}
+const RAD = Math.PI / 180;
+/** build a recipe (js/item-catalog.js) into a Group */
+export function buildRecipe(r, o = {}) {
+  const g = new THREE.Group(), main = o.color || r.main;
+  for (const p of r.parts) {
+    let geo, m, pos, rot = [0, 0, 0], scl = null, lift = 0;
+    if (p[0] === 'b') { geo = new THREE.BoxGeometry(p[1], p[2], p[3]); m = p[4]; pos = p.slice(5, 8); rot = p.slice(8, 11); lift = p[2] / 2; }
+    else if (p[0] === 'c') { geo = new THREE.CylinderGeometry(p[1], p[2], p[3], p[11] || 16); m = p[4]; pos = p.slice(5, 8); rot = p.slice(8, 11); lift = p[3] / 2; }
+    else if (p[0] === 's') { geo = new THREE.SphereGeometry(p[1], 18, 12); m = p[2]; pos = p.slice(3, 6); scl = p.slice(6, 9); rot = [0, p[9] || 0, 0]; }
+    else if (p[0] === 't') { geo = new THREE.TorusGeometry(p[1], p[2], 8, 24, ((p[10] ?? 360) * RAD)); m = p[3]; pos = p.slice(4, 7); rot = p.slice(7, 10); lift = p[2]; }
+    else continue;
+    const mesh = new THREE.Mesh(geo, itemMaterial(m, main));
+    mesh.rotation.set((rot[0] || 0) * RAD, (rot[1] || 0) * RAD, (rot[2] || 0) * RAD);
+    if (scl) mesh.scale.set(scl[0] ?? 1, scl[1] ?? 1, scl[2] ?? 1);
+    // y is the bottom of the part AFTER its rotation / scale (a lying cylinder rests on its side)
+    mesh.updateMatrix(); geo.computeBoundingBox(); lift = -geo.boundingBox.clone().applyMatrix4(mesh.matrix).min.y;
+    mesh.position.set(pos[0] || 0, (pos[1] || 0) + lift, pos[2] || 0);
+    mesh.castShadow = true; g.add(mesh);
+  }
+  return g;
+}
+for (const [k, r] of Object.entries(ITEM_RECIPES)) if (!ITEM_KINDS[k]) ITEM_KINDS[k] = { label: r.label, group: r.group, make: (o) => buildRecipe(r, o) };
+for (const [k, l] of Object.entries(BASIC_KINDS)) if (ITEM_KINDS[k]) ITEM_KINDS[k].group = 'basic';
+/** a game's own kind (ext.registerItemKind lands here): make(o) -> Group */
+export function registerItemKind(kind, make, label = kind) { if (typeof make !== 'function') throw new Error(`item kind "${kind}": needs a make function`); ITEM_KINDS[kind] = { label, group: 'game', make }; }
+export { ITEM_GROUPS, itemGroup };
 
 // a model of the kind, origin at the bottom centre, scaled up a little (W11: small things are placed larger than life)
 export function makeItemModel(kind, o = {}) {

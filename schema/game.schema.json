@@ -9,7 +9,7 @@
     "subtitle": { "type": "string" },
     "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$", "description": "semver of the game; equals the newest release-notes entry" },
     "standard": { "type": "string", "description": "the game-kit standard it was built on, e.g. 1.0" },
-    "theme": { "type": "string", "minLength": 1, "description": "data-theme value: dark-industrial | paper-light | retro-crt | a game theme" },
+    "theme": { "type": "string", "minLength": 1, "description": "data-theme value (a LIST of words): a base dark-industrial | paper-light | retro-crt, a mood theme of css/themes.css (shrine-night, summer-rural, hospital-cold, school-dusk, vhs-tape, snow-silence, deep-water, blood-washi, office-night, candle-room, fog-forest, pencil-diary), and/or the game's own" },
     "preset": { "type": ["string", "object"], "description": "render-presets preset: horror | dusk | office | zoo ... Or { base, ...overrides } (extendPreset; colours as numbers).", "properties": { "base": { "type": "string" } } },
     "modules": { "type": "array", "items": { "type": "string" }, "description": "kit modules the game uses (kit.json modules is derived from it)" },
     "titleImage": { "type": "string", "description": "title screen background image (relative to the game root)" },
@@ -31,7 +31,11 @@
       },
       "additionalProperties": { "type": "string" }
     },
-    "media": { "type": "object", "properties": { "dir": { "type": "string" }, "catalog": { "type": "string" } }, "additionalProperties": false }
+    "media": { "type": "object", "properties": { "dir": { "type": "string" }, "catalog": { "type": "string" } }, "additionalProperties": false },
+    "themeColors": { "type": "object", "description": "standard 1.9: a theme made from a few colours (js/theme-make.js makeTheme, every pair AA-fitted), put on top of theme. from: a mood theme to start from", "properties": { "from": { "type": "string" }, "mode": { "enum": ["dark", "light"] }, "bg": { "type": "string" }, "surface": { "type": "string" }, "text": { "type": "string" }, "accent": { "type": "string" }, "accent2": { "type": "string" }, "danger": { "type": "string" }, "ok": { "type": "string" }, "heading": { "type": "string" }, "font": { "type": "string" }, "radius": { "type": "number" }, "scanlines": { "type": "number" } }, "additionalProperties": false },
+    "spotFx": { "description": "standard 1.9: the default 'it saw you' effect for every monster (js/spot-fx.js; monsters.json spotFx wins)" },
+    "music": { "description": "standard 1.9: title music, played after the first click / key on the title and faded out at the start (stage music: stages.json levels[].look.music)", "type": "object", "additionalProperties": false, "properties": { "title": { "type": "string" }, "volume": { "type": "number", "minimum": 0, "maximum": 1 } } },
+    "stationsWhenDone": { "description": "standard 1.9: 'hide' takes a station out of the interactables once all its tasks are done (js/stage-look.js)", "enum": ["keep", "hide"] }
   },
   "additionalProperties": true
 }

@@ -13,6 +13,7 @@
         "type": "object", "required": ["id"],
         "properties": {
           "id": { "type": "string" },
+          "spotFx": { "description": "standard 1.9: the effect when this monster notices the player (js/spot-fx.js): a name (red-flash, white-flash, ink, heartbeat, static, glitch, shake, zoom, tunnel, desaturate, letterbox, word, veins), a set (jump, dread, tape, stare), { name, strength, ms, text }, or a list; a game effect registered with ext.registerSpotFx" },
           "look": { "type": "string", "minLength": 1, "description": "windmill = the original みる風車 look (no red / black); dark-red-mist = near-black body, thin deep-red rim, with the red-black mist; any other name = a look the game registers with ext.registerLook (standard 1.7)" },
           "afterNear": { "type": "boolean", "description": "with a nearAttack: do not patrol before the scripted encounter (default true)" },
           "nearRespawn": { "type": "number", "minimum": 0, "description": "seconds after the scripted encounter before it patrols (default 6)" },
@@ -22,6 +23,7 @@
           "route": { "description": "'auto' (a loop through the spawn room), a plan.routes id, { rooms: [...] } or null (stands still until it notices you)" },
           "activeFrom": { "type": "object", "properties": { "stage": { "type": "string" }, "task": { "type": "string" }, "flag": { "type": "string" }, "room": { "type": "string" } } },
           "nearAttack": { "type": "object", "required": ["room"], "description": "the scripted safe attack (S8), once: when the player enters `room` it walks from `from` to `target`; it never touches anyone", "properties": { "room": { "type": "string" }, "from": { "type": "object" }, "target": { "type": "object" }, "stop": { "type": "number" }, "speed": { "type": "number" } } },
+          "kill": { "type": "object", "description": "a monster that kills with its own attack instead of contact (params.catch 0): `reach` metres is where that attack lands; check-escape replays with it as the catch distance", "properties": { "by": { "type": "string" }, "reach": { "type": "number" } } },
           "params": { "type": "object", "description": "overrides of the preset (js/monster-ai.js PRESETS): speed { wander seek chase }, sight, fov, near, notice, catch, lose { noLos corners cornersDelay dist cap hide }, hints, hintText" },
           "respawn": { "type": "number" },
           "assets": { "type": "string" }

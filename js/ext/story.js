@@ -100,7 +100,7 @@ export default function story(ext) {
   const talk = (lines, o = {}) => ctx.talk(lines, o);
   const wait = (sec) => new Promise((r) => setTimeout(r, sec * 1000));
   // a found picture at the top of the screen (U14: things above, thoughts below)
-  function flashPhoto(src, caption, sec = 2.2) {
+  function flashPhoto(src, caption, sec = 5) {   // long enough to read (feedback 2026-11-02 "画像が一瞬で切り替わる")
     const el = document.getElementById('hk-photo'); if (!el) return;
     el.innerHTML = `<img src="${esc(src)}" alt="">${caption ? `<p>${esc(caption)}</p>` : ''}`;
     el.hidden = false; clearTimeout(flashPhoto.t); flashPhoto.t = setTimeout(() => { el.hidden = true; }, sec * 1000);
@@ -128,7 +128,7 @@ export default function story(ext) {
     return true;
   }, onDone: () => { say('醤油と電池を受け取った。来た道を戻って、祖父の家へ。', 5); showSighting(); } });
   ext.registerTask('T_REPORT', { run: async () => {
-    if (!st.seen) { st.seen = true; snd.sting(); flashPhoto('assets/photos/encounter.webp', '帰ってきた道の向こう。白い帽子が、塀の上を通り過ぎた。', 3); }
+    if (!st.seen) { st.seen = true; snd.sting(); flashPhoto('assets/photos/encounter.webp', '帰ってきた道の向こう。白い帽子が、塀の上を通り過ぎた。', 5); }
     if (H) H.root.visible = false;
     await talk(T.report, { title: '居間' });
     // Issue #4: Ｋさん does not just appear. The grandfather shuts the front door first (the knock must come at a closed door), the po
@@ -203,8 +203,10 @@ export default function story(ext) {
     if (dying) return; dying = true; st.deaths++;
     c.bus.emit('player:dead', { reason });
     snd.sting();
-    const show = () => c.wm.open('death', { title: '声の向こう', size: 's', locked: true, render: (el) => {
-      el.innerHTML = `<div class="hk-death"><p class="hk-death-kicker">THE VOICE WAS NOT HIS</p>${c.calm ? '' : '<img class="hk-death-img" src="assets/photos/face.webp" alt="">'}<p class="hk-death-text">${esc((T.deaths || {})[reason] || T.deaths.monster)}</p><div class="hk-choices"><button type="button" class="btn primary" data-retry>この段階からやり直す</button></div></div>`;
+    const [dTitle, dKicker] = (T.deathTitles || {})[reason] || ['声の向こう', 'THE VOICE WAS NOT HIS'];   // each way of dying has its own words
+    const dText = (c.isTouch && (T.deathsTouch || {})[reason]) || (T.deaths || {})[reason] || T.deaths.monster;   // the advice names the controls the player has
+    const show = () => c.wm.open('death', { title: dTitle, size: 's', locked: true, render: (el) => {
+      el.innerHTML = `<div class="hk-death"><p class="hk-death-kicker">${esc(dKicker)}</p>${c.calm ? '' : '<img class="hk-death-img" src="assets/photos/face.webp" alt="">'}<p class="hk-death-text">${esc(dText)}</p><div class="hk-choices"><button type="button" class="btn primary" data-retry>この段階からやり直す</button></div></div>`;
       const b = el.querySelector('[data-retry]'); b.onclick = () => { c.wm.close(); }; setTimeout(() => b.focus(), 30);
     }, onClose: () => {
       dying = false; resetStageLocal(); applyStage();
@@ -213,7 +215,7 @@ export default function story(ext) {
       c.ui.toast(`第${['一', '二', '三', '四', '五'][lvl()]}段階の区切りから、やり直します。`);
     } });
     const el = document.getElementById('hk-jump');
-    if (el && !c.calm) { el.hidden = false; setTimeout(() => { el.hidden = true; show(); }, 900); } else show();
+    if (el && !c.calm) { el.classList.add('long'); el.hidden = false; setTimeout(() => { el.hidden = true; el.classList.remove('long'); show(); }, c.qa ? 50 : 2400); } else show();   // the face stays long enough to be seen (feedback 2026-11-02), then heads the window
   } });
   // the ending (feedback 2026-11-01 "最後にも写真を置いて手前に文字"): the kit's ending scene - the picture fills the screen, the kicker, the title
   // and the epilogue appear in front of it a line at a time, then how the night went
@@ -339,7 +341,7 @@ export default function story(ext) {
         if (fx === 'knockFinal') { snd.knock({ n: 5, vol: 0.9, pan: 0.1 }); snd.sting(); shake(3.5); fear && fear.kick(0.9); }
         if (fx === 'fakeDawn') { st.fakeClock = true; snd.knock({ n: 2, vol: 0.3 }); }   // the HUD clock shows 07:00 until fakeEnd
         if (fx === 'fakeEnd') { st.fakeClock = false; snd.po({ vol: 0.7, pan: 0.1 }); snd.sting(); shake(2.5); fear && fear.kick(0.8); }
-        if (fx === 'po') { snd.po({ vol: 0.5, pan: -0.2 }); shadow(7); flashPhoto('assets/photos/ph-window-shadow.webp', '', 2.6); }
+        if (fx === 'po') { snd.po({ vol: 0.5, pan: -0.2 }); shadow(7); flashPhoto('assets/photos/ph-window-shadow.webp', '', 4); }
       }
     }
     let worst = 0;
@@ -352,12 +354,12 @@ export default function story(ext) {
       else s.material.color.setRGB(0.95 - v * 0.9, 0.93 - v * 0.89, 0.88 - v * 0.85);
       s.scale.setScalar(1 + v * 0.35);
     }
-    if (worst > 0.85 && !st.warned) { st.warned = true; snd.po({ vol: 0.4, pan: 0 }); ctx.ui.toast('塩が黒くなっている。黒ずんだ皿に近づいて、[E] で替えよう。'); flashPhoto('assets/photos/salt-scene.webp', '', 1.2); }
+    if (worst > 0.85 && !st.warned) { st.warned = true; snd.po({ vol: 0.4, pan: 0 }); ctx.ui.toast(`塩が黒くなっている。黒ずんだ皿に近づいて、${ctx.isTouch ? '皿をタップして' : '[E] で'}替えよう。`); flashPhoto('assets/photos/salt-scene.webp', '', 3); }
     if (worst >= 1.35) return ctx.die('salt');
     // the HUD: the clock and the four plates
     const c = el('hk-night-clock'), shown = `午前 ${st.fakeClock ? '07:00' : nightClock(st.night)}`; if (c.textContent !== shown) c.textContent = shown;
     for (const k of BOWLS) { const b = el(`hk-pip-${k}`); if (b.dataset) b.dataset.state = st.dark[k] > 0.9 ? 'critical' : st.dark[k] > 0.35 ? 'tainted' : 'ok'; }
-    el('hk-night-help').textContent = worst > 0.6 ? '黒くなった皿に近づいて、[E] で塩を替える' : '誰の声でも、七時までは戸を開けない';
+    el('hk-night-help').textContent = worst > 0.6 ? `黒くなった皿に近づいて、${ctx.isTouch ? 'タップで' : '[E] で'}塩を替える` : '誰の声でも、七時までは戸を開けない';
     if (V.parts.clockHand) V.parts.clockHand.rotation.z = -(st.night / NIGHT_SEC) * Math.PI;
     if (st.night >= NIGHT_SEC && !done('T_DAWN') && !st.dawning) {
       st.dawning = true;
@@ -435,7 +437,7 @@ export default function story(ext) {
   const noise = (name, o) => ctx.audio && ctx.audio.noise && ctx.audio.noise(name, o);
   function rideFx(fx) {
     if (!fx) return;
-    if (fx === 'po') { snd.po({ vol: 0.5, pan: 0.9 }); flashPhoto('assets/photos/ph-van-window.webp', '', 2.2); fear.kick(0.5); }
+    if (fx === 'po') { snd.po({ vol: 0.5, pan: 0.9 }); flashPhoto('assets/photos/ph-van-window.webp', '', 3.5); fear.kick(0.5); }
     if (fx === 'knock') { snd.knock({ pan: 0.9, vol: 0.6 }); fear.kick(0.45); }
     if (fx === 'roof') { noise('thud', { n: 1, gain: 0.9 }); setTimeout(() => noise('thud', { n: 1, gain: 0.8 }), 650); setTimeout(() => noise('thud', { n: 1, gain: 0.7 }), 1250); fear.kick(0.75); darkT = Math.max(darkT, 0.4); }
     if (fx === 'radio') { snd.radio({ sec: 3.2, vol: 0.24 }); fear.kick(0.5); }
@@ -514,7 +516,7 @@ export default function story(ext) {
     if (!resume) {
       await talk(T.opening, { title: '八月の夕方', last: '探索を始める' });
       say('まずは玄関の外の地図板を見よう。夕霧商店は、道を北へ。', 6);
-    } else say(`第${['一', '二', '三', '四', '五'][lvl()]}段階から再開した。Tab で手帳、M で地図を開ける。`, 5);
+    } else say(`第${['一', '二', '三', '四', '五'][lvl()]}段階から再開した。${ctx.isTouch ? '右上のメニューから手帳と地図を開ける' : 'Tab で手帳、M で地図を開ける'}。`, 5);
   });
   ext.on('stage:up', async () => {
     applyStage();
@@ -523,7 +525,7 @@ export default function story(ext) {
     if (i === 1) setTimeout(() => say(T.hints.items_first, 7), 1500);
     if (i === 2) { resetStageLocal(); setTimeout(() => say(T.night_start, 6), 800); }
     if (i === 3) setTimeout(() => say('走ると、足音で気づかれる。見つかったら立ち止まらず、生垣の陰か家の中へ。', 7), 900);
-    if (i === 4) { resetStageLocal(); setTimeout(() => say('札を握っていれば、目を伏せていられる。窓は見ない。', 6), 600); }
+    if (i === 4) { resetStageLocal(); ctx.fp.yaw = 0; ctx.fp.pitch = -0.4; setTimeout(() => say('札を握っていれば、目を伏せていられる。窓は見ない。', 6), 600); }   // the ride starts looking down at the hands, not at the window
   });
   ext.on('door:open', ({ id }) => {
     if (id === 'D_GENKAN' && !st.genkan && lvl() === 0) { st.genkan = true; snd.knock({ n: 1, vol: 0.15, pan: -0.6 }); say(T.genkan_first, 6); }

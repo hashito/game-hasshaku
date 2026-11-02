@@ -1,4 +1,4 @@
-/* game-kit 695f291: js/monster-std.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 96bae95: js/monster-std.js — edit in game-kit and run tools/kit-sync.js */
 // The default monster pack (standard 1.5; rules S12 / S20). Driven by DATA: manifest data.monsters = data/monsters.json (schema/monsters.schema.json).
 //   { "early": { "stages": 2 },
 //     "monsters": [ { "id": "windmill", "look": "windmill", "phases": [ { "preset": "early", "untilStage": "L3" }, { "preset": "normal" } ],
@@ -115,6 +115,7 @@ export function installMonsters(ctx) {
       const fx = ctx.fx || (ctx.look && ctx.look.fx);
       fx && fx.spook && fx.spook(1);
       fx && fx.glitch && fx.glitch(0.35, 0.12);
+      ctx.spotFx && ctx.spotFx(m.def.spotFx, { first: e.first });   // standard 1.9: monsters.json "spotFx" (else game.json "spotFx")
       bus.emit('monster:seen', { id: m.def.id, first: e.first }); gfEmit('monsterStd', 'notice', { id: m.def.id });
     } else if (e.type === 'lose') bus.emit('monster:lost', { id: m.def.id, why: e.why });
     else if (e.type === 'hint') monologue(e.text, 2.2);

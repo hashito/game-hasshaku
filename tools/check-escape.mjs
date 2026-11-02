@@ -33,11 +33,14 @@ const errors = [], warns = [];
 const bad = (m) => (flag('warn') ? warns : errors).push(m);
 
 // ---- parameters of the early monsters ----
+// a monster that kills with its own attack (monsters.json kill: { by, reach }, params.catch 0) is replayed with that reach as its catch distance
+const killParams = (m, p) => (m.kill && m.kill.reach > 0 && !(p.catch > 0) ? { ...p, catch: m.kill.reach } : p);
 const early = (mon && mon.monsters ? mon.monsters : [{ id: 'default', preset: 'early' }]).filter((m) => (m.preset || 'early') === 'early' || m.early);
 const defs = early.length ? early : [{ id: 'default', preset: 'early' }];
 for (const m of defs) {
   const p = resolveParams(m.preset || 'early', m.params || {});
   if (!earlyOk(p)) bad(`monster ${m.id}: chase speed ${p.speed.chase} must be between walk (${PLAYER.walk}) and run (${PLAYER.run}) with a chase cap <= 60 s (S20)`);
+  if (p.sight > p.lose.dist) warns.push(`monster ${m.id}: it sees ${p.sight} m but gives up past ${p.lose.dist} m, so a chase that starts far away ends at once (params.lose.dist >= sight)`);
   if (p.lose.cap > 25) warns.push(`monster ${m.id}: the early chase cap is ${p.lose.cap} s (S20 wants it short, <= 25 s)`);
 }
 
@@ -69,7 +72,7 @@ const monsterRooms = [...new Set(defs.flatMap((m) => [m.spawn && m.spawn.room, .
 let n = 0, ok = 0, replays = 0;
 const failures = [];
 for (const m of defs) {
-  const p = resolveParams(m.preset || 'early', m.params || {});
+  const p = killParams(m, resolveParams(m.preset || 'early', m.params || {}));
   const scenarios = escapeScenarios(nav, p, { rooms: startRooms, monsterRooms: monsterRooms.length ? monsterRooms.filter((r) => earlySet.has(r)) : earlyRooms });
   for (const sc of scenarios) {
     n++;

@@ -58,7 +58,7 @@ if (!url) {
 // presets: "core" = the standard game-core games (window.__game: ctx.selectables() / ctx.pickNow()); default = the sorting-centre style (G.world.things, G.aim())
 const PRESET = opt("--preset", "things");
 const PRE = PRESET === "core"
-  ? { game: "window.__game", ready: "G.state && G.state.started", things: "return G.selectables().map((t) => ({ id: t.id, v: { min: t.min, max: t.max }, min: t.min, max: t.max }));", aim: "const t = G.pickNow(); return t ? t.kind + ':' + t.id : null;" }
+  ? { game: "window.__game", ready: "G.state && G.state.started", things: "const multi = ((G.data && G.data.plan && G.data.plan.rooms) || []).some((r) => r.floor); const fy = (f) => (G.world && G.world.floorY ? G.world.floorY(f) : f * 3.4); const floorOf = (y) => { let f = 0; while (f < 8 && fy(f + 1) <= y + 0.3) f++; return f; }; return G.selectables().map((t) => ({ id: t.id, floor: multi ? floorOf(t.min[1]) : undefined, v: { min: t.min, max: t.max }, min: t.min, max: t.max }));", aim: "const t = G.pickNow(); return t ? t.kind + ':' + t.id : null;" }
   : {};
 const W = +opt("--width", 1280), H = +opt("--height", 720);
 const GAME = opt("--game", PRE.game || "(window.game || window.__game)");
@@ -128,7 +128,7 @@ const SWEEP = `(() => {
   for (const t of things) {
     window.__selThing = t; // the thing being swept (an --aim expression can read it, e.g. to treat the two faces of one door as the same thing)
     const cx0 = (t.min[0] + t.max[0]) / 2, cz0 = (t.min[2] + t.max[2]) / 2;
-    if (t.floor != null && G.teleport) { G.teleport(cx0, cz0, t.floor, 0); eye = cam.position.y; colliders = (G.player && G.player.colliders) || (G.fp && G.fp.colliders) || []; }
+    if (t.floor != null && G.teleport) { if (G.teleport.length >= 3) G.teleport(cx0, cz0, t.floor, 0); else G.teleport({ x: cx0, z: cz0, floor: t.floor, yaw: 0 }); /* core games: teleport({ x, z, floor, yaw }) (multi-floor plans, jashi 5.0) */ eye = cam.position.y; colliders = (G.player && G.player.colliders) || (G.fp && G.fp.colliders) || []; }
     const V = t.v || t; // the visual bounds: the player looks at these
     const cx = (V.min[0] + V.max[0]) / 2, cy = (V.min[1] + V.max[1]) / 2, cz = (V.min[2] + V.max[2]) / 2;
     const y0 = eye;

@@ -32,7 +32,8 @@ try {
   await p.goto(`${base}?qa=1${mobile ? '&touch=1' : ''}`);
   await p.waitFor("window.__game && document.getElementById('start-btn') && !document.getElementById('start-btn').disabled", 90000);   // the button is disabled while the boot steps run
   await shot('title');
-  const r = await p.eval("JSON.stringify(document.getElementById('start-btn').getBoundingClientRect())").then(JSON.parse);
+  // a short landscape phone scrolls the title: bring the button into view before tapping it
+  const r = await p.eval("(() => { const b = document.getElementById('start-btn'); b.scrollIntoView({ block: 'center' }); return JSON.stringify(b.getBoundingClientRect()); })()").then(JSON.parse);
   await p.click(r.x + r.width / 2, r.y + r.height / 2);
   await p.waitFor('__game.state.started', 10000);
   await sleep(500);
@@ -49,11 +50,13 @@ try {
 
   // stand 1.3 m from an interactable (on a side that is inside a room) and look at it
   const approach = (name) => p.eval(`(async () => { const g = window.__game, m = g.world.interactables.find((o) => o.name === ${JSON.stringify(name)});
-    if (!m) return 'no such object'; const c = m.position;
+    if (!m) return 'no such object'; const c = m.getWorldPosition(new m.position.constructor());
+    // the floor the thing stands on (multi-floor plans: rooms with "floor"); its height above that floor
+    const fy = (f) => (g.world.floorY ? g.world.floorY(f) : f * 3.4); let fl = 0; while (fl < 8 && fy(fl + 1) <= c.y + 0.3) fl++;
     for (const [dx, dz] of [[0, -1.3], [0, 1.3], [-1.3, 0], [1.3, 0]]) {
-      if (g.world.roomAt(c.x + dx, c.z + dz) === null) continue;
-      g.teleport({ x: c.x + dx, z: c.z + dz, yaw: Math.atan2(dx, dz) });
-      g.fp.pitch = -Math.atan2(1.65 - c.y, 1.3);
+      if (g.world.roomAt(c.x + dx, c.z + dz, fy(fl) + 1.6) === null) continue;
+      g.teleport({ x: c.x + dx, z: c.z + dz, yaw: Math.atan2(dx, dz), floor: fl });
+      g.fp.pitch = -Math.atan2(1.65 - (c.y - fy(fl)), 1.3);
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
       if (g.target && g.target.kind + ':' + g.target.id === ${JSON.stringify(name)}) return 'ok'; }
     return 'no selectable approach side'; })()`);
@@ -93,7 +96,7 @@ try {
 
   // tasks in order of the data (needs respected), doors in between
   const tasks = await G('g.data.tasks');
-  const doors = await G('g.data.plan.doors.map((d) => d.id)');
+  const doors = await G('g.data.plan.doors.filter((d) => g.world.doors.get(d.id) && !d.open).map((d) => d.id)');   // stairs / lifts are not doors; openings are always open
   const doneAll = () => G('g.data.tasks.every((t) => g.state.tasks.includes(t.id)) || !!g.state.ended');
   let resumed = false;
   for (let round = 0; round < 12 && !(await doneAll()); round++) {
@@ -115,8 +118,8 @@ try {
         const before = await G('[g.state.tasks, g.state.docsRead, g.state.inv]');
         await p.eval('__game.save()');
         await p.goto(`${base}?qa=1${mobile ? '&touch=1' : ''}`);
-        await p.waitFor("window.__game && document.getElementById('continue-btn') && !document.getElementById('continue-btn').classList.contains('hidden')", 90000);
-        const rect = JSON.parse(await p.eval("JSON.stringify(document.getElementById('continue-btn').getBoundingClientRect())"));
+        await p.waitFor("window.__game && document.getElementById('continue-btn') && !document.getElementById('continue-btn').classList.contains('hidden') && !document.getElementById('start-btn').disabled", 90000);   // shown before the boot steps end: wait for them (slow phones)
+        const rect = JSON.parse(await p.eval("(() => { const b = document.getElementById('continue-btn'); b.scrollIntoView({ block: 'center' }); return JSON.stringify(b.getBoundingClientRect()); })()"));
         await p.click(rect.x + rect.width / 2, rect.y + rect.height / 2);
         await p.waitFor('__game.state.started', 10000);
         expect(JSON.stringify(before) === JSON.stringify(await G('[g.state.tasks, g.state.docsRead, g.state.inv]')), 'reload restores tasks, documents and inventory');

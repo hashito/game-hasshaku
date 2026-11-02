@@ -1,4 +1,4 @@
-/* game-kit 08f1905: js/schema-check.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 96bae95: js/schema-check.js — edit in game-kit and run tools/kit-sync.js */
 // A small JSON Schema checker (no dependencies, no DOM; Node and browser) + the cross-file checks of a game's data.
 // Supported keywords: $ref ("#/$defs/x"), type (string | array), enum, const, required, properties, additionalProperties
 // (bool | schema), items, minItems, maxItems, minLength, maxLength, pattern, minimum, maximum, oneOf, anyOf, uniqueBy (own).
@@ -6,8 +6,9 @@
 // checkGameData({ game, plan, items, docs, tasks, stages, endings, notes }, { minigameTypes }) -> { errors, warns }
 //   cross-references between the files (room / stage / task / unlock ids), reachability by stage (a room behind a door that a
 //   later stage unlocks cannot hold an earlier task or item), endings that can be reached, the progression definition.
-// names of the kinds / room types (kept in sync with js/item-kinds.js ITEM_KINDS and js/room-types.js ROOM_TYPES; test/standard-1.7.test.mjs checks)
-export const ITEM_KIND_NAMES = ['key', 'card', 'paper', 'clipboard', 'book', 'photo', 'tag', 'tape', 'talisman', 'bag', 'bottle', 'box', 'phone', 'flashlight', 'tool', 'cloth', 'jar', 'battery'];
+// names of the kinds / room types (item kinds: js/item-catalog.js, 192 since standard 1.9; room types kept in sync with js/room-types.js ROOM_TYPES; test/standard-1.7.test.mjs checks)
+import { ITEM_KIND_LIST } from './item-catalog.js';
+export const ITEM_KIND_NAMES = ITEM_KIND_LIST;
 export const ROOM_TYPE_NAMES = ['washitsu', 'kitchen', 'storage', 'office', 'shop', 'classroom', 'hospital', 'bathroom', 'workshop', 'corridor', 'engawa', 'doma', 'road', 'yard', 'field', 'forest', 'grounds', 'street'];
 // The schemas live in schema/*.schema.json; tools/check-game-data.mjs loads and runs everything. docs/standard-3d.md "Data".
 import { resolveParams, earlyOk, PLAYER } from './monster-ai.js';
@@ -104,11 +105,18 @@ export function checkGameData(d, opts = {}) {
     if (t.minigame && types.size && !types.has(t.minigame.type)) E(`task "${t.id}": mini game type "${t.minigame.type}" is not a kit type nor listed in game.json "minigames"`);
   }
   // standard 1.7: item / doc kinds, items given by a task, room types
-  for (const x of [...items, ...docs]) if (x.kind && !ITEM_KIND_NAMES.includes(x.kind)) E(`${items.includes(x) ? 'item' : 'doc'} "${x.id}": kind "${x.kind}" is not one of ${ITEM_KIND_NAMES.join(', ')} (js/item-kinds.js)`);
+  const ownKinds = new Set([...((game && game.itemKinds) || []), ...(opts.itemKinds || [])]);   // a game's own kinds (ext.registerItemKind + game.json itemKinds)
+  for (const x of [...items, ...docs]) if (x.kind && !ITEM_KIND_NAMES.includes(x.kind) && !ownKinds.has(x.kind)) E(`${items.includes(x) ? 'item' : 'doc'} "${x.id}": kind "${x.kind}" is not a standard kind (docs/item-kinds.md, js/item-catalog.js) nor in game.json itemKinds`);
   for (const x of items) if (x.given && !taskIds.has(x.given)) E(`item "${x.id}": given by unknown task "${x.given}"`);
   for (const r of (plan && plan.rooms) || []) if (r.type && !ROOM_TYPE_NAMES.includes(r.type)) E(`room "${r.id}": type "${r.type}" is not one of ${ROOM_TYPE_NAMES.join(', ')} (js/room-types.js)`);
   for (const dr of (plan && plan.doors) || []) if (dr.unlock && !unlockLevel.has(dr.unlock)) E(`door "${dr.id}": unlock "${dr.unlock}" is not unlocked by any level in stages.json`);
   for (const l of (stages && stages.levels) || []) for (const k of l.unlocks || []) if (!((stages.unlocks || {})[k])) E(`level "${l.id}": unlock "${k}" is not defined in stages.unlocks`);
+  ((stages && stages.show) || []).forEach((r, i) => {   // stage-look rules (js/stage-look.js)
+    if (!r.name && !(r.names && r.names.length)) E(`stages.show[${i}]: needs name or names`);
+    for (const k of ['from', 'until']) if (r[k] != null && !lvIdx.has(r[k])) E(`stages.show[${i}]: ${k} "${r[k]}" is not a level in stages.json`);
+    for (const l of r.stages || []) if (!lvIdx.has(l)) E(`stages.show[${i}]: stage "${l}" is not a level in stages.json`);
+    for (const k of ['done', 'notDone']) for (const t of [].concat(r[k] ?? [])) if (!taskIds.has(t)) E(`stages.show[${i}]: ${k} "${t}" is not a task`);
+  });
 
   // task dependency cycles
   const state = {}, byId = new Map(tasks.map((t) => [t.id, t]));
