@@ -1,4 +1,4 @@
-/* game-kit 4b9f6fa: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 5b6bf60: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -61,6 +61,8 @@ import { buildProgressionDef, taskAtStation, pickEnding } from './game-data.js';
 import { showEndingScene, foundEndings } from './ending-scene.js';
 
 export const CORE_VERSION = '1.10.16';
+// the mini game library's types (js/mg-library.js LIBRARY; test/story-hooks.test.mjs keeps the two equal): game.json "minigames" naming one of these loads the library
+export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath'];
 const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(typeof location !== 'undefined' ? location.search : '');
 const safe = (fn, d = null) => { try { return fn(); } catch { return d; } };
@@ -80,7 +82,7 @@ export async function loadGame(manifestUrl = 'game.json', o = {}) {
   for (const f of manifest.ext || []) { const m = await import(new URL(f, base).href); if (typeof m.default === 'function') await m.default(ext, { manifest, data, base }); }   // (1.1) the ext module gets the loaded data (a game whose rules read it at import time fills its tables here)
   // the kit's mini game library (standard 1.10.15, deguchi K9): a library type named in game.json "minigames" is registered (kit-sync copies
   // js/mg-library.js and those js/mg-<type>.js); a type the game registered itself is left alone
-  if (Array.isArray(manifest.minigames) && manifest.minigames.length) {
+  if (Array.isArray(manifest.minigames) && manifest.minigames.some((t) => MG_LIB_TYPES.includes(t))) {   // only the game's own types: no mg-library.js to load (1.10.16)
     try {
       const { LIBRARY, useMinigames } = await import('./mg-library.js');
       const want = LIBRARY.filter((e) => manifest.minigames.includes(e.type) && !ext.reg.minigame.has(e.type));
