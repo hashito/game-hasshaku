@@ -260,7 +260,9 @@
    "x": -4,
    "z": 23,
    "width": 7.6,
-   "open": true
+   "open": true,
+   "unlock": "dawn",
+   "hint": "家の裏手は、あとでいい。先に商店へ行って、それから居間の祖父に知らせる。"
   },
   {
    "id": "G_GARDEN_BACK",
@@ -287,7 +289,9 @@
    "x": -4,
    "z": 0.5,
    "width": 4.6,
-   "open": true
+   "open": true,
+   "unlock": "dawn",
+   "hint": "家の裏手は、あとでいい。先に商店へ行って、それから居間の祖父に知らせる。"
   },
   {
    "id": "G_FRONT_FIELD",
@@ -296,7 +300,9 @@
    "x": 5,
    "z": 12.5,
    "width": 25.0,
-   "open": true
+   "open": true,
+   "unlock": "dawn",
+   "hint": "田んぼの畦には、今は用がない。商店は村道の先だ。"
   },
   {
    "id": "G_FRONT_ROAD",
@@ -332,7 +338,9 @@
    "x": 15.5,
    "z": -2,
    "width": 4.0,
-   "open": true
+   "open": true,
+   "unlock": "dawn",
+   "hint": "畦へ下りる道。今は、商店と家のあいだだけを歩く。"
   },
   {
    "id": "D_GATE",
@@ -437,7 +445,7 @@
    "room": "O_SHRINE",
    "x": 15.8,
    "z": -15.6,
-   "label": "社の裏"
+   "label": "社の物置"
   },
   {
    "id": "H_SHOPSIDE",

@@ -462,6 +462,9 @@ export function dressVillage(ctx) {
     for (let i = 0; i < 4; i++) box(0.1, 0.32, 0.01, M.paper, -1.5 + i, 2.25, 0.05, t);
   }
 
+  // the shrine's tool shed behind it (a hiding place, plan.hides H_SHRINE; rule G7: a hiding place you can see, it was only the shadow of the shrine)
+  { const g = hut(15.8, -15.6, 1.8, 1.3, 0); for (let i = 0; i < 2; i++) box(0.5, 0.6, 0.4, M.darkWood, -0.5 + i * 1.0, 0.3, -0.35, g); }
+
   // ---------------------------------------------------------------- the north gate of the farm road (D_GATE) and its notice
   {
     const d = world.doors.get('D_GATE'); if (d) d.mesh.material = M.hidden;

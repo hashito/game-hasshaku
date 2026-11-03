@@ -1,5 +1,5 @@
 {
-  "kit": "17b29ea",
+  "kit": "b1860c2",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -216,7 +216,7 @@
     "js\\kit\\text-contrast.js": "7fee755af57a",
     "js\\kit\\monster-nav.js": "aa4dd24b4872",
     "js\\kit\\monster-escape.js": "4a9e4dd0e05d",
-    "js\\kit\\game-core.js": "711c25fcb77d",
+    "js\\kit\\game-core.js": "a14664be009c",
     "js\\kit\\item-kinds.js": "42b609ccaa9a",
     "js\\kit\\item-models.js": "611975f171a7",
     "js\\kit\\prop-geo.js": "b7d46c577d9a",
@@ -234,7 +234,7 @@
     "js\\kit\\store.js": "e2695a9cb831",
     "js\\kit\\audio.js": "af85c06339a1",
     "js\\kit\\audio-at.js": "f573fa6e4e01",
-    "js\\kit\\world-from-plan.js": "d837e0a0f3f3",
+    "js\\kit\\world-from-plan.js": "341ccdd93f34",
     "js\\kit\\room-types.js": "a2993c599dea",
     "js\\kit\\win-manager.js": "e8830a5007fa",
     "js\\kit\\tab-menu.js": "27550d2cd73b",
@@ -249,7 +249,7 @@
     "js\\kit\\look-input.js": "acebad92f70f",
     "js\\kit\\pad-input.js": "7e4fab6b2245",
     "js\\kit\\ext.js": "d597aa41ed0c",
-    "js\\kit\\monster-std.js": "78fbc48529d0",
+    "js\\kit\\monster-std.js": "2132aeb0d730",
     "js\\kit\\monster-looks.js": "c353da72ebd1",
     "js\\kit\\character.js": "d45df815eeca",
     "js\\kit\\motion.js": "f2a850adc06b",
