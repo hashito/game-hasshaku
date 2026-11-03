@@ -342,7 +342,7 @@ export function dressVillage(ctx) {
   // ---- 納戸: shelves of baskets, desks with the newspaper and the photo
   { const s = shelf(1.8, 2.0, 0.45, 5, 'boxes'); at(s, -18.4, 0, 3.3, 0); addCol(-19.3, 3.0, -17.5, 3.55, 0, 2.0); }
   { const t = table(1.2, 0.6, 0.76, 0x5a4330); at(t, -17.0, 0, 7.0); addCol(-17.6, 6.7, -16.4, 7.3, 0, 0.8, { low: true }); }
-  { const t = table(0.9, 0.5, 0.76, 0x4e3b2a); at(t, -18.4, 0, 9.55); addCol(-18.85, 9.3, -17.95, 9.8, 0, 0.8, { low: true }); }
+  { const t = table(1.5, 0.6, 0.76, 0x4e3b2a); at(t, -18.4, 0, 9.5); addCol(-19.15, 9.2, -17.65, 9.8, 0, 0.8, { low: true }); }   // the photo and the old record side by side (the record floated 1 m in front of it until 2026-11-03)
   { const g = new THREE.Group(); for (let i = 0; i < 3; i++) box(0.6, 0.45, 0.5, M.straw, (i - 1) * 0.7, 0.22, 0, g); at(g, -14.2, 0, 9.9); addCol(-15.3, 9.6, -13.2, 10.2, 0, 0.5, { low: true }); }
 
   // ---------------------------------------------------------------- the shed in the back garden (a hiding place)
