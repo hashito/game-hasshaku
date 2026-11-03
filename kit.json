@@ -1,5 +1,5 @@
 {
-  "kit": "8cacc23",
+  "kit": "17b29ea",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -216,7 +216,7 @@
     "js\\kit\\text-contrast.js": "7fee755af57a",
     "js\\kit\\monster-nav.js": "aa4dd24b4872",
     "js\\kit\\monster-escape.js": "4a9e4dd0e05d",
-    "js\\kit\\game-core.js": "d41a28afcf9b",
+    "js\\kit\\game-core.js": "711c25fcb77d",
     "js\\kit\\item-kinds.js": "42b609ccaa9a",
     "js\\kit\\item-models.js": "611975f171a7",
     "js\\kit\\prop-geo.js": "b7d46c577d9a",
@@ -264,7 +264,7 @@
     "js\\kit\\env-props.js": "8173704023b6",
     "js\\kit\\texture-library.js": "b28d6322f0be",
     "css\\theme.css": "ebaca1cab248",
-    "css\\shell.css": "97490ac1464a",
+    "css\\shell.css": "b10ba41363e3",
     "js\\kit\\mg-pour.js": "b64263edba23",
     "js\\kit\\mg-frame.js": "9a0b1bbe2f21",
     "js\\kit\\mg-turn-dials.js": "2c242c57eb40",
@@ -272,7 +272,7 @@
     "tools/check-traps.mjs": "4390617a5164",
     "js\\kit\\step-sound.js": "73ec45c73c86",
     "js\\kit\\fear-fx.js": "086714c2913d",
-    "js\\kit\\ending-scene.js": "1e75e581c187",
+    "js\\kit\\ending-scene.js": "38960229a610",
     "js\\kit\\outer-walls.js": "753347b4f3a0",
     "js\\kit\\item-catalog.js": "60e4641e0e34",
     "js\\kit\\theme-make.js": "65354f9a717c",
