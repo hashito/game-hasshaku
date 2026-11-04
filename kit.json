@@ -1,5 +1,5 @@
 {
-  "kit": "bd0256a",
+  "kit": "b4c715e",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -83,7 +83,8 @@
     "flavor",
     "barrier-look",
     "station-looks",
-    "hide-looks"
+    "hide-looks",
+    "mg-sound"
   ],
   "css": "css/kit.css",
   "cssExtra": [
@@ -168,10 +169,10 @@
     "js/kit/prop-batch.js": "abd03dfc3b79",
     "js/kit/env-props.js": "8173704023b6",
     "js/kit/text-contrast.js": "7fee755af57a",
-    "css/kit.css": "58f3ccf03274",
+    "css/kit.css": "cd826193c6ab",
     "css/theme.css": "ebaca1cab248",
     "css/shell.css": "69c16bee0f93",
-    "schema/chat-story.schema.json": "e24a86e49bb9",
+    "schema/chat-story.schema.json": "74021fbcd2f8",
     "schema/creation-brief.schema.json": "fc0ca4964483",
     "schema/docs.schema.json": "533be2902f17",
     "schema/endings.schema.json": "ec10b40dad12",
@@ -196,7 +197,7 @@
     "tools/check-no-emoji.mjs": "e33672578f3a",
     "tools/check-wording.mjs": "fba8646626fe",
     "tools/check-escape.mjs": "e02864475501",
-    "tools/kit-features.cjs": "c98f85ca0c76",
+    "tools/kit-features.cjs": "06093e9d5d45",
     "js/kit/texture-library.js": "b28d6322f0be",
     "js/kit/item-kinds.js": "170ca47c72cb",
     "js/kit/item-models.js": "611975f171a7",
@@ -219,7 +220,7 @@
     "js\\kit\\text-contrast.js": "7ee42856ab86",
     "js\\kit\\monster-nav.js": "e8c9ff6e2b4c",
     "js\\kit\\monster-escape.js": "4a9e4dd0e05d",
-    "js\\kit\\game-core.js": "56114ef28de6",
+    "js\\kit\\game-core.js": "e030dc29314b",
     "js\\kit\\item-kinds.js": "42b609ccaa9a",
     "js\\kit\\item-models.js": "611975f171a7",
     "js\\kit\\prop-geo.js": "b7d46c577d9a",
@@ -270,8 +271,8 @@
     "css\\shell.css": "b10ba41363e3",
     "js\\kit\\mg-pour.js": "b64263edba23",
     "js\\kit\\mg-frame.js": "9a0b1bbe2f21",
-    "js\\kit\\mg-turn-dials.js": "2c242c57eb40",
-    "js\\kit\\mg-library.js": "e445280bdd13",
+    "js\\kit\\mg-turn-dials.js": "31e4b2907754",
+    "js\\kit\\mg-library.js": "47db75195a82",
     "tools/check-traps.mjs": "4390617a5164",
     "js\\kit\\step-sound.js": "73ec45c73c86",
     "js\\kit\\fear-fx.js": "086714c2913d",
@@ -288,7 +289,9 @@
     "tools/smoke.mjs": "ef4b5d335643",
     "js\\kit\\barrier-look.js": "1371ea4fb268",
     "js\\kit\\station-looks.js": "d975e9cad2f9",
-    "js\\kit\\hide-looks.js": "a89ffad60f08"
+    "js\\kit\\hide-looks.js": "a89ffad60f08",
+    "js\\kit\\mg-sound.js": "716108fa36d3",
+    "schema/chat-game.schema.json": "2aba9a135db4"
   },
   "textures": [
     "planks_worn",

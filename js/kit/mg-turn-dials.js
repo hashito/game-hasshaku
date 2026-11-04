@@ -1,9 +1,9 @@
-/* game-kit 96bae95: js/mg-turn-dials.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit b4c715e: js/mg-turn-dials.js — edit in game-kit and run tools/kit-sync.js */
 // Library mini game "turn-dials" (from 八尺様 ― 境の夜: the gate's three turn-buttons): each press turns a dial by one step; set every
 // dial to its answer (a clue in the world tells which), then try. Mouse, touch, keyboard (Tab + Enter).
 //   cfg: title, help, labels (under each dial, e.g. ['朝日', '正午', '地蔵']), answer (indexes into dirs, e.g. [1, 2, 0]),
 //        dirs (['北', '東', '南', '西']), hint (the line of the hint button; none = no button), tryLabel ('外す'), ok, bad
-//   hooks: { sound(name, ctx) ('turn' | 'bad'), get() -> saved turns, set(turns) }   (the dials keep their turns between tries)
+//   hooks: { sound(name, ctx) ('turn' | 'bad' | 'ok'), get() -> saved turns, set(turns) }   (the dials keep their turns between tries)
 import { mgFrame, esc } from './mg-frame.js';
 
 export const DIRS = ['北', '東', '南', '西'];
@@ -23,7 +23,7 @@ export default {
       const draw = () => dials.forEach((d, i) => { const k = v[i] % dirs.length; d.querySelector('.mgx-dial-arrow').style.transform = `rotate(${v[i] * step}deg)`; d.querySelector('.mgx-dial-dir').textContent = dirs[k]; d.setAttribute('aria-label', `${i + 1}番目の金具。いまは${dirs[k]}。押して回す`); });
       dials.forEach((d, i) => d.addEventListener('click', () => { v[i] = (v[i] + 1) % dirs.length; draw(); snd('turn'); f.say(''); hooks.set && hooks.set(v.slice()); }));
       const h = f.body.querySelector('[data-hint]'); if (h) h.onclick = () => f.say(cfg.hint);
-      f.body.querySelector('[data-try]').onclick = () => { if (dialsOk(v, answer, dirs.length)) { f.say(cfg.ok || '外れた。'); f.win(500); } else { f.say(cfg.bad || '引っかかる。向きがまだ合っていません。'); snd('bad'); f.miss(); } };
+      f.body.querySelector('[data-try]').onclick = () => { if (dialsOk(v, answer, dirs.length)) { f.say(cfg.ok || '外れた。'); snd('ok'); f.win(500); } else { f.say(cfg.bad || '引っかかる。向きがまだ合っていません。'); snd('bad'); f.miss(); } };
       draw();
       if (ctx.qa) return f.end(true);
       dials[0].focus();
