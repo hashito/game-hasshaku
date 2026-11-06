@@ -101,6 +101,12 @@
   "who": "祖父",
   "preset": null
  },
+ "v-report-after-5": {
+  "key": "report_after",
+  "index": 5,
+  "who": "祖父",
+  "preset": null
+ },
  "v-prepared-1": {
   "key": "prepared",
   "index": 1,
@@ -116,6 +122,12 @@
  "v-prepared-3": {
   "key": "prepared",
   "index": 3,
+  "who": "Ｋさん",
+  "preset": "wall"
+ },
+ "v-prepared-4": {
+  "key": "prepared",
+  "index": 4,
   "who": "祖父",
   "preset": "wall"
  },
@@ -182,6 +194,12 @@
  "v-dawn-5": {
   "key": "dawn",
   "index": 5,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-dawn-6": {
+  "key": "dawn",
+  "index": 6,
   "who": "祖父",
   "preset": null
  },
@@ -200,6 +218,12 @@
  "v-boarded-2": {
   "key": "boarded",
   "index": 2,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-boarded-3": {
+  "key": "boarded",
+  "index": 3,
   "who": "Ｋさん",
   "preset": null
  },
