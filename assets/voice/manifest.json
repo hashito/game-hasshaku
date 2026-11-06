@@ -221,6 +221,18 @@
   "who": "Ｋさん",
   "preset": null
  },
+ "v-ride-5": {
+  "key": "ride",
+  "index": 5,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-ride-7": {
+  "key": "ride",
+  "index": 7,
+  "who": "Ｋさん",
+  "preset": null
+ },
  "v-door-choice": {
   "key": "door_choice",
   "index": 0,
