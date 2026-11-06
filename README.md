@@ -58,3 +58,23 @@ npm run check:contrast   # 文字と背景のコントラスト（U30）
 5. Game-fleet の `portal/overrides.json` から `hasshaku` の `"status": "wip"` を外す。
 
 共有画像は `node tools/make-og.mjs`（タイトル画面を 1200×630 で撮影 → `assets/og-image.png`）。
+
+<!-- scene-links:start -->
+## テスト用の場面リンク
+
+`?scene=<id>` を付けて開くと、テストモードでその場面から始まります（前の作業は済んだことになり、会話は飛ばします）。
+テストモードではセーブを書かず、消しもしません（画面の上に「テストモード」の札が出ます）。`?test` だけを付けると、最初からテストモードで遊べます。
+知らない id のときは最初から始まります。場面の一覧は `js/ext/test-scenes.js`、この表は `node tools/scene-links.mjs` で作り直します。
+
+
+### 段階の頭
+
+| 場面 | 公開版 | 手元 (npm run serve) |
+|---|---|---|
+| 1. 板塀の向こう | [stage:L1](https://hasshaku.autoarticles.net/?scene=stage:L1) | [local](http://localhost:8000/?scene=stage:L1) |
+| 2. 今夜を越す部屋 | [stage:L2](https://hasshaku.autoarticles.net/?scene=stage:L2) | [local](http://localhost:8000/?scene=stage:L2) |
+| 3. 朝になるまで、開けない | [stage:L3](https://hasshaku.autoarticles.net/?scene=stage:L3) | [local](http://localhost:8000/?scene=stage:L3) |
+| 4. 朝にも、まだいる | [stage:L4](https://hasshaku.autoarticles.net/?scene=stage:L4) | [local](http://localhost:8000/?scene=stage:L4) |
+| 5. 窓の外を、確かめない | [stage:L5](https://hasshaku.autoarticles.net/?scene=stage:L5) | [local](http://localhost:8000/?scene=stage:L5) |
+
+<!-- scene-links:end -->
