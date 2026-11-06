@@ -1,5 +1,5 @@
 {
-  "kit": "1b8c7db",
+  "kit": "1279a7c",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -90,7 +90,8 @@
     "plan-dress",
     "room-marks",
     "test-scenes",
-    "guidance"
+    "guidance",
+    "guide-aids"
   ],
   "css": "css/kit.css",
   "cssExtra": [
@@ -115,7 +116,8 @@
     "check-traps.mjs",
     "smoke.mjs",
     "review-shots.mjs",
-    "scene-links.mjs"
+    "scene-links.mjs",
+    "check-copy.mjs"
   ],
   "hashes": {
     "js/kit/game-core.js": "c29bd1a4b570",
@@ -190,7 +192,7 @@
     "schema/plan.schema.json": "1250d3cdb7c4",
     "schema/release-notes.schema.json": "4097758c9ec4",
     "schema/stages.schema.json": "1c343e9e4f9f",
-    "schema/tasks.schema.json": "3c4a3616267c",
+    "schema/tasks.schema.json": "bc2134649d64",
     "schema/terminals.schema.json": "d925c34908f1",
     "schema/things.schema.json": "8758a52e26d8",
     "tools/serve.js": "383ea74a3e8f",
@@ -204,7 +206,7 @@
     "tools/check-no-emoji.mjs": "e33672578f3a",
     "tools/check-wording.mjs": "fba8646626fe",
     "tools/check-escape.mjs": "e02864475501",
-    "tools/kit-features.cjs": "e733abe6afab",
+    "tools/kit-features.cjs": "74df7f6039f7",
     "js/kit/texture-library.js": "b28d6322f0be",
     "js/kit/item-kinds.js": "170ca47c72cb",
     "js/kit/item-models.js": "611975f171a7",
@@ -227,7 +229,7 @@
     "js\\kit\\text-contrast.js": "7ee42856ab86",
     "js\\kit\\monster-nav.js": "e8c9ff6e2b4c",
     "js\\kit\\monster-escape.js": "4a9e4dd0e05d",
-    "js\\kit\\game-core.js": "a76058db8351",
+    "js\\kit\\game-core.js": "71a855115fd4",
     "js\\kit\\item-kinds.js": "42b609ccaa9a",
     "js\\kit\\item-models.js": "611975f171a7",
     "js\\kit\\prop-geo.js": "b7d46c577d9a",
@@ -304,8 +306,10 @@
     "js\\kit\\plan-dress.js": "3bad408ffcdd",
     "js\\kit\\room-marks.js": "9a586aef4161",
     "js\\kit\\test-scenes.js": "6ff1c309a84c",
-    "js\\kit\\guidance.js": "51a2b689b2e7",
-    "tools/scene-links.mjs": "9af56179448d"
+    "js\\kit\\guidance.js": "744c14fa932f",
+    "tools/scene-links.mjs": "a7c96d3e129b",
+    "js\\kit\\guide-aids.js": "02b0f6be3aa9",
+    "tools/check-copy.mjs": "1fb89de372c0"
   },
   "textures": [
     "planks_worn",
