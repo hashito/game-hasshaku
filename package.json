@@ -20,6 +20,7 @@
     "og": "node tools/make-og.mjs",
     "data": "python3 tools/authoring/make-plan.py && python3 tools/authoring/make-data.py",
     "sync-kit": "node ../game-kit/tools/kit-sync.js .",
-    "check:traps": "node tools/check-traps.mjs ."
+    "check:traps": "node tools/check-traps.mjs .",
+    "check:copy": "node tools/check-copy.mjs . --strict"
   }
 }

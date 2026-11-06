@@ -2,8 +2,8 @@
   "id": "hasshaku",
   "title": "八尺様 ― 境の夜",
   "subtitle": "朝まで、誰の声にも返事をしてはいけない",
-  "version": "1.2.7",
-  "standard": "1.10",
+  "version": "1.3.0",
+  "standard": "1.14",
   "theme": "dark-industrial hasshaku",
   "preset": {
     "base": "dusk",
@@ -140,5 +140,6 @@
     "祖父": "assets/photos/ph-grandpa.webp",
     "Ｋさん": "assets/photos/ph-k.webp",
     "店のおばさん": "assets/photos/ph-lady.webp"
-  }
+  },
+  "copy": {"ok":["**[Space]・[E]**（タッチは「札を握る」）を押している間、目を伏せていられる。"]}
 }
