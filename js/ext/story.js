@@ -39,6 +39,7 @@ export function curseStep(curse, { grip, yaw, pitch }, dt) {
 export default function story(ext) {
   const kw = { node: 'IMA', path: null, t: 0, walking: false, talking: null };
   const st = { seen: false, genkan: false, zashiki: false, morning: false, gate: [0, 0, 0], deaths: 0, night: 0, dark: { NW: 0, NE: 0, SW: 0, SE: 0 }, warned: false, fired: [], ride: 0, curse: 0, startedAt: 0, played: 0, first: { road: false, po: false } };
+  const NO_GATE_KEY = '車止めに錠が下りている。鍵は、勝手口の柱に掛けてあると祖父が言っていた。';
   let ctx = null, V = null, T = null, snd = null, H = null, light = null, dying = false, gripKey = false, gripTouch = false, fear = null;
   // behind the title (the start button waits): wait for the textures, then compile the shaders of every stage's lights and upload
   // the textures, so pressing start does not freeze for seconds while the GPU driver links the programs (GPU perf, Issue #3)
@@ -180,7 +181,7 @@ export default function story(ext) {
     run: async () => { await morningTalk(); return true; },
     onDone: () => { if (V.parts.gateKey) V.parts.gateKey.visible = false; snd.knock({ n: 1, vol: 0.12, pan: 0 }); prune(); say('鍵を取った。村道を北へ、車止めまで。', 5); },
   });
-  ext.registerTask('T_GATE', { canStart: (c) => (c.state.inv.includes('I_GATEKEY') ? true : '車止めに錠が下りている。鍵は、勝手口の柱に掛けてあると祖父が言っていた。'), run: async (c, task) => {
+  ext.registerTask('T_GATE', { canStart: (c) => (c.state.inv.includes('I_GATEKEY') ? true : NO_GATE_KEY), run: async (c, task) => {
     if (!(await playMG(task))) return false;
     snd.knock({ n: 1, vol: 0.5, pan: 0 });
     if (V.parts.gateLock) V.parts.gateLock.visible = false;
@@ -555,6 +556,16 @@ export default function story(ext) {
   });
   ext.on('game:ready', (c) => {
     ctx = c; T = c.data.talk; snd = createSound(c); loadVoices();
+    // [E] at the gate without the key: that answer is what she needs to run for, so a chase hint ("走れ。") does not cut it off before it has been read
+    const chaseHints = new Set(Object.values((c.data.monsters && c.data.monsters.hints) || {}));
+    const uiSay = c.ui.say.bind(c.ui);
+    let noKeyUntil = 0;
+    c.ui.say = (html, sec, o) => {
+      const now = performance.now();
+      if (html === NO_GATE_KEY) noKeyUntil = now + 8000;
+      else if (now < noKeyUntil && chaseHints.has(html)) return undefined;
+      return uiSay(html, sec, o);
+    };
     c.hk = { state: st, sound: snd };
     V = dressVillage(c);
     fear = createFear(c);   // tremble, heartbeat, the dark edges (kit js/fear-fx.js, feedback 2026-11-01)
