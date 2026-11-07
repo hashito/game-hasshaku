@@ -1,5 +1,5 @@
 {
-  "kit": "e82a687",
+  "kit": "2246e71",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -91,7 +91,8 @@
     "room-marks",
     "test-scenes",
     "guidance",
-    "guide-aids"
+    "guide-aids",
+    "share-bar"
   ],
   "css": "css/kit.css",
   "cssExtra": [
@@ -178,14 +179,14 @@
     "js/kit/prop-batch.js": "abd03dfc3b79",
     "js/kit/env-props.js": "8173704023b6",
     "js/kit/text-contrast.js": "7fee755af57a",
-    "css/kit.css": "bf0f3d20a69a",
+    "css/kit.css": "6312c2b31cb2",
     "css/theme.css": "ebaca1cab248",
     "css/shell.css": "69c16bee0f93",
     "schema/chat-story.schema.json": "74021fbcd2f8",
     "schema/creation-brief.schema.json": "4a7c4e40cf74",
     "schema/docs.schema.json": "533be2902f17",
     "schema/endings.schema.json": "ec10b40dad12",
-    "schema/game.schema.json": "c9a9f8976d64",
+    "schema/game.schema.json": "08622f782238",
     "schema/items.schema.json": "faa2f5a7e22a",
     "schema/media-queue.schema.json": "2c674c764cb1",
     "schema/monsters.schema.json": "bc4bfb9d5cfe",
@@ -229,7 +230,7 @@
     "js\\kit\\text-contrast.js": "7ee42856ab86",
     "js\\kit\\monster-nav.js": "e8c9ff6e2b4c",
     "js\\kit\\monster-escape.js": "4a9e4dd0e05d",
-    "js\\kit\\game-core.js": "68bc069a278a",
+    "js\\kit\\game-core.js": "5e152f026ca5",
     "js\\kit\\item-kinds.js": "42b609ccaa9a",
     "js\\kit\\item-models.js": "611975f171a7",
     "js\\kit\\prop-geo.js": "b7d46c577d9a",
@@ -277,7 +278,7 @@
     "js\\kit\\env-props.js": "8173704023b6",
     "js\\kit\\texture-library.js": "b28d6322f0be",
     "css\\theme.css": "ebaca1cab248",
-    "css\\shell.css": "b10ba41363e3",
+    "css\\shell.css": "4dbb1b304fae",
     "js\\kit\\mg-pour.js": "b64263edba23",
     "js\\kit\\mg-frame.js": "5fb1eeec4d16",
     "js\\kit\\mg-turn-dials.js": "31e4b2907754",
@@ -285,7 +286,7 @@
     "tools/check-traps.mjs": "4390617a5164",
     "js\\kit\\step-sound.js": "73ec45c73c86",
     "js\\kit\\fear-fx.js": "086714c2913d",
-    "js\\kit\\ending-scene.js": "38960229a610",
+    "js\\kit\\ending-scene.js": "28554e72ed39",
     "js\\kit\\outer-walls.js": "753347b4f3a0",
     "js\\kit\\item-catalog.js": "60e4641e0e34",
     "js\\kit\\theme-make.js": "65354f9a717c",
@@ -300,7 +301,7 @@
     "js\\kit\\station-looks.js": "d975e9cad2f9",
     "js\\kit\\hide-looks.js": "a89ffad60f08",
     "js\\kit\\mg-sound.js": "716108fa36d3",
-    "schema/chat-game.schema.json": "2aba9a135db4",
+    "schema/chat-game.schema.json": "4463a3812a3d",
     "js\\kit\\approach-fx.js": "c7a3996b7bcd",
     "js\\kit\\body-fx.js": "930d95ad9beb",
     "js\\kit\\plan-dress.js": "3bad408ffcdd",
@@ -309,7 +310,8 @@
     "js\\kit\\guidance.js": "744c14fa932f",
     "tools/scene-links.mjs": "a7c96d3e129b",
     "js\\kit\\guide-aids.js": "02b0f6be3aa9",
-    "tools/check-copy.mjs": "1fb89de372c0"
+    "tools/check-copy.mjs": "1fb89de372c0",
+    "js\\kit\\share-bar.js": "1e518dc38c2d"
   },
   "textures": [
     "planks_worn",
