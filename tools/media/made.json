@@ -152,6 +152,15 @@
   "seed": 959454438,
   "prompt": "An old silver metal flashlight with a round lens lying on the dark wooden floor boards of an old Japanese farmhouse corridor at night, its beam lighting the boards, dim, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
  },
+ "ph-gate-key": {
+  "file": "assets/photos/ph-gate-key.webp",
+  "bytes": 130396,
+  "size": "1080x739",
+  "quality": 80,
+  "model": "flux1-dev-fp8 (ComfyUI, local)",
+  "seed": 598389693,
+  "prompt": "A heavy old black iron key with a round ring bow and a simple toothed bit, on a loop of worn cord with a small blank wooden tag, hanging from a nail on a dark weathered wooden post of an old Japanese farmhouse kitchen, the ring polished by years of hands, dim morning light from a door, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+ },
  "ph-gate-notice": {
   "file": "assets/photos/ph-gate-notice.webp",
   "bytes": 110294,
@@ -217,12 +226,12 @@
  },
  "ph-kakejiku": {
   "file": "assets/photos/ph-kakejiku.webp",
-  "bytes": 132848,
+  "bytes": 128544,
   "size": "739x1080",
   "quality": 80,
   "model": "flux1-dev-fp8 (ComfyUI, local)",
   "seed": 19459086,
-  "prompt": "A tokonoma alcove in an old Japanese tatami room in the evening, a long hanging scroll with one single bold abstract black ink brush stroke on cream paper, a small ceramic vase on the wooden floor of the alcove, dim warm light, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
+  "prompt": "A tokonoma alcove in an old Japanese tatami room in the evening, a long hanging scroll with deep indigo cloth mounting, thin gold bands and dark wooden roller ends, on its cream paper a simple sumi ink painting of a crescent moon over low hills with no writing, a dark wooden alcove post, dim warm light, no people, rural Japan in 2008, realistic photo, 35mm film snapshot, natural colours, no text, no letters, no writing, no signs, no logos, no labels"
  },
  "ph-kamado": {
   "file": "assets/photos/ph-kamado.webp",

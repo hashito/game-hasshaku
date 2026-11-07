@@ -60,12 +60,16 @@ export function createSound(ctx) {
     const wind = ac.createBufferSource(); wind.buffer = noiseBuf(ac, 4); wind.loop = true; const wf = ac.createBiquadFilter(); wf.type = 'lowpass'; wf.frequency.value = 380; const wg = ac.createGain(); wg.gain.value = 0.12; wind.connect(wf); wf.connect(wg); wg.connect(lp); wind.start();
     const ins = ac.createGain(); ins.gain.value = 0.0; ins.connect(lp);
     for (const [fr, rate] of [[4200, 31], [4650, 27], [3900, 36]]) { const o = ac.createOscillator(); o.frequency.value = fr; const am = ac.createGain(); am.gain.value = 0; const lfo = ac.createOscillator(); lfo.type = 'square'; lfo.frequency.value = rate; const lg = ac.createGain(); lg.gain.value = 0.012; lfo.connect(lg); lg.connect(am.gain); o.connect(am); am.connect(ins); o.start(); lfo.start(); }
-    S.bed = { g, lp, ins, wg };
+    // the van's engine (the ride): no music, only a low rumble of filtered noise and a faint 48 Hz hum, so the po, the knocks and the steps on the roof are what you hear
+    const eng = ac.createGain(); eng.gain.value = 0; eng.connect(lp);
+    const rum = ac.createBufferSource(); rum.buffer = noiseBuf(ac, 4); rum.loop = true; const rf = ac.createBiquadFilter(); rf.type = 'lowpass'; rf.frequency.value = 140; const rg = ac.createGain(); rg.gain.value = 0.55; rum.connect(rf); rf.connect(rg); rg.connect(eng); rum.start();
+    const hum = ac.createOscillator(); hum.frequency.value = 48; const hg = ac.createGain(); hg.gain.value = 0.06; hum.connect(hg); hg.connect(eng); hum.start();
+    S.bed = { g, lp, ins, wg, eng };
     return S.bed;
   }
   // recorded beds (Issue #1, ACE-Step loops in assets/audio/, listed in its manifest.json): one per stage, the night bed has an indoor
   // (muffled) twin and the two cross-fade with outdoor / indoor. Until they are decoded (or if they fail) the synthesized bed plays.
-  const BEDS = [['amb-dusk-village'], ['amb-night-insects', 'amb-night-indoor'], ['amb-night-insects', 'amb-night-indoor'], ['amb-dawn-fog'], ['amb-van']];
+  const BEDS = [['amb-dusk-village'], ['amb-night-insects', 'amb-night-indoor'], ['amb-night-insects', 'amb-night-indoor'], ['amb-dawn-fog'], []];   // L5 has no recorded bed: only the engine (feedback 2026-11-07: the van's music broke the mood)
   const BED_GAIN = 0.45;   // the beds sit under the voices, the po and the footsteps (they were too loud at 1)
   const loops = {}; let loopsAsked = false;
   function loadLoops() {
@@ -92,10 +96,18 @@ export function createSound(ctx) {
       b.g.gain.setTargetAtTime(0, t, 0.4);
       return;
     }
+    if (!want.length) for (const g of Object.values(loops)) g.gain.setTargetAtTime(0, t, 1.2);   // nothing recorded wanted: the last stage's bed must not stay on
     b.g.gain.setTargetAtTime(vol * BED_GAIN * (o.outdoor ? 0.9 : 0.22), t, 0.4);
     b.lp.frequency.setTargetAtTime(o.outdoor ? 9000 : 700, t, 0.4);
     b.ins.gain.setTargetAtTime(o.insects ?? 1, t, 1.5);
     b.wg.gain.setTargetAtTime(o.wind ?? 0.12, t, 1.5);
+    b.eng.gain.setTargetAtTime(o.engine ? 1 : 0, t, 0.6);
+  }
+  // the ending: the update stops with the play, so every bed is faded out here
+  function silence() {
+    const ac = A(); if (!ac) return; const t = ac.currentTime;
+    for (const g of Object.values(loops)) g.gain.setTargetAtTime(0, t, 0.8);
+    if (S.bed) S.bed.g.gain.setTargetAtTime(0, t, 0.8);
   }
   // the van's radio switching itself on (the ride, feedback 2026-11-01): crackling static that swells and cuts, the po buried in it
   function radio(o = {}) {
@@ -109,5 +121,5 @@ export function createSound(ctx) {
     src.start(t); lfo.start(t); src.stop(t + sec + 0.2); lfo.stop(t + sec + 0.2);
     setTimeout(() => po({ vol: vol * 1.4, pan: o.pan ?? -0.2 }), sec * 450);
   }
-  return { po, knock, scrape, salt, sting, radio, update };
+  return { po, knock, scrape, salt, sting, radio, update, silence };
 }

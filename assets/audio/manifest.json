@@ -19,11 +19,6 @@
   "loop": true,
   "use": "L4 朝霧の村（鳥が鳴かない）"
  },
- "amb-van": {
-  "file": "assets/audio/amb-van.mp3",
-  "loop": true,
-  "use": "L5 車内"
- },
  "music-title": {
   "file": "assets/audio/music-title.mp3",
   "loop": false,

@@ -21,8 +21,6 @@ export const AUDIO = [
   { id: 'amb-night-indoor', derive: 'amb-night-insects', sec: 45, lufs: -32, use: 'L2・L3 夜の虫と風（屋内でこもる）', muffle: true },
   { id: 'amb-dawn-fog', sec: 40, lufs: -30, use: 'L4 朝霧の村（鳥が鳴かない）',
     tags: `field recording, still foggy dawn in an empty mountain village, almost silent, faint low wind, distant dripping water, no birds, no insects, eerie quiet room tone, ambient drone, ${INST}` },
-  { id: 'amb-van', sec: 40, lufs: -24, use: 'L5 車内',
-    tags: `field recording inside an old van driving slowly on a narrow country road, low engine hum, tyre rumble, rhythmic bump over road joints, rattling interior, ambient, ${INST}` },
   { id: 'music-title', sec: 32, lufs: -22, loop: false, use: 'タイトル',
     tags: `dark ambient Japanese horror film score, slow, sparse shakuhachi breath, low taiko heartbeat, detuned koto plucks, deep drone, tense and quiet, minimal, ${INST}` },
 ];

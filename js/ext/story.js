@@ -28,6 +28,7 @@ export const SALT_START = { NW: 22, NE: 75, SW: 108, SE: 48 };   // when each pl
 export const SALT_RATE = 0.022;        // per second; 0.85 = the warning, 1.35 = the room's guard breaks (death)
 export const BOWLS = ['NW', 'NE', 'SW', 'SE'];
 export const BOWL_NAMES = { NW: '北西', NE: '北東', SW: '南西', SE: '南東' };
+const hhmm = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
 export function nightClock(t) { const m = 60 + Math.floor((clamp(t, 0, NIGHT_SEC) / NIGHT_SEC) * 360); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
 // in the van: looking at the side window raises the pull, holding the talisman lowers it (rates per second)
 export function curseStep(curse, { grip, yaw, pitch }, dt) {
@@ -36,7 +37,8 @@ export function curseStep(curse, { grip, yaw, pitch }, dt) {
 }
 
 export default function story(ext) {
-  const st = { seen: false, genkan: false, zashiki: false, gate: [0, 0, 0], deaths: 0, night: 0, dark: { NW: 0, NE: 0, SW: 0, SE: 0 }, warned: false, fired: [], ride: 0, curse: 0, startedAt: 0, played: 0, first: { road: false, po: false } };
+  const kw = { node: 'IMA', path: null, t: 0, walking: false, talking: null };
+  const st = { seen: false, genkan: false, zashiki: false, morning: false, gate: [0, 0, 0], deaths: 0, night: 0, dark: { NW: 0, NE: 0, SW: 0, SE: 0 }, warned: false, fired: [], ride: 0, curse: 0, startedAt: 0, played: 0, first: { road: false, po: false } };
   let ctx = null, V = null, T = null, snd = null, H = null, light = null, dying = false, gripKey = false, gripTouch = false, fear = null;
   // behind the title (the start button waits): wait for the textures, then compile the shaders of every stage's lights and upload
   // the textures, so pressing start does not freeze for seconds while the GPU driver links the programs (GPU perf, Issue #3)
@@ -91,10 +93,10 @@ export default function story(ext) {
     note: '怪異の姿、追われて捕まる場面、驚かせる表現があります（設定の「おだやか」で弱められます）。ネット怪談「八尺様」を題材にした創作です。',
   });
   ext.registerPersist('hasshaku', {
-    serialize: () => ({ seen: st.seen, genkan: st.genkan, zashiki: st.zashiki, gate: st.gate, deaths: st.deaths, played: st.played }),
-    restore: (j) => { Object.assign(st, { seen: false, genkan: false, zashiki: false, gate: [0, 0, 0], deaths: 0, played: 0 }, j || {}); resetStageLocal(); },
+    serialize: () => ({ seen: st.seen, genkan: st.genkan, zashiki: st.zashiki, morning: st.morning, gate: st.gate, deaths: st.deaths, played: st.played }),
+    restore: (j) => { Object.assign(st, { seen: false, genkan: false, zashiki: false, morning: false, gate: [0, 0, 0], deaths: 0, played: 0 }, j || {}); resetStageLocal(); },
   });
-  function resetStageLocal() { faceT = 0; darkT = 0; handsK = 0; if (hands) hands.material.opacity = 0; fear && fear.reset(); st.fakeClock = false; st.night = 0; st.dark = { NW: 0, NE: 0, SW: 0, SE: 0 }; st.warned = false; st.fired = []; st.ride = 0; st.curse = 0; }
+  function resetStageLocal() { faceT = 0; darkT = 0; handsK = 0; if (hands) hands.material.opacity = 0; fear && fear.reset(); st.fakeClock = false; st.fakeEndAt = 0; kw.path = null; kw.t = 0; st.night = 0; st.dark = { NW: 0, NE: 0, SW: 0, SE: 0 }; st.warned = false; st.fired = []; st.ride = 0; st.curse = 0; }
 
   // ---------------------------------------------------------------- conversations: the standard window (ctx.talk / ctx.choose, standard 1.7)
   const talk = (lines, o = {}) => ctx.talk(lines, o);
@@ -147,6 +149,7 @@ export default function story(ext) {
     const K = V && V.people.k, GPa = V && V.people.grandpa;
     if (GPa) { GPa.root.position.set(-4.9, 0, 16.5); GPa.root.rotation.y = Math.PI / 2; }   // he goes to the door himself
     if (genkan) { genkan.open(); snd.scrape({ vol: 0.3, pan: -0.3 }); lookAt = { ...G, t: 2.2 }; say(T.k_enter, 5); if (!ctx.qa) await wait(1.0); if (K) { K.root.position.set(-4.7, 0, 15.6); K.root.rotation.y = -Math.PI / 2; K.root.visible = true; } if (!ctx.qa) await wait(1.4); genkan.close(); snd.scrape({ vol: 0.3, pan: -0.3 }); }
+    lookAt = null;   // the glance is over: nothing turns the head while the player walks off (under ?qa there are no waits, so it used to run on after the talks)
     await talk(T.k_arrive.slice(3), { title: '玄関' });
     await talk(T.report_after, { title: '居間' });
     if (K) { K.root.position.set(-10.6, 0, 15.0); K.root.rotation.y = Math.PI / 2; }
@@ -170,13 +173,20 @@ export default function story(ext) {
       return true;
     },
   });
-  ext.registerTask('T_DAWN', { canStart: () => `時計はまだ ${nightClock(st.night)}。七時まで、戸は開けない。` });
-  ext.registerTask('T_GATE', { run: async (c, task) => {
+  ext.registerTask('T_DAWN', { canStart: () => `時計はまだ ${hhmm(shownMinutes())}。七時まで、戸は開けない。` });
+  // the key of the gate, on the post by the back door (feedback 2026-11-07). The map's pin and the guide come from this task; before the morning its station is not there (prune)
+  ext.registerTask('T_KEY', {
+    canStart: () => (lvl() === 3 ? true : '今は、まだ要らない。'),
+    run: async () => { await morningTalk(); return true; },
+    onDone: () => { if (V.parts.gateKey) V.parts.gateKey.visible = false; snd.knock({ n: 1, vol: 0.12, pan: 0 }); prune(); say('鍵を取った。村道を北へ、車止めまで。', 5); },
+  });
+  ext.registerTask('T_GATE', { canStart: (c) => (c.state.inv.includes('I_GATEKEY') ? true : '車止めに錠が下りている。鍵は、勝手口の柱に掛けてあると祖父が言っていた。'), run: async (c, task) => {
     if (!(await playMG(task))) return false;
     snd.knock({ n: 1, vol: 0.5, pan: 0 });
+    if (V.parts.gateLock) V.parts.gateLock.visible = false;
     await talk(T.gate_opened, { title: '農道の車止め' });
     return true;
-  }, onDone: () => { const d = ctx.world.doors.get('D_GATE'); d && d.open(); if (V.parts.gate) V.parts.gate.target = 1; snd.scrape({ vol: 0.45 }); ctx.audio && ctx.audio.noise && ctx.audio.noise('scrape', { gain: 0.6 }); say('重い木の門が、軋みながら左右に開いていく。', 4.5); } });   // feedback 2026-11-01: the gate was not seen to open (only the plan's door opened; the leaves waited for the next stage)
+  }, onDone: () => { const d = ctx.world.doors.get('D_GATE'); d && d.open(); if (V.parts.gate) V.parts.gate.target = 1; snd.scrape({ vol: 0.45 }); ctx.audio && ctx.audio.noise && ctx.audio.noise('scrape', { gain: 0.6 }); prune(); say('重い木の門が、軋みながら左右に開いていく。', 4.5); } });   // feedback 2026-11-01: the gate was not seen to open (only the plan's door opened; the leaves waited for the next stage)
   ext.registerTask('T_CAR', { run: async () => { await talk(T.boarded, { title: '迎えの車' }); return true; }, onDone: () => { if (V.parts.boarding) V.parts.boarding.visible = false; } });
   ext.registerTask('T_RIDE', { canStart: () => '村境まで、札を握って待つ。' });
 
@@ -222,6 +232,7 @@ export default function story(ext) {
   ext.registerScreen('ending', { keepSave: false, open: (c, e) => {
     const sec = Math.round(st.played), recs = ['N_LETTER', 'N_PHOTO', 'N_DIARY'].filter((d) => c.state.docsRead.includes(d)).length;
     if (fear) fear.reset();
+    snd.silence();
     showEndingScene(c, { photo: e.photo, kicker: e.kicker, title: e.title, text: e.text,
       stats: `5 / 5 段階 ・ 記録 ${recs} / 3 ・ やり直し ${st.deaths} 回 ・ ${Math.floor(sec / 60)}分${String(sec % 60).padStart(2, '0')}秒`,
       buttons: [{ label: 'タイトルに戻る', primary: true, fn: () => location.reload() }] });
@@ -244,10 +255,13 @@ export default function story(ext) {
     if (!baseLights) { baseLights = []; scene.traverse((o) => { if (o.isHemisphereLight || o.isDirectionalLight) baseLights.push([o, o.intensity]); }); }
     for (const [o, k] of baseLights) o.intensity = k * sky.light;
     const P = V.people;
-    P.grandpa.root.visible = i <= 1;
-    P.k.root.visible = i === 1;
+    // the morning (feedback 2026-11-07): the two of them are in the living room when the fusuma opens; Ｋさん then walks to the van with me (updateEscort)
+    P.grandpa.root.visible = i <= 1 || i === 3;
+    P.k.root.visible = i === 1 || i === 3;
+    if (i === 3) placeMorning();
+    else if (i <= 1) { P.grandpa.root.position.set(-6.4, 0, 16.6); P.grandpa.root.rotation.y = -Math.PI / 2; P.k.root.position.set(-10.6, 0, 15); P.k.root.rotation.y = Math.PI / 2; }
     P.lady.root.visible = i <= 1;
-    P.driver.root.visible = i >= 3;
+    P.driver.root.visible = i === 4;
     if (V.parts.boarding) V.parts.boarding.visible = i === 3 && !done('T_CAR');
     V.parts.van.visible = i >= 3; V.parts.vanLight.visible = i >= 3; V.parts.vanInside.visible = i === 4; for (const m of V.parts.vanShell) m.visible = i !== 4;   // in the van: the inside instead of the shell
     V.parts.shopLight.intensity = i === 2 ? 4 : 10;
@@ -261,6 +275,11 @@ export default function story(ext) {
     voiceMark.visible = i === 2;
     const g = ctx.world.doors.get('D_GATE'); if (g && done('T_GATE')) g.open();
     const katte = ctx.world.doors.get('D_KATTE'); if (katte && i >= 3) katte.open();   // at dawn the grandfather unbolts the back door
+    const kdoor = ctx.world.doors.get('D_DAIDOKORO'); if (kdoor && i >= 3) kdoor.open();
+    if (V.parts.gateKey) V.parts.gateKey.visible = !done('T_KEY');
+    if (V.parts.gateLock) V.parts.gateLock.visible = !done('T_GATE');
+    if (V.parts.roadBar) V.parts.roadBar.visible = i !== 4;
+    { const base = [18 * 60 + 40, 19 * 60 + 10, null, 7 * 60, 7 * 60 + 8][i]; if (base != null && V.parts.clock) V.parts.clock.set(base); }   // the clock's hands: the stage's time
     if (V.parts.gate) V.parts.gate.target = done('T_GATE') ? 1 : 0;
     prune();
     el('hk-night').hidden = i !== 2; el('hk-ride').hidden = i !== 4;
@@ -271,7 +290,7 @@ export default function story(ext) {
     for (const s of ctx.data.plan.stations) {
       const ts = ctx.data.tasks.filter((t) => t.station === s.id);
       const m = ctx.world.group.getObjectByName(`station:${s.id}`); if (!m) continue;
-      const idx = ctx.world.interactables.indexOf(m), over = ts.length && ts.every((t) => done(t.id));
+      const idx = ctx.world.interactables.indexOf(m), over = (ts.length && ts.every((t) => done(t.id))) || (s.id === 'S_KEY' && lvl() !== 3);
       if (over && idx >= 0) ctx.world.interactables.splice(idx, 1); else if (!over && idx < 0) ctx.world.interactables.push(m);
     }
   }
@@ -330,6 +349,12 @@ export default function story(ext) {
 
   // ---------------------------------------------------------------- L3: the night
   const nightMarks = {}; let voiceMark = null;
+  // what the room's clock claims (the HUD and the hands of the wall clock read the same): the false seven, then back to 6:58 and on to the real seven
+  function shownMinutes() {
+    if (st.fakeClock) return 7 * 60;
+    if (st.fakeEndAt) return 6 * 60 + 58 + clamp((st.night - st.fakeEndAt) / Math.max(1, NIGHT_SEC - st.fakeEndAt), 0, 1) * 2;
+    return 60 + (clamp(st.night, 0, NIGHT_SEC) / NIGHT_SEC) * 360;
+  }
   function updateNight(dt) {
     if (lvl() !== 2 || dying) return;
     st.night += dt;
@@ -340,7 +365,7 @@ export default function story(ext) {
         if (fx === 'knock') { snd.knock({ pan: 0.2 }); shake(1.6); }
         if (fx === 'knockFinal') { snd.knock({ n: 5, vol: 0.9, pan: 0.1 }); snd.sting(); shake(3.5); fear && fear.kick(0.9); }
         if (fx === 'fakeDawn') { st.fakeClock = true; snd.knock({ n: 2, vol: 0.3 }); }   // the HUD clock shows 07:00 until fakeEnd
-        if (fx === 'fakeEnd') { st.fakeClock = false; snd.po({ vol: 0.7, pan: 0.1 }); snd.sting(); shake(2.5); fear && fear.kick(0.8); }
+        if (fx === 'fakeEnd') { st.fakeClock = false; st.fakeEndAt = st.night; snd.po({ vol: 0.7, pan: 0.1 }); snd.sting(); shake(2.5); fear && fear.kick(0.8); }
         if (fx === 'po') { snd.po({ vol: 0.5, pan: -0.2 }); shadow(7); flashPhoto('assets/photos/ph-window-shadow.webp', '', 4); }
       }
     }
@@ -357,10 +382,10 @@ export default function story(ext) {
     if (worst > 0.85 && !st.warned) { st.warned = true; snd.po({ vol: 0.4, pan: 0 }); ctx.ui.toast(`塩が黒くなっている。黒ずんだ皿に近づいて、${ctx.isTouch ? '皿をタップして' : '[E] で'}替えよう。`); flashPhoto('assets/photos/salt-scene.webp', '', 3); }
     if (worst >= 1.35) return ctx.die('salt');
     // the HUD: the clock and the four plates
-    const c = el('hk-night-clock'), shown = `午前 ${st.fakeClock ? '07:00' : nightClock(st.night)}`; if (c.textContent !== shown) c.textContent = shown;
+    const c = el('hk-night-clock'), shown = `午前 ${hhmm(shownMinutes())}`; if (c.textContent !== shown) c.textContent = shown;
     for (const k of BOWLS) { const b = el(`hk-pip-${k}`); if (b.dataset) b.dataset.state = st.dark[k] > 0.9 ? 'critical' : st.dark[k] > 0.35 ? 'tainted' : 'ok'; }
     el('hk-night-help').textContent = worst > 0.6 ? `黒くなった皿に近づいて、${ctx.isTouch ? 'タップで' : '[E] で'}塩を替える` : '誰の声でも、七時までは戸を開けない';
-    if (V.parts.clockHand) V.parts.clockHand.rotation.z = -(st.night / NIGHT_SEC) * Math.PI;
+    if (V.parts.clock) V.parts.clock.set(shownMinutes());
     if (st.night >= NIGHT_SEC && !done('T_DAWN') && !st.dawning) {
       st.dawning = true;
       (async () => { snd.knock({ n: 2, vol: 0.3 }); await talk(T.dawn, { title: '午前七時' }); st.dawning = false; ctx.completeTask('T_DAWN'); })();
@@ -377,6 +402,66 @@ export default function story(ext) {
     w.mat.opacity = Math.min(0.55, shadowT * 0.3 + (st.zashikiShadow > 0 ? 0.3 : 0)) * (0.7 + 0.3 * Math.sin(t * 2.3) ** 2);
     if (st.zashikiShadow > 0) st.zashikiShadow -= dt;
     if (V.parts.pendulum) V.parts.pendulum.rotation.z = Math.sin(t * 2.4) * 0.18;
+  }
+
+  // ---------------------------------------------------------------- L4: the morning in the living room, and Ｋさん walking with me to the van
+  // She keeps a few metres from me along a small graph of the paths through the house and the village, catches up off screen when I have run ahead, and never blocks anything
+  const ESC_N = { ZASH: [-8, 8.5, 'ZASHIKI'], IMA: [-8, 13.5, 'IMA'], DOOR: [-12, 15, 'IMA'], GEN: [-5, 15.6, 'IMA'], KIT: [-14, 16.6, 'DAIDOKORO'], NAN: [-16, 9, 'NANDO'], KAT: [-19, 16.6, 'DAIDOKORO'],
+    BACK: [-23, 16.6, 'O_BACK'], BACKN: [-23, 0.5, 'O_BACK'], NORTH: [-12, 0.5, 'O_NORTH'], JUNC: [0.5, 0.5, 'O_FRONT'], FRONT: [-2, 15.6, 'O_FRONT'], GAF: [-3, 22, 'O_FRONT'], GA: [-15, 22, 'O_GARDEN'], GAB: [-23, 21, 'O_GARDEN'],
+    FI: [9, 12, 'O_FIELD'], ROADM: [0.5, -13, 'O_ROAD'], SF: [-8, -13.5, 'O_SHOPFRONT'], SR: [9, -12, 'O_SHRINE'], GATEB: [1.5, -22.5, 'O_ROAD'], GATEF: [1.5, -25.5, 'O_GATE'], CAR: [3.2, -31, 'O_GATE'] };
+  const ESC_E = [['ZASH', 'IMA'], ['IMA', 'DOOR'], ['IMA', 'GEN'], ['GEN', 'FRONT', 'genkan'], ['DOOR', 'KIT'], ['KIT', 'NAN'], ['KIT', 'KAT'], ['KAT', 'BACK'], ['BACK', 'BACKN'], ['BACK', 'GAB'], ['GAB', 'GA'], ['GA', 'GAF'], ['GAF', 'FRONT'],
+    ['BACKN', 'NORTH'], ['NORTH', 'JUNC'], ['JUNC', 'FRONT'], ['FRONT', 'FI'], ['JUNC', 'ROADM'], ['ROADM', 'SF'], ['ROADM', 'SR'], ['ROADM', 'GATEB'], ['GATEB', 'GATEF', 'gate'], ['GATEF', 'CAR']];
+  function placeMorning() {
+    const P = V.people, seen = st.morning;
+    P.k.root.position.set(-9.6, 0, 12.8); P.k.root.rotation.y = Math.PI * 0.8; P.k.set('idle');
+    kw.node = 'IMA'; kw.path = null; kw.walking = false;
+    if (seen) { P.grandpa.root.position.set(-6.4, 0, 16.6); P.grandpa.root.rotation.y = Math.atan2(-1.6, -5.6); }   // he stays, watching that door
+    else { P.grandpa.root.position.set(-6.4, 0, 12.8); P.grandpa.root.rotation.y = -Math.PI * 0.8; }
+  }
+  async function morningTalk() {
+    if (st.morning) return;
+    if (kw.talking) return kw.talking;
+    kw.talking = (async () => {
+      await talk(T.morning, { title: '居間' });
+      st.morning = true; kw.talking = null; placeMorning();
+      say('鍵は、台所の勝手口の柱。走ると足音で気づかれる。見つかったら立ち止まらず、生垣の陰か家の中へ。', 7);
+    })();
+    return kw.talking;
+  }
+  function escRoute(from, to) {
+    const open = (g) => (g === 'genkan' ? (() => { const d = ctx.world.doors.get('D_GENKAN'); return d && d.isOpen; })() : g === 'gate' ? done('T_GATE') : true);
+    const prev = { [from]: null }, q = [from];
+    while (q.length) { const n = q.shift(); if (n === to) break; for (const [a, b, g] of ESC_E) { const m = a === n ? b : b === n ? a : null; if (m && !(m in prev) && open(g)) { prev[m] = n; q.push(m); } } }
+    if (!(to in prev)) return null;
+    const path = []; for (let n = to; n && n !== from; n = prev[n]) path.unshift(n); return path;
+  }
+  function updateEscort(dt, c) {
+    if (lvl() !== 3 || !st.morning || !V) return;
+    const K = V.people.k, R = K.root, p = c.camera.position, d = Math.hypot(R.position.x - p.x, R.position.z - p.z), room = c.state.room;
+    const line = (i, cond) => { const id = `e${i}`; if (cond && !st.fired.includes(id)) { st.fired.push(id); const L = T.escort[i]; voice(L[1], L[2], 4.5); } };
+    line(0, room !== 'IMA' && d < 9);
+    line(1, d > 13);
+    line(2, room === 'O_ROAD' && p.z < -17 && !done('T_GATE'));
+    if ((kw.t -= dt) <= 0) {
+      kw.t = 0.5;
+      const near = (ok) => { let best = null, bd = 1e9; for (const [id, n] of Object.entries(ESC_N)) if (ok(n)) { const v = Math.hypot(n[0] - p.x, n[1] - p.z); if (v < bd) { bd = v; best = id; } } return best; };
+      const goal = near((n) => n[2] === room) || near(() => true);
+      kw.path = goal ? escRoute(kw.node, goal) : null;
+      // far behind and out of sight: she has caught up by another way
+      if (d > 16 && kw.path && kw.path.length) {
+        const dir = new THREE.Vector3(); c.camera.getWorldDirection(dir);
+        const unseen = (x, z) => { const dx = x - p.x, dz = z - p.z, l = Math.hypot(dx, dz) || 1; return (dir.x * dx + dir.z * dz) / l < 0.2; };
+        if (unseen(R.position.x, R.position.z)) { let jump = null; for (const id of kw.path) { const n = ESC_N[id]; if (Math.hypot(n[0] - p.x, n[1] - p.z) > 5 && unseen(n[0], n[1])) jump = id; } if (jump) { const n = ESC_N[jump]; R.position.set(n[0], 0, n[1]); kw.node = jump; kw.path = escRoute(jump, goal); } }
+      }
+    }
+    const next = kw.path && kw.path[0], tx = d < 2.6 ? null : next ? ESC_N[next][0] : (ESC_N[kw.node] && ESC_N[kw.node][2] === room ? p.x : null), tz = tx == null ? null : next ? ESC_N[next][1] : p.z;
+    const walk = tx != null;
+    if (walk !== kw.walking) { kw.walking = walk; K.set(walk ? 'walk' : 'idle'); }
+    if (!walk) return;
+    const dx = tx - R.position.x, dz = tz - R.position.z, l = Math.hypot(dx, dz), step = (d > 7 ? 4.4 : 2.7) * dt;
+    if (l <= step) { R.position.x = tx; R.position.z = tz; if (next) { kw.node = next; kw.path.shift(); } return; }
+    R.position.x += (dx / l) * step; R.position.z += (dz / l) * step;
+    const want = Math.atan2(dx, dz); R.rotation.y += Math.atan2(Math.sin(want - R.rotation.y), Math.cos(want - R.rotation.y)) * Math.min(1, dt * 8);
   }
 
   // ---------------------------------------------------------------- L5: the van to the border
@@ -502,7 +587,7 @@ export default function story(ext) {
     c.hudStressHooks && c.hudStressHooks.push((onOff) => { el('hk-night').hidden = !onOff; });
     c.warmImages = [...(c.warmImages || []), 'assets/photos/face.webp', 'assets/photos/salt-scene.webp', 'assets/photos/encounter.webp'];
     // tests (window.__gf when ?qa / ?debug): jump the night or the ride, read the state
-    if (window.__gf || c.qa || c.debug) window.__hk = { st, nightClock, applyStage, skipNight: () => { st.night = NIGHT_SEC - 0.1; }, skipRide: () => { st.ride = RIDE_SEC - 0.1; }, ride: () => ({ ride: st.ride, curse: st.curse }), H: () => H };
+    if (window.__gf || c.qa || c.debug) window.__hk = { st, nightClock, applyStage, skipNight: () => { st.night = NIGHT_SEC - 0.1; }, skipRide: () => { st.ride = RIDE_SEC - 0.1; }, ride: () => ({ ride: st.ride, curse: st.curse }), H: () => H, V: () => V, kw };
   });
   function toggleLight(on) { if (!light) return; light.userData.auto = false; light.visible = on ?? !light.visible; ctx.ui.toast(light.visible ? '懐中電灯をつけた。' : '懐中電灯を消した。'); }
   ext.on('input:key', (k) => {
@@ -524,7 +609,7 @@ export default function story(ext) {
     if (light) light.visible = i >= 1 && i !== 4;
     if (i === 1) setTimeout(() => say(T.hints.items_first, 7), 1500);
     if (i === 2) { resetStageLocal(); setTimeout(() => say(T.night_start, 6), 800); }
-    if (i === 3) setTimeout(() => say('走ると、足音で気づかれる。見つかったら立ち止まらず、生垣の陰か家の中へ。', 7), 900);
+    if (i === 3) setTimeout(() => say('襖が開いた。居間へ出よう。', 5), 900);
     if (i === 4) { resetStageLocal(); ctx.fp.yaw = 0; ctx.fp.pitch = -0.4; setTimeout(() => say('札を握っていれば、目を伏せていられる。窓は見ない。', 6), 600); }   // the ride starts looking down at the hands, not at the window
   });
   ext.on('door:open', ({ id }) => {
@@ -532,6 +617,7 @@ export default function story(ext) {
   });
   ext.on('player:room', ({ to }) => {
     if (to === 'ZASHIKI' && lvl() === 1 && !st.zashiki) { st.zashiki = true; snd.scrape({ vol: 0.3, pan: -0.4 }); st.zashikiShadow = 4; say('北の座敷だけ、空気がひどく冷たい。窓の外で、靴を擦る音が止まった。', 5.5); }
+    if (to === 'IMA' && lvl() === 3) morningTalk();
     if (to === 'O_ROAD' && lvl() === 0 && !st.first.road) { st.first.road = true; setTimeout(() => snd.po({ vol: 0.12, pan: 0.9 }), 1500); }
   });
   ext.on('doc:read', ({ id }) => {
@@ -564,7 +650,6 @@ export default function story(ext) {
     updateHouseFx(dt, t);
     if (light && light.visible) { light.position.copy(c.camera.position); const dir = new THREE.Vector3(); c.camera.getWorldDirection(dir); light.target.position.copy(c.camera.position).addScaledVector(dir, 6); }
     if (V.parts.gateDials) V.parts.gateDials.forEach((d, i) => { const want = -(st.gate[i] || 0) * Math.PI / 2; d.rotation.z += (want - d.rotation.z) * Math.min(1, dt * 8); });
-    if (V.parts.boardPad && V.parts.boarding.visible) V.parts.boardPad.material.opacity = 0.28 + 0.2 * (0.5 + 0.5 * Math.sin(t * 3));
     if (V.parts.gate) { const G = V.parts.gate; G.open += ((G.target || 0) - G.open) * Math.min(1, dt * 2); G.left.rotation.y = -G.open * 1.6; G.right.rotation.y = G.open * 1.6; }
     if (!active) { if (lvl() === 4 && !dying && c.state.started && !c.wm.isOpen) { /* keep the seat even when the pointer is free */ } return; }
     st.played += dt;
@@ -575,9 +660,10 @@ export default function story(ext) {
     if (lookAt) { turnTo(lookAt.x, lookAt.y, lookAt.z, Math.min(1, dt * 4)); if ((lookAt.t -= dt) <= 0) lookAt = null; }
     updateNight(qdt);
     updateRide(qdt);
+    updateEscort(dt, c);
     updateFear(dt);
     const room = c.data.plan.rooms.find((r) => r.id === c.state.room);
     if (V.prints) V.prints.visible = lvl() >= 3;   // W13: the footprints are there in the morning
-    snd.update(dt, { level: lvl() === 4 && !st.ride ? 3 : lvl(), outdoor: !room || room.kind === 'outdoor' || lvl() === 4, insects: lvl() === 3 || lvl() === 4 ? 0.3 : 1, wind: lvl() === 2 ? 0.2 : 0.12 });
+    snd.update(dt, { level: lvl() === 4 && !st.ride ? 3 : lvl(), outdoor: !room || room.kind === 'outdoor' || lvl() === 4, insects: lvl() === 4 ? 0 : lvl() === 3 ? 0.3 : 1, wind: lvl() === 2 ? 0.2 : lvl() === 4 ? 0.04 : 0.12, engine: lvl() === 4 && !done('T_RIDE') });
   } });
 }

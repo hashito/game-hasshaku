@@ -93,7 +93,7 @@ try {
   await retry(); await frames(4);
   expect((await G('g.prog.index')) === 3, 'try again from the start of the morning');
   // ---- L5: the van
-  await toStage(['T_DAWN', 'T_GATE', 'T_CAR']); await closeUi(); await sleep(600);
+  await toStage(['T_DAWN', 'T_KEY', 'T_GATE', 'T_CAR']); await closeUi(); await sleep(600);
   expect((await G('g.prog.index')) === 4, 'in the van (L5)');
   await shot('06_van');
   for (let i = 0; i < 160 && !(await deathText()); i++) { await run('g.fp.yaw = 1.3; g.fp.pitch = 0;'); await sleep(250); }
@@ -109,7 +109,7 @@ try {
   // ---- the other ending: all three records read
   await start();
   await run(`g.state.docsRead.push('N_LETTER', 'N_PHOTO', 'N_DIARY');`);
-  await toStage([...L3, 'T_DAWN', 'T_GATE', 'T_CAR']); await closeUi(); await sleep(600);
+  await toStage([...L3, 'T_DAWN', 'T_KEY', 'T_GATE', 'T_CAR']); await closeUi(); await sleep(600);
   await p.key('Space', 'down'); await run('hk.skipRide();');
   await p.waitFor("document.querySelector('.hk-ending')", 20000).catch(() => {});
   await p.key('Space', 'up');

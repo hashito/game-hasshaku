@@ -173,36 +173,6 @@
   "who": "Ｋさん",
   "preset": "wall"
  },
- "v-dawn-2": {
-  "key": "dawn",
-  "index": 2,
-  "who": "祖父",
-  "preset": null
- },
- "v-dawn-3": {
-  "key": "dawn",
-  "index": 3,
-  "who": "Ｋさん",
-  "preset": null
- },
- "v-dawn-4": {
-  "key": "dawn",
-  "index": 4,
-  "who": "Ｋさん",
-  "preset": null
- },
- "v-dawn-5": {
-  "key": "dawn",
-  "index": 5,
-  "who": "Ｋさん",
-  "preset": null
- },
- "v-dawn-6": {
-  "key": "dawn",
-  "index": 6,
-  "who": "祖父",
-  "preset": null
- },
  "v-gate-opened-1": {
   "key": "gate_opened",
   "index": 1,
@@ -254,6 +224,60 @@
  "v-ride-7": {
   "key": "ride",
   "index": 7,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-morning-1": {
+  "key": "morning",
+  "index": 1,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-morning-2": {
+  "key": "morning",
+  "index": 2,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-morning-3": {
+  "key": "morning",
+  "index": 3,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-morning-4": {
+  "key": "morning",
+  "index": 4,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-morning-5": {
+  "key": "morning",
+  "index": 5,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-morning-6": {
+  "key": "morning",
+  "index": 6,
+  "who": "祖父",
+  "preset": null
+ },
+ "v-escort-0": {
+  "key": "escort",
+  "index": 0,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-escort-1": {
+  "key": "escort",
+  "index": 1,
+  "who": "Ｋさん",
+  "preset": null
+ },
+ "v-escort-2": {
+  "key": "escort",
+  "index": 2,
   "who": "Ｋさん",
   "preset": null
  },

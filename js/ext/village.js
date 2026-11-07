@@ -147,7 +147,11 @@ export function dressVillage(ctx) {
 
   // the outer edge of the map: a low old stone wall along every edge that leads nowhere (Issue #4: make the border plain to see), the cedars
   // behind it; the empty houses' board fences take the east of the field and the south of the back garden
-  for (const run of edgeRuns.filter((e) => !e.shared && !(e.room === 'O_FIELD' && e.edge === 'e') && !(e.room === 'O_GARDEN' && e.edge === 's'))) {
+  // the far road passes through the north edge of the gate yard (feedback 2026-11-07: the van jumped the wall): that wall stops at the road's two rails
+  const roadGap = [-3.3, 4.3];
+  const outerRuns = edgeRuns.filter((e) => !e.shared && !(e.room === 'O_FIELD' && e.edge === 'e') && !(e.room === 'O_GARDEN' && e.edge === 's'))
+    .flatMap((e) => (e.room === 'O_GATE' && e.edge === 'n' ? [{ ...e, x1: roadGap[0] }, { ...e, x0: roadGap[1] }] : [e]));
+  for (const run of outerRuns) {
     const len = Math.hypot(run.x1 - run.x0, run.z1 - run.z0), alongX = run.x1 - run.x0 > run.z1 - run.z0;
     const out = { n: [0, -1], s: [0, 1], w: [-1, 0], e: [1, 0] }[run.edge], cx = (run.x0 + run.x1) / 2 + out[0] * 0.3, cz = (run.z0 + run.z1) / 2 + out[1] * 0.3;
     box(alongX ? len : 0.6, 0.85, alongX ? 0.6 : len, M.stone, cx, 0.42, cz);
@@ -298,11 +302,35 @@ export function dressVillage(ctx) {
   api.parts.plates = plates;
   { const g = new THREE.Group(); box(1.0, 0.12, 2.0, M.futon, 0, 0.06, 0, g); box(1.0, 0.06, 1.3, M.futonCover, 0, 0.15, 0.3, g); box(0.5, 0.1, 0.28, M.paper, 0, 0.16, -0.75, g); at(g, -8.6, 0, 6.4); }
   {
-    const g = new THREE.Group(); box(0.36, 0.6, 0.12, M.darkWood, 0, 0, 0, g);
-    const face = new THREE.Mesh(new THREE.CircleGeometry(0.14, 24), new THREE.MeshStandardMaterial({ map: canvasTexture(['七'], { w: 256, h: 256, bg: '#e7dfc8', fg: '#8a2b20', size: 120 }) })); face.position.set(0, 0.12, 0.065); g.add(face);
-    const hand = box(0.012, 0.1, 0.01, M.beam, 0, 0.16, 0.07, g); hand.geometry.translate(0, 0.04, 0);
-    api.parts.clockHand = hand;
-    const pend = box(0.03, 0.18, 0.01, M.brass, 0, -0.15, 0.07, g); api.parts.pendulum = pend;
+    // the old wall clock (feedback 2026-11-07: "a real clock"): a dial with the hours, an hour hand and a minute hand, the pendulum behind its glass.
+    // story.js drives the hands with api.parts.clock.set(minutes): the time the room's clock claims, the false seven and the 6:58 included
+    const g = new THREE.Group();
+    box(0.5, 1.02, 0.12, M.darkWood, 0, -0.2, 0, g);                 // the case
+    box(0.56, 0.05, 0.15, M.beam, 0, 0.33, 0, g); box(0.56, 0.05, 0.15, M.beam, 0, -0.73, 0, g);
+    box(0.54, 0.03, 0.14, M.beam, 0, -0.17, 0, g);                   // the rail between the dial and the pendulum
+    const dc = document.createElement('canvas'); dc.width = dc.height = 512; const d2 = dc.getContext('2d');
+    d2.fillStyle = '#e9e1ca'; d2.fillRect(0, 0, 512, 512);
+    d2.strokeStyle = '#2a221a'; d2.lineWidth = 10; d2.beginPath(); d2.arc(256, 256, 244, 0, Math.PI * 2); d2.stroke();
+    d2.lineWidth = 3; d2.beginPath(); d2.arc(256, 256, 226, 0, Math.PI * 2); d2.stroke();
+    for (let i = 0; i < 60; i++) { const a = (i / 60) * Math.PI * 2, r0 = i % 5 ? 216 : 206; d2.lineWidth = i % 5 ? 3 : 8; d2.beginPath(); d2.moveTo(256 + Math.sin(a) * r0, 256 - Math.cos(a) * r0); d2.lineTo(256 + Math.sin(a) * 226, 256 - Math.cos(a) * 226); d2.stroke(); }
+    d2.font = '700 54px "Times New Roman",Georgia,serif'; d2.textAlign = 'center'; d2.textBaseline = 'middle';
+    ['XII', 'I', 'II', 'III', 'IIII', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'].forEach((n, i) => { const a = (i / 12) * Math.PI * 2; d2.fillStyle = i === 7 ? '#a3261b' : '#0d0a07'; d2.fillText(n, 256 + Math.sin(a) * 160, 256 - Math.cos(a) * 160); });
+    { const a = (7 / 12) * Math.PI * 2; d2.fillStyle = '#a3261b'; d2.beginPath(); d2.arc(256 + Math.sin(a) * 216, 256 - Math.cos(a) * 216, 15, 0, Math.PI * 2); d2.fill(); }   // the red mark at seven
+    const dt = new THREE.CanvasTexture(dc); dt.colorSpace = THREE.SRGBColorSpace; dt.anisotropy = 4;
+    const R = 0.235, face = new THREE.Mesh(new THREE.CircleGeometry(R, 40), new THREE.MeshBasicMaterial({ map: dt, color: 0xc8c0a8 })); face.position.set(0, 0.08, 0.066); g.add(face);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.012, 8, 40), M.brass); ring.position.set(0, 0.08, 0.068); g.add(ring);
+    const hand = (len, wide, z) => { const h = new THREE.Group(); h.position.set(0, 0.08, z); g.add(h); const m = new THREE.Mesh(new THREE.BoxGeometry(wide, len, 0.006), mat(0x14100c, { roughness: 0.5 })); m.position.y = len / 2 - 0.018; h.add(m); return h; };
+    const hourHand = hand(0.125, 0.018, 0.074), minHand = hand(0.19, 0.011, 0.08);
+    cyl(0.012, 0.012, 0.012, M.brass, 0, 0.08, 0.084, 10, g).rotation.x = Math.PI / 2;
+    api.parts.clock = { set: (m) => { minHand.rotation.z = -((m % 60) / 60) * Math.PI * 2; hourHand.rotation.z = -(((m / 60) % 12) / 12) * Math.PI * 2; } };
+    api.parts.clock.set(18 * 60 + 40);
+    // the pendulum in its glass-fronted lower case: pivot at the top
+    box(0.38, 0.46, 0.012, mat(0x17120d), 0, -0.45, 0.06, g);
+    const pend = new THREE.Group(); pend.position.set(0, -0.2, 0.072); g.add(pend);
+    box(0.012, 0.34, 0.006, M.brass, 0, -0.17, 0, pend);
+    { const disc = new THREE.Mesh(new THREE.CircleGeometry(0.052, 20), M.brass); disc.position.set(0, -0.36, 0.004); pend.add(disc); }
+    api.parts.pendulum = pend;
+    { const gl = new THREE.Mesh(new THREE.PlaneGeometry(0.38, 0.46), new THREE.MeshStandardMaterial({ color: 0x28302e, transparent: true, opacity: 0.12, roughness: 0.6 })); gl.position.set(0, -0.45, 0.082); g.add(gl); }
     at(g, -4.12, 2.0, 6.6, -Math.PI / 2);
   }
   {
@@ -332,7 +360,40 @@ export function dressVillage(ctx) {
     for (const [x, z] of [[-9.5, 16.4], [-7.3, 16.4], [-8.4, 17.4]]) box(0.55, 0.08, 0.55, M.cloth, x, 0.04, z); }
   { const g = new THREE.Group(); box(1.1, 1.6, 0.6, M.beam, 0, 0.8, 0, g); box(1.0, 0.04, 0.5, M.brass, 0, 1.0, 0.03, g); box(0.12, 0.3, 0.06, M.darkWood, -0.15, 1.2, 0.0, g); box(0.12, 0.3, 0.06, M.darkWood, 0.15, 1.2, 0.0, g); cyl(0.03, 0.03, 0.12, M.paper, -0.35, 1.08, 0.1, 6, g); cyl(0.03, 0.03, 0.12, M.paper, 0.35, 1.08, 0.1, 6, g); at(g, -11.3, 0, 18.65, Math.PI); addCol(-11.9, 18.3, -10.7, 19, 0, 1.7); }
   { box(0.5, 0.4, 0.4, M.beam, -10.3, 0.2, 18.5); addCol(-10.55, 18.3, -10.05, 18.7, 0, 0.45, { low: true }); }   // the low stand where Ｋさん left the talismans
-  { const s = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 1.4), new THREE.MeshStandardMaterial({ map: canvasTexture(['静'], { w: 180, h: 512, bg: '#ece4cc', fg: '#262018', vertical: true, size: 150, border: '#5c4632' }) })); s.position.set(-9.6, 1.6, 18.9); s.rotation.y = Math.PI; G.add(s); box(1.6, 0.12, 0.6, M.darkWood, -9.6, 0.06, 18.65); }
+  // the tokonoma and its hanging scroll (feedback 2026-11-07, dot art): the alcove's post, lintel and raised floor, the scroll with its rods, cloth mount and gold
+  // bands; the picture is an invented moon over hills in sumi with one character. The dots are drawn on a coarse grid and kept sharp (NearestFilter)
+  { const TX = -8.0, TZ = 18.93, A = new THREE.Group(); G.add(A);
+    box(1.7, 0.14, 0.62, M.darkWood, TX, 0.07, TZ - 0.31, A); box(1.6, 0.01, 0.56, mat(0x8f8a63), TX, 0.145, TZ - 0.31, A);   // the raised floor
+    box(1.62, 2.1, 0.02, M.paper, TX, 1.25, TZ, A);                                                                         // the back wall
+    box(0.1, 2.5, 0.1, M.darkWood, TX - 0.86, 1.25, TZ - 0.58, A); box(0.1, 2.5, 0.1, M.darkWood, TX + 0.86, 1.25, TZ - 0.58, A); // the posts
+    box(1.82, 0.12, 0.1, M.darkWood, TX, 2.3, TZ - 0.58, A);                                                                // the lintel
+    addCol(TX - 0.92, TZ - 0.64, TX + 0.92, TZ, 0, 0.4, { low: true });
+    const c = document.createElement('canvas'); c.width = 72; c.height = 192; const x = c.getContext('2d');
+    const fill = (col, a, b, w, h) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
+    fill('#2e3a44', 0, 0, 72, 192);                                  // the deep indigo cloth
+    for (let i = 0; i < 72; i += 4) for (let j = (i % 8 ? 2 : 0); j < 192; j += 4) fill('#36434e', i, j, 1, 1);   // its woven dots
+    fill('#7a6a48', 8, 28, 56, 138);                                  // the ochre cloth
+    for (let i = 8; i < 64; i += 4) for (let j = 28 + (i % 8 ? 2 : 0); j < 166; j += 4) fill('#85754f', i, j, 1, 1);
+    fill('#c8a850', 8, 28, 56, 3); fill('#c8a850', 8, 163, 56, 3);    // the gold bands
+    fill('#e9e1ca', 15, 36, 42, 122);                                 // the paper
+    fill('#c9c2ae', 15, 36, 1, 122); fill('#c9c2ae', 56, 36, 1, 122);
+    const dots = (col, rows) => { x.fillStyle = col; rows.forEach(([ox, oy, w]) => x.fillRect(ox, oy, w, 1)); };
+    dots('#3a342c', [[31, 44, 6], [29, 45, 10], [28, 46, 12], [28, 47, 12], [27, 48, 14], [27, 49, 14], [27, 50, 14], [28, 51, 12], [28, 52, 12], [29, 53, 10], [31, 54, 6]]);   // the moon: ink...
+    dots('#e9e1ca', [[34, 45, 4], [33, 46, 7], [33, 47, 7], [33, 48, 8], [33, 49, 8], [33, 50, 8], [33, 51, 7], [33, 52, 7], [34, 53, 4]]);                                     // ...cut to a crescent
+    for (let i = 0; i < 42; i++) { const far = 96 - Math.round(Math.abs(Math.sin(i * 0.17 + 0.5)) * 13), near = 112 - Math.round(Math.abs(Math.sin(i * 0.11 + 2)) * 15); fill('#a8a292', 15 + i, far, 1, Math.max(0, near - far)); fill('#4e483e', 15 + i, near, 1, 124 - near); if (i % 3 === 0) fill('#6e685c', 15 + i, near + 3, 1, 3); }
+    { // the character, thresholded to dots
+      const t = document.createElement('canvas'); t.width = t.height = 22; const y = t.getContext('2d'); y.fillStyle = '#fff'; y.fillRect(0, 0, 22, 22); y.fillStyle = '#000'; y.font = '700 21px "Yu Mincho","Hiragino Mincho ProN","Noto Serif CJK JP",serif'; y.textAlign = 'center'; y.textBaseline = 'middle'; y.fillText('静', 11, 11.5);
+      const px = y.getImageData(0, 0, 22, 22).data; x.fillStyle = '#17120d'; for (let j = 0; j < 22; j++) for (let i = 0; i < 22; i++) if (px[(j * 22 + i) * 4] < 130) x.fillRect(25 + i, 130 + j, 1, 1); }
+    fill('#a3261b', 49, 151, 4, 4);                                   // a small red seal
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter; tex.generateMipmaps = false;
+    const W = 0.56, H = W * 192 / 72, top = 2.15, sc = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ map: tex, color: 0xc8c0a8 })); sc.position.set(TX, top - H / 2, TZ - 0.03); sc.rotation.y = Math.PI; A.add(sc);
+    const rod = (w, r, y, m) => { const k = cyl(r, r, w, m, TX, y, TZ - 0.04, 10, A); k.rotation.z = Math.PI / 2; return k; };
+    rod(W + 0.02, 0.011, top, M.darkWood);                            // the rod at the top
+    rod(W + 0.03, 0.017, top - H, M.darkWood);                        // the weighted rod at the foot
+    for (const s2 of [-1, 1]) { const k = cyl(0.024, 0.024, 0.05, M.beam, TX + s2 * (W / 2 + 0.035), top - H, TZ - 0.04, 10, A); k.rotation.z = Math.PI / 2; }   // its knobs
+    const cord = (a) => { const k = cyl(0.003, 0.003, 0.17, M.darkWood, TX + Math.sin(a) * 0.075, top + 0.07, TZ - 0.035, 5, A); k.rotation.z = -a; };
+    cord(0.95); cord(-0.95); cyl(0.008, 0.008, 0.03, M.brass, TX, top + 0.13, TZ - 0.02, 6, A).rotation.x = Math.PI / 2;   // the cord and its nail
+  }
   { const c = canvasTexture([''], { w: 64, h: 512, bg: '#4b3b2b' }); const g = c.image.getContext('2d'); g.strokeStyle = '#d8c8a8'; g.lineWidth = 3; for (const y of [470, 440, 400, 360, 60]) { g.beginPath(); g.moveTo(8, y); g.lineTo(56, y); g.stroke(); } c.needsUpdate = true; const p = cyl(0.12, 0.12, 3, new THREE.MeshStandardMaterial({ map: c, roughness: 0.9 }), -4.25, 1.5, 12.65, 10); p.rotation.y = Math.PI / 2; addCol(-4.4, 12.5, -4.1, 12.8); }
   // ---- 台所: sink, kamado (stove), work table with the salt, shelves
   { box(1.4, 0.85, 0.6, M.stone, -19.6 + 0.3, 0.42, 14.4).rotation.y = Math.PI / 2; addCol(-19.95, 13.7, -19.35, 15.1, 0, 0.9); }
@@ -490,9 +551,16 @@ export function dressVillage(ctx) {
       tag.position.set(0, 1.07, 0.082); bx0.add(tag);
       const glow = new THREE.PointLight(0xffd8a0, 2.2, 3.2, 1.6); glow.position.set(0, 1.7, 0.5); bx0.add(glow);
       api.parts.gateDials = dials; }
+    // the lock across the middle of the gate (feedback 2026-11-07: a key): a chain round both leaves and a padlock, gone when the gate opens
+    { const L = new THREE.Group(); at(L, 0.5, 0, -24); api.parts.gateLock = L; const iron = mat(0x3a3c3a, { metalness: 0.6, roughness: 0.45 });
+      for (let i = 0; i < 5; i++) { const lk = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.009, 6, 10), iron); lk.position.set(-0.14 + i * 0.07, 1.0, 0.06); lk.rotation.y = i % 2 ? Math.PI / 2 : 0; L.add(lk); }
+      box(0.13, 0.15, 0.05, M.brass, 0, 0.89, 0.07, L); const sh = new THREE.Mesh(new THREE.TorusGeometry(0.038, 0.009, 6, 12, Math.PI), iron); sh.position.set(0, 0.965, 0.07); L.add(sh); }
     const notice = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.56), new THREE.MeshStandardMaterial({ map: canvasTexture(['三つの回し金', '朝日・正午・地蔵', '東・南・北'], { w: 256, h: 340, bg: '#ddd3b6', fg: '#2e2820', head: true }), roughness: 1 }));
     notice.position.set(-3.3 + 0.5, 1.5, -23.82); G.add(notice);
   }
+  // the far road beyond the wall: a plain bar closes it until the ride (the plan's wall still keeps the player in; the bar shows why), story.js takes it away in L5
+  { const g = new THREE.Group(); at(g, 0.5, 0, -46.3); api.parts.roadBar = g; for (const x of [-3.7, 3.7]) box(0.14, 1.05, 0.14, M.darkWood, x, 0.52, 0, g);
+    const b = box(7.4, 0.1, 0.06, mat(0xb9ad8e), 0, 0.92, 0, g); b.rotation.z = 0.012; box(0.9, 0.42, 0.03, M.paper, -0.9, 0.62, 0, g).rotation.z = -0.02; }
   // fences along the far road (seen from the van) and the van itself
   for (const s of [-1, 1]) for (let z = -48; z > -140; z -= 6) { const f = E.fence({ kind: 'rail', len: 6, h: 0.8 }); at(f, 0.5 + s * 3.8, 0, z - 3, Math.PI / 2); }
   {
@@ -501,14 +569,12 @@ export function dressVillage(ctx) {
     api.parts.vanInside = van.userData.interior; api.parts.vanShell = van.userData.shell; api.parts.vanSeats = van.userData.seats;
     addCol(-0.45, -37.0, 1.45, -32.2, 0, 2.0);
     // where to get in (feedback 2026-11-01: "hard to see where to board"): the side door slid open on the +x side, the lit inside showing
-    // through it, a step, and a pale square on the ground where to stand (api.parts.boarding: hidden once aboard)
+    // through it, and a step (api.parts.boarding: hidden once aboard). Any side of the van boards it (feedback 2026-11-07): S_CAR's box is the van's size, set below
     { const bd = new THREE.Group(); bd.name = 'boarding'; G.add(bd); api.parts.boarding = bd;
       const hole = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 1.25), new THREE.MeshStandardMaterial({ color: 0x1c1a16, emissive: 0x6a5232, emissiveIntensity: 0.55, roughness: 1 }));
       hole.position.set(1.37, 1.05, -34.2); hole.rotation.y = Math.PI / 2; bd.add(hole);
       box(0.04, 1.3, 0.95, mat(0x3a514a, { metalness: 0.5, roughness: 0.35 }), 1.42, 1.05, -33.1, bd);   // the slid-back door
       box(0.35, 0.12, 0.9, M.stone, 1.6, 0.06, -34.2, bd);
-      const pad = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), new THREE.MeshBasicMaterial({ color: 0xffe6b0, transparent: true, opacity: 0.22, depthWrite: false }));
-      pad.rotation.x = -Math.PI / 2; pad.position.set(2.1, 0.03, -34.2); bd.add(pad); api.parts.boardPad = pad;
       const inl = new THREE.PointLight(0xffc98a, 3.5, 4, 1.6); inl.position.set(0.9, 1.5, -34.2); bd.add(inl); }
     const hl = new THREE.SpotLight(0xffe2a4, 30, 30, 0.5, 0.6, 1.2); hl.position.set(0.5, 0.8, -37); hl.target.position.set(0.5, 0, -52); G.add(hl, hl.target); api.parts.vanLight = hl;
   }
@@ -545,6 +611,15 @@ export function dressVillage(ctx) {
 
   // ---------------------------------------------------------------- stations and pickups: the console boxes become the things themselves
   for (const s of plan.stations) { const m = world.group.getObjectByName(`station:${s.id}`); if (!m) continue; const c = colOf(m); if (c) c.off = true; m.material = M.hidden; }
+  { const m = world.group.getObjectByName('station:S_CAR'); if (m) { m.geometry = new THREE.BoxGeometry(2.5, 2.3, 5.5); m.position.set(0.5, 1.1, -34.6); } }   // the whole van is the thing to board
+  // the key of the gate on the post by the back door (T_KEY): an old iron key with a wooden tag on a nail, at eye level; the station's box sits on it
+  { const X = -19.72, Z = 15.62, iron = mat(0x4a4640, { metalness: 0.55, roughness: 0.5 }), g = new THREE.Group(); at(g, X, 1.42, Z); g.scale.setScalar(1.5); api.parts.gateKey = g;
+    box(0.16, 2.5, 0.16, M.darkWood, X - 0.14, 1.25, Z);
+    cyl(0.008, 0.008, 0.06, M.brass, 0, 0.05, 0, 6, g).rotation.z = Math.PI / 2;
+    const bow = new THREE.Mesh(new THREE.TorusGeometry(0.032, 0.009, 6, 14), iron); bow.position.set(0.03, 0.02, 0); bow.rotation.y = Math.PI / 2; g.add(bow);
+    box(0.018, 0.17, 0.018, iron, 0.03, -0.09, 0, g); box(0.018, 0.022, 0.05, iron, 0.03, -0.16, 0.03, g); box(0.018, 0.022, 0.035, iron, 0.03, -0.125, 0.024, g);
+    const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.075, 0.13), new THREE.MeshStandardMaterial({ map: canvasTexture(['車止'], { w: 64, h: 112, bg: '#a98f66', fg: '#21180f', vertical: true, size: 36 }), roughness: 1 })); tag.position.set(0.042, -0.1, -0.075); tag.rotation.y = Math.PI / 2; g.add(tag);
+    const m = world.group.getObjectByName('station:S_KEY'); if (m) { m.geometry = new THREE.BoxGeometry(0.5, 0.7, 0.6); m.position.set(X + 0.1, 1.35, Z); } }
   // pickups are the kit's item models (items / docs "kind", resting on their "y"); the gate notice stands upright on its post
   for (const o of world.interactables) {
     const ui = o.userData && o.userData.interact;

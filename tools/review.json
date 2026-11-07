@@ -55,14 +55,14 @@
         { "name": "gate", "focus": { "x": -1.6, "y": 1, "z": -23.2, "dist": 2.2 }, "shot": true },
         { "name": "shrine-diary", "focus": { "x": 11.6, "y": 0.8, "z": -13.05, "dist": 1.6 }, "shot": true },
         { "name": "creature-close", "eval": "const m = g.monsters.list[0]; if (m && m.ai) { m.ai.pos.x = 0.5; m.ai.pos.z = -10; m.ai.state = 'idle'; } g.teleport({ x: 0.5, z: -4, floor: 0, yaw: 0 }); g.fp.yaw = 0; g.fp.pitch = 0.18;", "wait": 1200, "shot": true },
-        { "name": "car-cue", "tasks": ["T_GATE"], "focus": { "x": 2, "y": 1, "z": -33.5, "dist": 4 }, "wait": 1500, "shot": true }
+        { "name": "car-cue", "tasks": ["T_KEY", "T_GATE"], "focus": { "x": 2, "y": 1, "z": -33.5, "dist": 4 }, "wait": 1500, "shot": true }
       ]
     },
     {
       "name": "l5",
       "query": "?debug=1",
       "steps": [
-        { "name": "ride-start", "items": ["I_SALT", "I_PAPER", "I_OFUDA"], "tasks": ["T_SHOP", "T_REPORT", "T_SALT_NW", "T_SALT_NE", "T_SALT_SW", "T_SALT_SE", "T_WINDOW", "T_SEAL", "T_DAWN", "T_GATE", "T_CAR"], "wait": 2500, "shot": true },
+        { "name": "ride-start", "items": ["I_SALT", "I_PAPER", "I_OFUDA"], "tasks": ["T_SHOP", "T_REPORT", "T_SALT_NW", "T_SALT_NE", "T_SALT_SW", "T_SALT_SE", "T_WINDOW", "T_SEAL", "T_DAWN", "T_KEY", "T_GATE", "T_CAR"], "wait": 2500, "shot": true },
         { "name": "ride-roof", "close": false, "eval": "window.__hk.st.ride = 9;", "wait": 1200, "shot": true },
         { "name": "ride-hands", "close": false, "eval": "window.__hk.st.ride = 15; g.fp.yaw = 1.2; g.fp.pitch = 0;", "wait": 1500, "shot": true },
         { "name": "ride-face", "close": false, "eval": "window.__hk.st.ride = 23; window.__hk.st.curse = 0; g.fp.yaw = 1.2; g.fp.pitch = 0;", "wait": 900, "shot": true },
@@ -81,7 +81,7 @@
         { "name": "respawn", "wait": 1500, "shot": true }
       ]
     },
-    { "name": "ending-safe", "steps": [ { "name": "ending", "tasks": ["T_SHOP", "T_REPORT", "T_SALT_NW", "T_SALT_NE", "T_SALT_SW", "T_SALT_SE", "T_WINDOW", "T_SEAL", "T_DAWN", "T_GATE", "T_CAR", "T_RIDE"], "close": false, "wait": 3500, "shot": true } ] },
-    { "name": "ending-remembered", "steps": [ { "name": "ending", "flags": ["records_all"], "tasks": ["T_SHOP", "T_REPORT", "T_SALT_NW", "T_SALT_NE", "T_SALT_SW", "T_SALT_SE", "T_WINDOW", "T_SEAL", "T_DAWN", "T_GATE", "T_CAR", "T_RIDE"], "close": false, "wait": 3500, "shot": true } ] }
+    { "name": "ending-safe", "steps": [ { "name": "ending", "tasks": ["T_SHOP", "T_REPORT", "T_SALT_NW", "T_SALT_NE", "T_SALT_SW", "T_SALT_SE", "T_WINDOW", "T_SEAL", "T_DAWN", "T_KEY", "T_GATE", "T_CAR", "T_RIDE"], "close": false, "wait": 3500, "shot": true } ] },
+    { "name": "ending-remembered", "steps": [ { "name": "ending", "flags": ["records_all"], "tasks": ["T_SHOP", "T_REPORT", "T_SALT_NW", "T_SALT_NE", "T_SALT_SW", "T_SALT_SE", "T_WINDOW", "T_SEAL", "T_DAWN", "T_KEY", "T_GATE", "T_CAR", "T_RIDE"], "close": false, "wait": 3500, "shot": true } ] }
   ]
 }

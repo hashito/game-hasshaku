@@ -51,5 +51,16 @@
   "z": 18.45,
   "y": 0.4,
   "kind": "talisman"
+ },
+ {
+  "id": "I_GATEKEY",
+  "name": "車止めの鍵",
+  "photo": "assets/photos/ph-gate-key.webp",
+  "desc": "勝手口の柱に掛けてあった古い鉄の鍵。北の農道の車止めの錠を開ける。",
+  "why": "車止めを開けて、Ｋさんの車まで行くため。",
+  "feeling": "持ち手が、手の形にすり減っている。",
+  "room": "DAIDOKORO",
+  "stage": "L4",
+  "given": "T_KEY"
  }
 ]
