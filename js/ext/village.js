@@ -142,9 +142,12 @@ export function dressVillage(ctx) {
   for (const run of edgeRuns.filter((e) => e.shared)) {
     const len = Math.hypot(run.x1 - run.x0, run.z1 - run.z0), cx = (run.x0 + run.x1) / 2, cz = (run.z0 + run.z1) / 2, alongX = run.x1 - run.x0 > run.z1 - run.z0;
     const stone = (run.room === 'O_ROAD' || run.room === 'O_SHOPFRONT' || run.room === 'O_GATE') && !(run.room === 'O_ROAD' && run.edge === 'e');
-    const h = stone ? 1.15 : 1.9, m = stone ? M.stone : M.hedge;
+    // the hedge between the shrine and the field (z -2, x 5..18) stands low (feedback 2026-11-08: 「ゆっくり歩いてくると手前の木に隠れて
+    //見えない」「神社の手前の木の囲いを下げればいい」): walking home slowly, it hid her walk along the far fence; the collider keeps its height
+    const low = !stone && alongX && Math.abs(cz + 2) < 0.2 && cx > 5 && cx < 18;
+    const h = stone ? 1.15 : low ? 0.9 : 1.9, m = stone ? M.stone : M.hedge;
     const b = box(alongX ? len : 0.9, h, alongX ? 0.9 : len, m, cx, h / 2, cz);
-    if (!stone) addCol(cx - (alongX ? len : 0.6) / 2, cz - (alongX ? 0.6 : len) / 2, cx + (alongX ? len : 0.6) / 2, cz + (alongX ? 0.6 : len) / 2, 0, h);   // thick enough that the view (body radius + this) stops outside it (Issue #4)
+    if (!stone) addCol(cx - (alongX ? len : 0.6) / 2, cz - (alongX ? 0.6 : len) / 2, cx + (alongX ? len : 0.6) / 2, cz + (alongX ? 0.6 : len) / 2, 0, low ? 1.9 : h);   // thick enough that the view (body radius + this) stops outside it (Issue #4)
     if (!stone) for (let i = 0; i < len / 0.7; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(0.42 + rnd() * 0.2, 6, 5), M.hedge); const t = (i + 0.5) / (len / 0.7); s.position.set(alongX ? run.x0 + (run.x1 - run.x0) * t : cx + (rnd() - 0.5) * 0.3, h - 0.05 + rnd() * 0.2, alongX ? cz + (rnd() - 0.5) * 0.3 : run.z0 + (run.z1 - run.z0) * t); if (!nearIndoor(s.position.x, s.position.z, 0.7)) G.add(s); }
     texReady.then((tex) => { if (tex && stone) b.material = tex.material('block_wall_old', { triplanar: true }); });
   }
