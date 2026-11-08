@@ -109,7 +109,11 @@ export function dressVillage(ctx) {
   // trees: instanced cedars (trunk + three tiers) outside the walkable area, and a row along every outer edge
   const treeSpots = [];
   const rnd = (() => { let s = 20080815; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); })();
-  const inWalk = (x, z, pad = 1.2) => plan.rooms.some((r) => x > r.x - pad && x < r.x + r.w + pad && z > r.z - pad && z < r.z + r.d + pad) || (Math.abs(x - 0.5) < 5 && z < -40 && z > -230);
+  // a clearing behind the board fence east of the field (feedback 2026-11-08: 「最初にみる時に木の陰になって何も見えません」): the edge-row
+  // cedars stood right behind her walk (x 18.95) and their lowest tier (r 2 m) swallowed her, so no cedar grows from the fence to past the
+  // empty house; she stands against its pale wall and the open sky
+  const sightClear = (x, z) => x > 16.5 && x < 27 && z > -4 && z < 29;
+  const inWalk = (x, z, pad = 1.2) => plan.rooms.some((r) => x > r.x - pad && x < r.x + r.w + pad && z > r.z - pad && z < r.z + r.d + pad) || (Math.abs(x - 0.5) < 5 && z < -40 && z > -230) || sightClear(x, z);
   for (const run of edgeRuns.filter((e) => !e.shared)) {
     const len = Math.hypot(run.x1 - run.x0, run.z1 - run.z0);
     const n = Math.max(1, Math.round(len / 2.6));

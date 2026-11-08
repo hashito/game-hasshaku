@@ -300,7 +300,11 @@ export default function story(ext) {
   // ---------------------------------------------------------------- L1: the sighting
   // she walks behind the empty house's board fence across the rice field (1.7 m: only the hat and the top of the head show over it)
   const SIGHT = { x: 18.95, z0: 3.0, z1: 21.5 };
-  function showSighting() { if (!H) return; H.root.visible = true; H.root.position.set(SIGHT.x, 0, SIGHT.z0); H.root.rotation.y = -Math.PI / 2; H.walk = 0; H.seenT = 0; }
+  function showSighting() { if (!H) return; H.root.visible = true; H.root.position.set(SIGHT.x, 0, SIGHT.z0); H.root.rotation.y = -Math.PI / 2; H.walk = 0; H.seenT = 0; H.cued = false; }
+  // a pale wash of moonlight over the fence onto her (feedback 2026-11-08: she was lost in the cedars' shade): the white dress and the hat
+  // stand out from the dark boards and the empty house's wall; it stays in the scene at 0 when she is gone (no shader rebuild)
+  let moon = null;
+  function moonOn(k) { if (!moon) return; moon.intensity = k; if (k > 0) moon.position.set(H.root.position.x - 1.4, 3.4, H.root.position.z); }
   const tmpV = new THREE.Vector3();
   let lookAt = null;   // { x, y, z, t }: a staged glance (the knock at the front door)
   // the moment she is seen (Issue #4 follow-up: "where is she?"): my head turns to the hat on the fence and the eyes fix on it (the view
@@ -321,8 +325,9 @@ export default function story(ext) {
     if (Math.abs(f - cam.fov) > 0.01) { cam.fov = t > 3.6 ? baseFov : f; cam.updateProjectionMatrix(); }
   }
   function updateSighting(dt) {
-    if (!H || !H.root.visible || lvl() !== 0) return;
+    if (!H || !H.root.visible || lvl() !== 0) { moonOn(0); return; }
     const cam = ctx.camera, p = cam.position;
+    moonOn(H.root.position.y < -0.5 ? 0 : 4);
     // once seen (Issue #4: the first meeting must frighten): she stops and stares, then hurries along the fence towards you, sinks
     // behind it (the hat goes), and a moment later the po sounds close by, from where nothing can be seen
     if (st.seen) {
@@ -335,6 +340,9 @@ export default function story(ext) {
       H.character.update(dt);
       return;
     }
+    // a cue before the sight (feedback 2026-11-08): walking home down the road, a low po from across the field turns the head even if the
+    // eyes are elsewhere; the staged glance below then finds her
+    if (!H.cued && p.z > 2.5 && p.x < 8) { H.cued = true; snd.po({ vol: 0.38, pan: clamp((H.root.position.x - p.x) / 8, -1, 1) }); say(T.seen_cue, 4.5); }
     H.root.position.z = Math.min(SIGHT.z1, H.root.position.z + dt * 0.22); H.character.setSpeed(0.22); H.character.update(dt);
     if (H.root.position.z >= SIGHT.z1) { H.root.position.z = SIGHT.z0; }
     const head = tmpV.copy(H.root.position).setY(2.6), d = head.distanceTo(p);
@@ -570,6 +578,7 @@ export default function story(ext) {
     V = dressVillage(c);
     fear = createFear(c);   // tremble, heartbeat, the dark edges (kit js/fear-fx.js, feedback 2026-11-01)
     H = makeHasshaku({ detail: 1 }); H.root.visible = false; c.scene.add(H.root);
+    moon = new THREE.PointLight(0xc4d2e4, 0, 9, 1); c.scene.add(moon);
     // the gate is held by its three turn-buttons until T_GATE is done (the standard door then opens)
     const gate = c.world.doors.get('D_GATE'); if (gate) { const base = gate.locked; gate.locked = () => !done('T_GATE') || base(); }
     // in the night the fusuma is shut from the inside; the voice is behind it

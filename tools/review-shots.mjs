@@ -1,7 +1,7 @@
 // Screenshot review (feedback 2026-11-02: "screenshot every key point, and check more than the normal route").
 // Runs headless (tools/cdp.mjs, never a visible window), takes every shot listed in a review plan and writes a report with what the screen
 // said at each one (the [E] prompt, the thought band, the open window), so a person (or Claude) can look at every picture.
-//   node tools/review-shots.mjs [review.json] [--out shots/review] [--only name,name] [--mobile]
+//   node tools/review-shots.mjs [review.json] [--out shots/review] [--only name,name] [--mobile [--portrait]]
 // review.json: { "runs": [ { "name", "query": "?qa=1", "steps": [ step, ... ] } ] }   (each run is a fresh page load)
 // step: { "name", "tasks": [ids to complete first], "flags": [..], "items": [ids to own], "close": true,
 //         "focus": { "x", "y", "z", "floor", "dist" }  -> stand at a clear spot `dist` m away and look at the point (picks a direction no wall blocks)
@@ -53,7 +53,7 @@ const report = [`# 画面の点検（${new Date().toISOString().slice(0, 10)}${m
 let problems = 0, n = 0;
 for (const run of plan.runs) {
   if (only && !only.includes(run.name) && !run.steps.some((s) => only.includes(s.name))) continue;
-  const p = await launch(mobile ? { width: 844, height: 390, mobile: true } : { width: 1280, height: 720 });
+  const p = await launch(mobile ? (args.includes('--portrait') ? { width: 390, height: 844, mobile: true } : { width: 844, height: 390, mobile: true }) : { width: 1280, height: 720 });
   report.push(`## ${run.name}`, '');
   try {
     await p.goto(base + (run.query ?? '?qa=1') + (mobile ? '&touch=1' : ''));
