@@ -74,7 +74,7 @@ body:not(.touch) .hk-grip::after { content: "（Space・E）"; font-size: 12px; 
 /* death and ending */
 .hk-death, .hk-ending { display: flex; flex-direction: column; gap: var(--gf-space-3, 12px); color: var(--gf-text); }
 .hk-death-kicker { margin: 0; color: var(--gf-accent-2); letter-spacing: 0.2em; font-size: 12px; }
-.hk-death-img { width: 100%; max-height: 34vh; object-fit: cover; object-position: center 30%; filter: grayscale(0.4) contrast(1.1); border-radius: var(--gf-radius, 4px); }
+.hk-death-img { width: 100%; max-height: max(90px, min(34vh, calc(64vh - 280px))); object-fit: cover; object-position: center 30%; filter: grayscale(0.4) contrast(1.1); border-radius: var(--gf-radius, 4px); }
 .hk-death-text, .hk-ending p { margin: 0; font-family: var(--hk-serif); line-height: 1.9; }
 .hk-ending-stats { color: var(--gf-text-dim); font-family: var(--gf-font) !important; font-size: 13px; }
 
@@ -88,3 +88,6 @@ body:not(.touch) .hk-grip::after { content: "（Space・E）"; font-size: 12px; 
 .hk-jump.long { animation-duration: 2.4s; }
 /* a short (landscape phone) screen: the photo goes small to the left, clear of the ride panel and its hold button */
 @media (max-height: 500px) { .hk-photo { left: calc(8px + var(--gf-safe-left, 0px)); transform: none; top: calc(56px + var(--gf-safe-top, 0px)); width: min(200px, 26vw); } .hk-photo img { max-height: 30vh; } .hk-photo p { font-size: 12px; line-height: 1.5; } }
+/* the standard align mini game draws a barcode; here it is a bottle and a paper charm (review 2026-11-09) */
+#mg .al-item { background: #cfc39c; color: #2b2016; border-color: #5b4632; place-items: center; }
+#mg .al-item span { background: transparent; color: #2b2016; font-size: 11px; }

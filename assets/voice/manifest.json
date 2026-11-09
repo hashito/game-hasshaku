@@ -3,288 +3,336 @@
   "key": "opening",
   "index": 2,
   "who": "祖父",
-  "preset": null
+  "preset": null,
+  "sec": 15.84
  },
  "v-opening-4": {
   "key": "opening",
   "index": 4,
   "who": "祖父",
-  "preset": null
+  "preset": null,
+  "sec": 15.5
  },
  "v-shop-0": {
   "key": "shop",
   "index": 0,
   "who": "店のおばさん",
-  "preset": null
+  "preset": null,
+  "sec": 7.45
  },
  "v-shop-2": {
   "key": "shop",
   "index": 2,
   "who": "店のおばさん",
-  "preset": null
+  "preset": null,
+  "sec": 11.93
  },
  "v-shop-4": {
   "key": "shop",
   "index": 4,
   "who": "店のおばさん",
-  "preset": null
+  "preset": null,
+  "sec": 6.38
  },
  "v-report-0": {
   "key": "report",
   "index": 0,
   "who": "祖父",
-  "preset": null
+  "preset": null,
+  "sec": 5.48
  },
  "v-report-2": {
   "key": "report",
   "index": 2,
   "who": "祖父",
-  "preset": null
+  "preset": null,
+  "sec": 6.41
  },
  "v-report-4": {
   "key": "report",
   "index": 4,
   "who": "祖父",
-  "preset": null
+  "preset": null,
+  "sec": 14.05
  },
  "v-report-6": {
   "key": "report",
   "index": 6,
   "who": "祖父",
-  "preset": null
+  "preset": null,
+  "sec": 7.36
  },
  "v-k-arrive-0": {
   "key": "k_arrive",
   "index": 0,
   "who": "祖父",
-  "preset": null
+  "preset": null,
+  "sec": 1.03
  },
  "v-k-arrive-1": {
   "key": "k_arrive",
   "index": 1,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 6.67
  },
  "v-k-arrive-2": {
   "key": "k_arrive",
   "index": 2,
   "who": "祖父",
-  "preset": null
+  "preset": null,
+  "sec": 7.43
  },
  "v-k-arrive-3": {
   "key": "k_arrive",
   "index": 3,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 7.64
  },
  "v-k-arrive-5": {
   "key": "k_arrive",
   "index": 5,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 13.85
  },
  "v-report-after-0": {
   "key": "report_after",
   "index": 0,
   "who": "祖父",
-  "preset": null
+  "preset": null,
+  "sec": 10.77
  },
  "v-report-after-1": {
   "key": "report_after",
   "index": 1,
   "who": "祖父",
-  "preset": null
+  "preset": null,
+  "sec": 11.75
  },
  "v-report-after-3": {
   "key": "report_after",
   "index": 3,
   "who": "祖父",
-  "preset": null
+  "preset": null,
+  "sec": 11.03
  },
  "v-report-after-5": {
   "key": "report_after",
   "index": 5,
   "who": "祖父",
-  "preset": null
+  "preset": null,
+  "sec": 7.24
  },
  "v-prepared-1": {
   "key": "prepared",
   "index": 1,
   "who": "Ｋさん",
-  "preset": "wall"
+  "preset": "wall",
+  "sec": 11.03
  },
  "v-prepared-2": {
   "key": "prepared",
   "index": 2,
   "who": "Ｋさん",
-  "preset": "wall"
+  "preset": "wall",
+  "sec": 9.66
  },
  "v-prepared-3": {
   "key": "prepared",
   "index": 3,
   "who": "Ｋさん",
-  "preset": "wall"
+  "preset": "wall",
+  "sec": 17.55
  },
  "v-prepared-4": {
   "key": "prepared",
   "index": 4,
   "who": "祖父",
-  "preset": "wall"
+  "preset": "wall",
+  "sec": 10.85
  },
  "v-night-0": {
   "key": "night",
   "index": 0,
   "who": "戸の向こう",
-  "preset": "wall"
+  "preset": "wall",
+  "sec": 2.78
  },
  "v-night-2": {
   "key": "night",
   "index": 2,
   "who": "Ｋさんの声",
-  "preset": "wall"
+  "preset": "wall",
+  "sec": 6.11
  },
  "v-night-4": {
   "key": "night",
   "index": 4,
   "who": "戸の向こう",
-  "preset": "wall"
+  "preset": "wall",
+  "sec": 3.35
  },
  "v-night-6": {
   "key": "night",
   "index": 6,
   "who": "窓の外",
-  "preset": "wall"
+  "preset": "wall",
+  "sec": 2.98
  },
  "v-night-8": {
   "key": "night",
   "index": 8,
   "who": "戸の向こう",
-  "preset": "wall"
+  "preset": "wall",
+  "sec": 2.28
  },
  "v-night-9": {
   "key": "night",
   "index": 9,
   "who": "Ｋさんの声",
-  "preset": "wall"
+  "preset": "wall",
+  "sec": 6.72
  },
  "v-dawn-0": {
   "key": "dawn",
   "index": 0,
   "who": "Ｋさん",
-  "preset": "wall"
+  "preset": "wall",
+  "sec": 6.53
  },
  "v-gate-opened-1": {
   "key": "gate_opened",
   "index": 1,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 4.82
  },
  "v-boarded-0": {
   "key": "boarded",
   "index": 0,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 4.04
  },
  "v-boarded-2": {
   "key": "boarded",
   "index": 2,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 10.05
  },
  "v-boarded-3": {
   "key": "boarded",
   "index": 3,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 7.13
  },
  "v-ride-0": {
   "key": "ride",
   "index": 0,
   "who": "窓の外",
-  "preset": "wall"
+  "preset": "wall",
+  "sec": 2.98
  },
  "v-ride-1": {
   "key": "ride",
   "index": 1,
   "who": "窓の外",
-  "preset": "wall"
+  "preset": "wall",
+  "sec": 4.48
  },
  "v-ride-2": {
   "key": "ride",
   "index": 2,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 5.12
  },
  "v-ride-5": {
   "key": "ride",
   "index": 5,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 3.19
  },
  "v-ride-7": {
   "key": "ride",
   "index": 7,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 5.91
  },
  "v-morning-1": {
   "key": "morning",
   "index": 1,
   "who": "祖父",
-  "preset": null
+  "preset": null,
+  "sec": 4.15
  },
  "v-morning-2": {
   "key": "morning",
   "index": 2,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 13.53
  },
  "v-morning-3": {
   "key": "morning",
   "index": 3,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 19.03
  },
  "v-morning-4": {
   "key": "morning",
   "index": 4,
   "who": "祖父",
-  "preset": null
+  "preset": null,
+  "sec": 22.03
  },
  "v-morning-5": {
   "key": "morning",
   "index": 5,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 13.9
  },
  "v-morning-6": {
   "key": "morning",
   "index": 6,
   "who": "祖父",
-  "preset": null
+  "preset": null,
+  "sec": 14.83
  },
  "v-escort-0": {
   "key": "escort",
   "index": 0,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 5.34
  },
  "v-escort-1": {
   "key": "escort",
   "index": 1,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 4.59
  },
  "v-escort-2": {
   "key": "escort",
   "index": 2,
   "who": "Ｋさん",
-  "preset": null
+  "preset": null,
+  "sec": 4.64
  },
  "v-door-choice": {
   "key": "door_choice",
   "index": 0,
   "who": "戸の外",
-  "preset": "wall"
+  "preset": "wall",
+  "sec": 3.98
  }
 }

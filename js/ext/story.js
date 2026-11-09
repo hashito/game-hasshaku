@@ -23,7 +23,7 @@ import { showEndingScene } from '../kit/ending-scene.js';
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export const NIGHT_SEC = 150;          // 01:00 -> 07:00 in 150 s of play
-export const RIDE_SEC = 30;            // the van from the gate to the border
+export const RIDE_SEC = 40;            // the van from the gate to the border
 export const SALT_START = { NW: 22, NE: 75, SW: 108, SE: 48 };   // when each plate starts to turn black (s into the night)
 export const SALT_RATE = 0.022;        // per second; 0.85 = the warning, 1.35 = the room's guard breaks (death)
 export const BOWLS = ['NW', 'NE', 'SW', 'SE'];
@@ -71,14 +71,14 @@ export default function story(ext) {
   // the timed lines of the night and the ride play through spoken() (S15: through a door / window = the wall preset)
   const voiced = new Map();
   const spoken = (text) => { const v = voiced.get(text); return v && ctx.voiceLine ? ctx.voiceLine(v.src, v.vfx) : null; };
-  const voice = (who, text, sec) => { spoken(text); return ctx.ui.say(`<span class="hk-who">${esc(who)}</span>${esc(text)}`, sec ?? Math.min(8, 2.6 + String(text).length * 0.1)); };
+  const voice = (who, text, sec) => { spoken(text); const v = voiced.get(text), base = sec ?? Math.min(8, 2.6 + String(text).length * 0.1); return ctx.ui.say(`<span class="hk-who">${esc(who)}</span>${esc(text)}`, Math.max(base, v && v.sec ? v.sec + 0.4 : 0)); };   // the words stay until the voice has finished (review 2026-11-09)
   async function loadVoices() {
     let m = {}; try { m = await (await fetch('assets/voice/manifest.json')).json(); } catch (e) { return; }
     for (const [id, v] of Object.entries(m)) {
       const src = `assets/voice/${id}.mp3`, list = T[v.key];
-      if (v.key === 'door_choice') { voiced.set(T.door_choice.text, { src, vfx: v.preset }); continue; }
+      if (v.key === 'door_choice') { voiced.set(T.door_choice.text, { src, vfx: v.preset, sec: v.sec }); continue; }
       const L = Array.isArray(list) && list[v.index]; if (!L) continue;
-      if (Array.isArray(L)) voiced.set(L[2], { src, vfx: v.preset }); else Object.assign(L, { voice: src, vfx: v.preset });
+      if (Array.isArray(L)) voiced.set(L[2], { src, vfx: v.preset, sec: v.sec }); else Object.assign(L, { voice: src, vfx: v.preset });
     }
   }
 
@@ -268,8 +268,8 @@ export default function story(ext) {
     V.parts.shopLight.intensity = i === 2 ? 4 : 10;
     for (const k of BOWLS) V.parts.plates[k].salt.visible = done(`T_SALT_${k}`);
     V.parts.windowPapers.visible = done('T_WINDOW');
-    V.parts.sealPaper.visible = done('T_SEAL');
     const fus = ctx.world.doors.get('D_FUSUMA');
+    V.parts.sealPaper.visible = done('T_SEAL') && i < 3;   // the paper is on the fusuma, and the fusuma is gone in the morning (it hung in the empty doorway, review 2026-11-09)
     if (fus) { if (i === 2) { fus.close(); fus.def.hint = '七時までは、開けない。'; } else fus.def.hint = '北の座敷は閉め切ってある。今は、居間の祖父に話すのが先だ。'; if (i >= 3) fus.open(); fus.mesh.visible = !fus.isOpen; }   // in the morning the grandfather opens it from the living room
     if (i >= 1 && light) light.userData.auto && (light.visible = true);
     for (const k of BOWLS) nightMarks[k].visible = i === 2;
@@ -306,6 +306,38 @@ export default function story(ext) {
   let moon = null;
   function moonOn(k) { if (!moon) return; moon.intensity = k; if (k > 0) moon.position.set(H.root.position.x - 1.4, 3.4, H.root.position.z); }
   const tmpV = new THREE.Vector3();
+  // what stands in the way of a look (review 2026-11-09): every solid thing shown in the scene except her. Raycaster takes no notice of
+  // .visible, so a hit is checked against what is on screen at that moment. Built on first use, when the village is dressed
+  const ray = new THREE.Raycaster(), rayO = new THREE.Vector3(), rayT = new THREE.Vector3();
+  let solids = null;
+  function solidList() {
+    if (solids) return solids;
+    solids = [];
+    ctx.scene.traverse((o) => { if (!o.isMesh) return; for (let a = o; a; a = a.parent) if (H && a === H.root) return; const m = Array.isArray(o.material) ? o.material[0] : o.material; if (m && m.visible !== false && !m.transparent) solids.push(o); });
+    return solids;
+  }
+  const shown = (o) => { for (let a = o; a; a = a.parent) if (!a.visible) return false; return true; };
+  function firstHit(far) { ray.far = far; for (const h of ray.intersectObjects(solidList(), false)) if (h.distance > 0.25 && shown(h.object)) return h.distance; return Infinity; }
+  // can the eye reach her hat or her face? (the hedge along the road stands 1.9 m high: looking her way through it is not seeing her.)
+  let viewT = 0, viewOk = false;
+  function herInView(p) {
+    const now = performance.now(); if (now < viewT) return viewOk; viewT = now + 120;
+    viewOk = false;
+    for (const y of [3.0, 2.65]) {
+      rayO.copy(p); rayT.set(H.root.position.x, y, H.root.position.z); const L = rayT.distanceTo(rayO);
+      ray.set(rayO, rayT.sub(rayO).normalize());
+      if (firstHit(L - 0.4) === Infinity) { viewOk = true; break; }
+    }
+    return viewOk;
+  }
+  // the torch held close to something white burned it into a glowing block (the salt bag, the notice): it eases off near what it points at
+  const TORCH = 26; let torchT = 0, torchK = 1, torchWant = 1;
+  function updateTorch(dt, cam, dir) {
+    const now = performance.now();
+    if (now >= torchT) { torchT = now + 110; ray.set(cam.position, dir); const d = firstHit(4); torchWant = d === Infinity ? 1 : Math.pow(clamp(d / 3.2, 0.2, 1), 1.3); }
+    torchK += (torchWant - torchK) * Math.min(1, dt * 9);
+    light.intensity = TORCH * torchK;
+  }
   let lookAt = null;   // { x, y, z, t }: a staged glance (the knock at the front door)
   // the moment she is seen (Issue #4 follow-up: "where is she?"): my head turns to the hat on the fence and the eyes fix on it (the view
   // narrows to a zoom for about 2.5 s), then it lets go. The mouse can't fight it until it lets go.
@@ -348,8 +380,8 @@ export default function story(ext) {
     const head = tmpV.copy(H.root.position).setY(2.6), d = head.distanceTo(p);
     const look = new THREE.Vector3(); cam.getWorldDirection(look);
     const dot = look.dot(head.clone().sub(p).normalize());
-    H.gaze = (H.gaze || 0) + (d < 26 && dot > 0.8 ? dt : -dt * 0.5); H.gaze = Math.max(0, H.gaze);
-    if (H.gaze > 0.6 || (p.z > 8.5 && p.x > -4.2 && p.x < 5)) {
+    H.gaze = (H.gaze || 0) + (d < 26 && dot > 0.8 && herInView(p) ? dt : -dt * 0.5); H.gaze = Math.max(0, H.gaze);
+    if (H.gaze > 0.6 || (p.z > 8.5 && p.x > -4.2 && p.x < 5 && herInView(p))) {
       st.seen = true; H.seenT = 0; snd.po({ vol: 0.55, pan: clamp((H.root.position.x - p.x) / 8, -1, 1) }); snd.sting();
       H.character.lookAt(cam);
       say(T.seen, 8);
@@ -588,7 +620,7 @@ export default function story(ext) {
     for (const k of BOWLS) { const p = V.parts.plates[k].group.position; const m = mk(`hk-salt:${k}`, p.x, 0.6, p.z); m.userData.interact = { kind: 'hk-salt', id: k }; c.world.interactables.push(m); nightMarks[k] = m; m.visible = false; }
     voiceMark = mk('hk-voice', -8.0, 1.3, 10.75, [1.6, 1.6, 0.3]); voiceMark.userData.interact = { kind: 'hk-voice', id: 'door' }; c.world.interactables.push(voiceMark); voiceMark.visible = false;
     // the flashlight (rule S3: the tool is in hand from the start; [F] or the touch button)
-    light = new THREE.SpotLight(0xffefc7, 26, 22, Math.PI / 6.5, 0.7, 1.3); light.visible = false; light.userData.auto = true; c.scene.add(light, light.target);
+    light = new THREE.SpotLight(0xffefc7, TORCH, 22, Math.PI / 6.5, 0.7, 1.3); light.visible = false; light.userData.auto = true; c.scene.add(light, light.target);
     // HUD parts of this game
     document.body.insertAdjacentHTML('beforeend', `
       <div id="hk-photo" class="hk-photo" hidden></div>
@@ -668,7 +700,7 @@ export default function story(ext) {
     const t = performance.now() / 1000;
     V.updatePeople(dt, c.camera);
     updateHouseFx(dt, t);
-    if (light && light.visible) { light.position.copy(c.camera.position); const dir = new THREE.Vector3(); c.camera.getWorldDirection(dir); light.target.position.copy(c.camera.position).addScaledVector(dir, 6); }
+    if (light && light.visible) { light.position.copy(c.camera.position); const dir = new THREE.Vector3(); c.camera.getWorldDirection(dir); light.target.position.copy(c.camera.position).addScaledVector(dir, 6); updateTorch(dt, c.camera, dir); }
     if (V.parts.gateDials) V.parts.gateDials.forEach((d, i) => { const want = -(st.gate[i] || 0) * Math.PI / 2; d.rotation.z += (want - d.rotation.z) * Math.min(1, dt * 8); });
     if (V.parts.gate) { const G = V.parts.gate; G.open += ((G.target || 0) - G.open) * Math.min(1, dt * 2); G.left.rotation.y = -G.open * 1.6; G.right.rotation.y = G.open * 1.6; }
     if (!active) { if (lvl() === 4 && !dying && c.state.started && !c.wm.isOpen) { /* keep the seat even when the pointer is free */ } return; }
