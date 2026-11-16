@@ -1,4 +1,4 @@
-/* game-kit 9638d82: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 8e20d97: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -37,7 +37,7 @@ import { ProgressUI } from './progress-ui.js';
 import { createInventory, viewItemHtml } from './inventory-ui.js';
 import { createReleaseNotes } from './release-notes.js';
 import { Store } from './store.js';
-import { Audio } from './audio.js';
+import { Audio, preopenContext } from './audio.js';
 import * as MG from './task-minigames.js';
 import { buildWorld, pickInteractable, pickInteractableAt, selectablesOf } from './world-from-plan.js';
 import { lockedLabel, exposeGf } from './interact-select.js';
@@ -68,7 +68,7 @@ import { buildProgressionDef, taskAtStation, pickEnding } from './game-data.js';
 import { showEndingScene, foundEndings } from './ending-scene.js';
 import { mountShareBar } from './share-bar.js';
 
-export const CORE_VERSION = '1.16.3';
+export const CORE_VERSION = '1.16.4';
 // the mini game library's types (js/mg-library.js LIBRARY; test/story-hooks.test.mjs keeps the two equal): game.json "minigames" naming one of these loads the library
 export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath', 'layer-board'];
 const $ = (id) => document.getElementById(id);
@@ -303,7 +303,8 @@ export function createGame(cfg) {
   // ---- audio / input / UI ----
   const audioDef = uiDef('audio');
   const audio = ctx.audio = audioDef.create ? audioDef.create(ctx) : new Audio(); audio.volume = settings.volume;
-  const unlockAudio = () => safe(() => { ctx.audio.init(); ctx.audio.resume(); });
+  let audioHandoff = null;   // standard 1.16.4: the context opened behind the title for a game's own sound class (js/audio.js preopenContext)
+  const unlockAudio = () => { safe(() => { ctx.audio.init(); ctx.audio.resume(); }); if (audioHandoff) { audioHandoff.release(); audioHandoff = null; } };
   addEventListener('pointerdown', unlockAudio, { once: true }); addEventListener('keydown', unlockAudio, { once: true });
   const sound = (name, ...a) => safe(() => ctx.audio[name] && ctx.audio[name](...a));
   ctx.sound = sound;
@@ -902,7 +903,11 @@ ${it.desc}` : ''}`, ...(it.photo ? { img: it.photo } : {}) };
     ctx.warmReport = await warmStandardUi({ text: corpusOf([data, manifest]), images: [...imagesOf(data.items, data.docs, data.things), ...(ctx.warmImages || [])], wm, tm, pm, rn, inv, owned: () => ctx.owned(), minigames: Object.keys(MG.TASKS), minigame: (id) => ctx.minigame(id), abortMinigame: MG.abort, steps: ctx.warmSteps });
     // the sound engine too (standard 1.16.3): opening the AudioContext and generating the reverb on the start click froze the first frame of play 111-356 ms;
     // prepared here it stays private until the first click / key, which then only adopts and resumes it (js/audio.js prepare)
-    if (ctx.audio && typeof ctx.audio.prepare === 'function') { try { await ctx.audio.prepare(); } catch (e) { console.warn('audio prepare', e); } }
+    // (1.16.4) a game's own sound class (or one with its own init()) cannot adopt: the kit opens the context for it instead, handed to its first `new AudioContext()`
+    if (ctx.audio && !ctx.audio.ctx) {
+      if (ctx.audio instanceof Audio && ctx.audio.init === Audio.prototype.init) { try { await ctx.audio.prepare(); } catch (e) { console.warn('audio prepare', e); } }
+      else if (typeof ctx.audio.init === 'function' && !audioHandoff) { try { audioHandoff = preopenContext(); } catch (e) { console.warn('audio preopen', e); } await new Promise((r) => setTimeout(r, 0)); }
+    }
     ctx.booted = true;
     if (ctx.pixelStyle) ctx.pixelStyle.booted = true;
     if (status) status.textContent = '';

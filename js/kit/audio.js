@@ -1,10 +1,39 @@
-/* game-kit 9638d82: js/audio.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 8e20d97: js/audio.js — edit in game-kit and run tools/kit-sync.js */
 import { muffle as muffleOf } from './audio-at.js';
 import { stepParts, noiseParts } from './step-sound.js';
 // Procedural sound (Web Audio API). The engine (noise bursts, tones, positional output, generated
 // reverb, loops, footsteps, door / paper / beep sounds) is reused from みる風車 (game-miru-fusha,
 // js/audio.js); the station sounds (fluorescent hum, phone, printer, kitchen on the line, stamp,
 // first train) are added here. Nothing is recorded, so there is nothing to license.
+// For a game whose sound class is its own (not this Audio, or one with its own init()), standard 1.16.4: its init() still runs
+// `new (window.AudioContext || window.webkitAudioContext)()` on the first click, and opening the device is the slow part (kouguchi 476 ms,
+// shomei 494 ms in headless Chrome). preopenContext() opens one context behind the title and hands it to the first argument-less
+// `new AudioContext()`: the game's own init() gets it without knowing. release() (after that first click's init) puts the real
+// constructor back and closes the context if nobody took it, so a game that makes its context later behaves as before.
+export function preopenContext() {
+  if (typeof window === 'undefined') return null;
+  const key = window.AudioContext ? 'AudioContext' : window.webkitAudioContext ? 'webkitAudioContext' : null;
+  if (!key) return null;
+  const Real = window[key];
+  let pre;
+  try { pre = new Real(); } catch (e) { return null; }
+  let taken = false;
+  function Handoff(...args) {
+    if (!taken && !args.length) { taken = true; window[key] = Real; return pre; }
+    return new Real(...args);
+  }
+  Handoff.prototype = Real.prototype;
+  try { Object.setPrototypeOf(Handoff, Real); } catch (e) { /* statics only */ }
+  window[key] = Handoff;
+  return {
+    get taken() { return taken; },
+    release() {
+      if (window[key] === Handoff) window[key] = Real;
+      if (!taken) { taken = true; try { pre.close && pre.close(); } catch (e) { /* already closed */ } }
+    },
+  };
+}
+
 export class Audio {
   constructor() {
     this.ctx = null;

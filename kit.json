@@ -1,5 +1,5 @@
 {
-  "kit": "9638d82",
+  "kit": "8e20d97",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -232,7 +232,7 @@
     "js\\kit\\text-contrast.js": "7ee42856ab86",
     "js\\kit\\monster-nav.js": "e8c9ff6e2b4c",
     "js\\kit\\monster-escape.js": "4a9e4dd0e05d",
-    "js\\kit\\game-core.js": "19544ff99eaa",
+    "js\\kit\\game-core.js": "5a25e44b9424",
     "js\\kit\\item-kinds.js": "42b609ccaa9a",
     "js\\kit\\item-models.js": "611975f171a7",
     "js\\kit\\prop-geo.js": "b7d46c577d9a",
@@ -248,7 +248,7 @@
     "js\\kit\\icons.js": "f7b797be9b51",
     "js\\kit\\inventory-ui.js": "288b83f4e40b",
     "js\\kit\\store.js": "e2695a9cb831",
-    "js\\kit\\audio.js": "474da02bffe4",
+    "js\\kit\\audio.js": "7e7ec47f4feb",
     "js\\kit\\audio-at.js": "f573fa6e4e01",
     "js\\kit\\world-from-plan.js": "197002617425",
     "js\\kit\\room-types.js": "a2993c599dea",
