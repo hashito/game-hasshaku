@@ -1,4 +1,4 @@
-/* game-kit 2246e71: css/kit.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 9638d82: css/kit.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: shared styles for first-person browser games (windows, HUD, buttons, touch controls,
    status chips, steppers, kanban, app-like software screens, tabs, stamps, share buttons; at the end
    progression pg-*, sim UI nt-/tb-/dl-/ch-*, journal jr-* / stream veil st-* / hiding hd-*, chat cx-*).
@@ -2796,8 +2796,14 @@ body.touch .hb-tab { min-height: var(--gf-hit, 44px); } /* (U13) the notebook's 
 /* a phone held sideways (kit 1.16): a window that ends on its primary button (the controls card "タップで始める" of 汐返り・浦川・折り返し) keeps that
    button at the foot of the window while the text above scrolls, instead of leaving it below the screen */
 @media (orientation: landscape) and (max-height: 500px) {
-  .wm-body > .btn.primary:last-child, .wm-body > :last-child > .btn.primary:last-child, .wm-body > :last-child > p:last-child > .btn.primary:only-child {
+  /* the button itself when it sits right in the window body; otherwise the short row that holds only buttons
+     (a sticky element only moves inside its parent, so a button inside a short row has to take the row with it) */
+  .wm-body > .btn.primary:last-child,
+  .wm-body > :last-child:has(> .btn.primary:last-child):not(:has(> :not(.btn))),
+  .wm-body > :last-child > :last-child:has(> .btn.primary:last-child):not(:has(> :not(.btn))) {
     position: sticky; bottom: 0; z-index: 2; margin-top: 8px; box-shadow: 0 0 0 6px var(--gf-surface, var(--panel, #fffdf6)), 0 -14px 14px 4px var(--gf-surface, var(--panel, #fffdf6)); }
+  .wm-body > :last-child:has(> .btn.primary:last-child):not(:has(> :not(.btn))),
+  .wm-body > :last-child > :last-child:has(> .btn.primary:last-child):not(:has(> :not(.btn))) { background: var(--gf-surface, var(--panel, #fffdf6)); }
 }
 .wm-body img[data-wm-cap][style*="max-width"] { margin-left: auto; margin-right: auto; }   /* a capped picture (win-manager capImages) sits in the middle */
 @media (prefers-reduced-motion: no-preference) { .wm-layer { animation: wm-in 0.14s ease-out; } @keyframes wm-in { from { opacity: 0; } } }

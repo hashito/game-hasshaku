@@ -1,4 +1,4 @@
-/* game-kit 2246e71: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 9638d82: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -68,7 +68,7 @@ import { buildProgressionDef, taskAtStation, pickEnding } from './game-data.js';
 import { showEndingScene, foundEndings } from './ending-scene.js';
 import { mountShareBar } from './share-bar.js';
 
-export const CORE_VERSION = '1.16.0';
+export const CORE_VERSION = '1.16.3';
 // the mini game library's types (js/mg-library.js LIBRARY; test/story-hooks.test.mjs keeps the two equal): game.json "minigames" naming one of these loads the library
 export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath', 'layer-board'];
 const $ = (id) => document.getElementById(id);
@@ -900,6 +900,9 @@ ${it.desc}` : ''}`, ...(it.photo ? { img: it.photo } : {}) };
     // pre-paint every standard window (invisible): the first real open must not pay for layout / glyphs / image decode (perf: 150-450 ms at 4x CPU)
     if (status) status.textContent = '画面を準備中…';
     ctx.warmReport = await warmStandardUi({ text: corpusOf([data, manifest]), images: [...imagesOf(data.items, data.docs, data.things), ...(ctx.warmImages || [])], wm, tm, pm, rn, inv, owned: () => ctx.owned(), minigames: Object.keys(MG.TASKS), minigame: (id) => ctx.minigame(id), abortMinigame: MG.abort, steps: ctx.warmSteps });
+    // the sound engine too (standard 1.16.3): opening the AudioContext and generating the reverb on the start click froze the first frame of play 111-356 ms;
+    // prepared here it stays private until the first click / key, which then only adopts and resumes it (js/audio.js prepare)
+    if (ctx.audio && typeof ctx.audio.prepare === 'function') { try { await ctx.audio.prepare(); } catch (e) { console.warn('audio prepare', e); } }
     ctx.booted = true;
     if (ctx.pixelStyle) ctx.pixelStyle.booted = true;
     if (status) status.textContent = '';

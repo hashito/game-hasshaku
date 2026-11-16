@@ -1,4 +1,4 @@
-/* game-kit 77ebe23: js/audio.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 9638d82: js/audio.js — edit in game-kit and run tools/kit-sync.js */
 import { muffle as muffleOf } from './audio-at.js';
 import { stepParts, noiseParts } from './step-sound.js';
 // Procedural sound (Web Audio API). The engine (noise bursts, tones, positional output, generated
@@ -15,11 +15,44 @@ export class Audio {
     this.calm = false; // END4: the station is ordinary again
   }
 
-  init() {
-    if (this.ctx) return;
+  // the first click used to build all of this at once (standard 1.16.3): new AudioContext() alone takes 100-300 ms on Windows (the output
+  // device opens), the generated reverb and noise ~60 ms more, so the start button froze the first frame of play for 111-356 ms.
+  // prepare() runs behind the title (game-core's boot, after the warm-up) and keeps the result private: until the first click / key
+  // this.ctx stays null exactly as before (nothing plays, every `if (!audio.ctx)` check still says "not yet"); init() then only adopts it
+  // and resume() inside the gesture unlocks it. A game whose audio class overrides init() is left alone (it would open a second context).
+  async prepare() {
+    if (this.ctx || this._pre || this.init !== Audio.prototype.init) return;
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
-    this.ctx = new AC();
+    const idle = () => new Promise((r) => (window.requestIdleCallback ? window.requestIdleCallback(() => r(), { timeout: 200 }) : setTimeout(r, 0)));
+    let c;
+    try { c = new AC(); } catch (e) { return; }
+    if (this.ctx) { c.close && c.close(); return; }   // a gesture got there first
+    const pre = { ctx: c };
+    this.ctx = c;   // makeImpulse / makeNoise read this.ctx; put back right after (no await in between)
+    try {
+      pre.impulse = this.makeImpulse(1.2, 3);
+      this.ctx = null; await idle(); if (this.ctx) return c.close && c.close();
+      this.ctx = c; pre.wideImpulse = this.makeImpulse(2.6, 2.2);
+      this.ctx = null; await idle(); if (this.ctx) return c.close && c.close();
+      this.ctx = c; pre.noise = this.makeNoise(2);
+    } finally { if (this.ctx === c) this.ctx = null; }
+    await idle(); if (this.ctx) return c.close && c.close();
+    // a convolver prepares its FFT when its buffer is set (~15-25 ms each): one per idle slice
+    pre.reverb = c.createConvolver(); pre.reverb.buffer = pre.impulse;
+    await idle(); if (this.ctx) return c.close && c.close();
+    pre.wideReverb = c.createConvolver(); pre.wideReverb.buffer = pre.wideImpulse;
+    if (this.ctx) return c.close && c.close();
+    this._pre = pre;
+  }
+
+  init() {
+    if (this.ctx) return;
+    const pre = this._pre;
+    this._pre = null;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!pre && !AC) return;
+    this.ctx = pre ? pre.ctx : new AC();
     const ctx = this.ctx;
     this.master = ctx.createGain();
     this.master.gain.value = this.volume;
@@ -27,17 +60,23 @@ export class Audio {
     comp.threshold.value = -14;
     comp.ratio.value = 4;
     this.master.connect(comp).connect(ctx.destination);
-    this.reverb = ctx.createConvolver();
-    this.reverb.buffer = this.makeImpulse(1.2, 3);
-    this.wideReverb = ctx.createConvolver();
-    this.wideReverb.buffer = this.makeImpulse(2.6, 2.2);
+    if (pre) this.reverb = pre.reverb;
+    else {
+      this.reverb = ctx.createConvolver();
+      this.reverb.buffer = this.makeImpulse(1.2, 3);
+    }
+    if (pre) this.wideReverb = pre.wideReverb;
+    else {
+      this.wideReverb = ctx.createConvolver();
+      this.wideReverb.buffer = this.makeImpulse(2.6, 2.2);
+    }
     this.wet = ctx.createGain();
     this.wet.gain.value = 0.4;
     this.wideWet = ctx.createGain();
     this.wideWet.gain.value = 0;
     this.reverb.connect(this.wet).connect(this.master);
     this.wideReverb.connect(this.wideWet).connect(this.master);
-    this.noiseBuf = this.makeNoise(2);
+    this.noiseBuf = pre ? pre.noise : this.makeNoise(2);
     this.music = ctx.createGain();
     this.music.gain.value = 0.7;
     this.music.connect(this.master);
