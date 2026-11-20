@@ -1,5 +1,5 @@
 {
-  "kit": "2e206ef",
+  "kit": "f1cd86f",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -237,7 +237,7 @@
     "js\\kit\\text-contrast.js": "7ee42856ab86",
     "js\\kit\\monster-nav.js": "e8c9ff6e2b4c",
     "js\\kit\\monster-escape.js": "4a9e4dd0e05d",
-    "js\\kit\\game-core.js": "404517ef01ca",
+    "js\\kit\\game-core.js": "ac81ff16cc7a",
     "js\\kit\\item-kinds.js": "42b609ccaa9a",
     "js\\kit\\item-models.js": "611975f171a7",
     "js\\kit\\prop-geo.js": "b7d46c577d9a",
@@ -323,7 +323,7 @@
     "js\\kit\\chat-ext.js": "b945dbd6e7ab",
     "js\\kit\\control-help.js": "d95d2d411a43",
     "js\\kit\\paper-doc.js": "9237b6f2821d",
-    "tools/check-playtest.mjs": "b4b3e096d78b",
+    "tools/check-playtest.mjs": "af2e2d3b7c41",
     "js\\kit\\wall-paste.js": "c43114e53a2d",
     "js\\kit\\timed-shot.js": "136312a2caff"
   },

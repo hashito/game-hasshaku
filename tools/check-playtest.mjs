@@ -62,7 +62,8 @@ if (game.deaths) {
   const ms = [path.join(dir, 'js', 'kit', 'map-svg.js'), path.join(import.meta.dirname, '..', 'js', 'map-svg.js')].find((f) => fs.existsSync(f));
   if (plan && ms) {
     const { fitLabel, roomSpan } = await import(pathToFileURL(ms).href);
-    for (const r of plan.rooms || []) { const name = String(r.name || ''), fit = fitLabel(name, roomSpan(r, 16), 12); if ([...name].length > 3 && [...fit].length < 4) Wn('P16', `room "${r.id}" (${name}) shows as 「${fit}」 on the map: too small for its name (a shorter name, or "mapName")`); }
+    // a game whose js/kit/map-svg.js is kept older (edited in the game, skipped by kit-sync) has no fitLabel: P16 is left out there
+    if (typeof fitLabel === 'function' && typeof roomSpan === 'function') for (const r of plan.rooms || []) { const name = String(r.name || ''), fit = fitLabel(name, roomSpan(r, 16), 12); if ([...name].length > 3 && [...fit].length < 4) Wn('P16', `room "${r.id}" (${name}) shows as 「${fit}」 on the map: too small for its name (a shorter name, or "mapName")`); }
   }
 }
 
