@@ -1,5 +1,5 @@
 {
-  "kit": "74ad163",
+  "kit": "2e206ef",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -96,7 +96,9 @@
     "chat",
     "chat-ext",
     "control-help",
-    "paper-doc"
+    "paper-doc",
+    "wall-paste",
+    "timed-shot"
   ],
   "css": "css/kit.css",
   "cssExtra": [
@@ -184,12 +186,12 @@
     "js/kit/prop-batch.js": "abd03dfc3b79",
     "js/kit/env-props.js": "8173704023b6",
     "js/kit/text-contrast.js": "7fee755af57a",
-    "css/kit.css": "4c303c53e403",
+    "css/kit.css": "0cbd5c76df8b",
     "css/theme.css": "ebaca1cab248",
     "css/shell.css": "69c16bee0f93",
     "schema/chat-story.schema.json": "74021fbcd2f8",
     "schema/creation-brief.schema.json": "4a7c4e40cf74",
-    "schema/docs.schema.json": "533be2902f17",
+    "schema/docs.schema.json": "6ac035fd7d5b",
     "schema/endings.schema.json": "ec10b40dad12",
     "schema/game.schema.json": "08622f782238",
     "schema/items.schema.json": "faa2f5a7e22a",
@@ -198,7 +200,7 @@
     "schema/plan.schema.json": "1250d3cdb7c4",
     "schema/release-notes.schema.json": "4097758c9ec4",
     "schema/stages.schema.json": "1c343e9e4f9f",
-    "schema/tasks.schema.json": "bc2134649d64",
+    "schema/tasks.schema.json": "9b2a66d4973c",
     "schema/terminals.schema.json": "d925c34908f1",
     "schema/things.schema.json": "8758a52e26d8",
     "tools/serve.js": "383ea74a3e8f",
@@ -235,7 +237,7 @@
     "js\\kit\\text-contrast.js": "7ee42856ab86",
     "js\\kit\\monster-nav.js": "e8c9ff6e2b4c",
     "js\\kit\\monster-escape.js": "4a9e4dd0e05d",
-    "js\\kit\\game-core.js": "6c010a276e14",
+    "js\\kit\\game-core.js": "404517ef01ca",
     "js\\kit\\item-kinds.js": "42b609ccaa9a",
     "js\\kit\\item-models.js": "611975f171a7",
     "js\\kit\\prop-geo.js": "b7d46c577d9a",
@@ -259,7 +261,7 @@
     "js\\kit\\tab-menu.js": "27550d2cd73b",
     "js\\kit\\pause-menu.js": "9e9b552865d2",
     "js\\kit\\journal-ui.js": "cbc66ddef822",
-    "js\\kit\\map-svg.js": "658f7b1b62c2",
+    "js\\kit\\map-svg.js": "39cb11539e36",
     "js\\kit\\step-guide.js": "729b38a3b12e",
     "js\\kit\\frame-guard.js": "84d70b646f5e",
     "js\\kit\\ui-warm.js": "0dfaca7a2016",
@@ -288,7 +290,7 @@
     "js\\kit\\mg-frame.js": "5fb1eeec4d16",
     "js\\kit\\mg-turn-dials.js": "31e4b2907754",
     "js\\kit\\mg-library.js": "7e46f6d60015",
-    "tools/check-traps.mjs": "577f4df2f4a8",
+    "tools/check-traps.mjs": "2626544c3f48",
     "js\\kit\\step-sound.js": "73ec45c73c86",
     "js\\kit\\fear-fx.js": "086714c2913d",
     "js\\kit\\ending-scene.js": "28554e72ed39",
@@ -304,7 +306,7 @@
     "tools/smoke.mjs": "ef4b5d335643",
     "js\\kit\\barrier-look.js": "9e8a9707f8fb",
     "js\\kit\\station-looks.js": "d975e9cad2f9",
-    "js\\kit\\hide-looks.js": "a89ffad60f08",
+    "js\\kit\\hide-looks.js": "2a26fda3839f",
     "js\\kit\\mg-sound.js": "716108fa36d3",
     "schema/chat-game.schema.json": "4463a3812a3d",
     "js\\kit\\approach-fx.js": "c7a3996b7bcd",
@@ -321,7 +323,9 @@
     "js\\kit\\chat-ext.js": "b945dbd6e7ab",
     "js\\kit\\control-help.js": "d95d2d411a43",
     "js\\kit\\paper-doc.js": "9237b6f2821d",
-    "tools/check-playtest.mjs": "ea324a4addfd"
+    "tools/check-playtest.mjs": "b4b3e096d78b",
+    "js\\kit\\wall-paste.js": "c43114e53a2d",
+    "js\\kit\\timed-shot.js": "136312a2caff"
   },
   "textures": [
     "planks_worn",

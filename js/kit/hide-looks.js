@@ -1,4 +1,4 @@
-/* game-kit 4b9f6fa: js/hide-looks.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 2e206ef: js/hide-looks.js — edit in game-kit and run tools/kit-sync.js */
 // Hiding places you can see (standard 1.10.13, rule G7 "隠れる場所は、見て隠れ場所と分かる物にする"; feedback 2026-11-03 出口はこちらです
 // 「棚の隙間に隠れるの分かりづらい。ロッカーとかおいて」). plan.hides[i].look builds the thing at the hide spot (x, z = its centre):
 //   'locker'   a grey steel locker, a louvre at eye height to peek through (offices, stations, schools, plant rooms)
@@ -40,7 +40,7 @@ export function buildHideLook(h, room) {
   } else if (kind === 'oshiire') {
     const frame = mat('oshiire-frame', { color: 0x3e2c1e, roughness: 0.8 }), paper = mat('oshiire-paper', { color: 0xd9cfb4, roughness: 0.9 }), inner = mat('oshiire-in', { color: 0x4a3c2c, roughness: 0.9 });
     solids.push(box(g, 1.7, 1.85, 0.03, 0, 0.925, -0.42, inner), box(g, 0.05, 1.85, 0.86, -0.85, 0.925, 0, frame), box(g, 0.05, 1.85, 0.86, 0.85, 0.925, 0, frame));
-    box(g, 1.75, 0.06, 0.86, 0, 1.88, 0, frame); box(g, 1.7, 0.04, 0.86, 0, 0.02, 0, inner); box(g, 1.7, 0.04, 0.8, 0, 0.95, -0.02, inner);   // the shelf (中段)
+    box(g, 1.75, 0.06, 0.86, 0, 1.88, 0, frame); box(g, 1.7, 0.04, 0.86, 0, 0.02, 0, inner);   // no middle shelf (中段): you step in and stand (standard 1.18.0, 鏡屋 #7 「間で２段にきれているので入りづらい」)
     // two fusuma on their tracks; open = the right one slid behind the left, shut = side by side with a finger gap between
     const leaves = [-1, 1].map((s) => { const f = new THREE.Group(); f.position.set(s * 0.42, 0, 0.4 + (s > 0 ? 0.03 : 0)); g.add(f); box(f, 0.84, 1.8, 0.025, 0, 0.92, 0, paper); for (const x of [-0.4, 0.4]) box(f, 0.03, 1.8, 0.03, x, 0.92, 0, frame); box(f, 0.05, 0.05, 0.01, s * -0.3, 0.95, 0.015, frame); return f; });
     setShut = (k) => { leaves[1].position.x = 0.44 - (1 - k) * 0.84; };   // shut: a 2 cm gap at the middle to peek through

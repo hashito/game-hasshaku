@@ -49,6 +49,13 @@
         },
         "description": "task ids that must be done first"
       },
+      "needItems": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "standard 1.18.0: item ids this task needs; the map marks where each lies once the task is the one to do"
+      },
       "optional": {
         "type": "boolean"
       },

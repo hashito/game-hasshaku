@@ -1,4 +1,4 @@
-/* game-kit e82a687: js/map-svg.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 2e206ef: js/map-svg.js — edit in game-kit and run tools/kit-sync.js */
 // SVG floor map (rule U18 of docs/3d-game-rules.md). Game-agnostic: the input is the plan.json used by js/plan-check.js
 // (rooms / doors / stations; x east, z toward the bottom of the map, metres) plus runtime state.
 // Floors as tabs, room names, corridors, doors (locked ones marked), stairs, the player marker with heading,
@@ -64,6 +64,7 @@ export const MAP_SVG_CSS = `
 .ms-station{fill:#c33}
 .ms-pin{fill:var(--gf-accent,#e8a040);stroke:#fff;stroke-width:1.5}
 .ms-pin--item{fill:var(--gf-ok,#2e7a4a)}
+.ms-pin--next{fill:var(--gf-danger,#d0603a)}
 .ms-player{fill:var(--gf-accent,#3a7a5a);stroke:#fff;stroke-width:1.5}
 .ms-player-ring{fill:none;stroke:var(--gf-accent,#3a7a5a);stroke-width:1.5;opacity:.5}
 .ms-label,.ms-stairs-t,.ms-station-t,.ms-start,.ms-pin-t,.ms-legend,.ms-ruler{font-family:var(--gf-font,system-ui,"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif);font-weight:600;paint-order:stroke;stroke:var(--gf-surface,#fff);stroke-width:3px;stroke-linejoin:round}
@@ -102,7 +103,7 @@ export function renderFloor(plan, floor, opts = {}) {
     const cls = ["ms-room", `ms-room--${r.kind || "room"}`, !seen && "ms-room--unvisited", here && here.id === r.id && "ms-room--here", go.has(r.id) && "ms-room--go", o.selected === r.id && "ms-room--sel"].filter(Boolean).join(" ");
     out += `<g class="ms-r" data-room="${esc(r.id)}"><rect class="${cls}" x="${X(r.x)}" y="${Z(r.z)}" width="${(r.w * scale).toFixed(1)}" height="${(r.d * scale).toFixed(1)}"/>`;
     const showName = named ? named.has(r.id) : o.names === "visited" ? seen : true;
-    const label = showName ? r.name || r.id : "？";
+    const label = showName ? fitLabel(r.name || r.id, roomSpan(r, scale), o.fontSize || 12) : "？";
     const cx = X(r.x + r.w / 2), cz = Z(r.z + r.d / 2), vertical = r.d > r.w * 1.5 && [...String(label)].length > 1; // one character ("？") stays upright
     out += `<text class="ms-label${r.kind === "corridor" ? " ms-label--small" : ""}${showName ? "" : " ms-label--dim"}" x="${cx}" y="${cz}"${vertical ? ` transform="rotate(-90 ${cx} ${cz})"` : ""}>${esc(label)}</text></g>`;
   }
@@ -149,14 +150,16 @@ export function renderFloor(plan, floor, opts = {}) {
     let txt = "";
     if (p.label) {
       // the name of a pin in a room goes on its own line under the room name (same direction as that name), shortened, so the two never overlap (1.15.3)
-      const home = r || roomAt(plan, px, pz, floor), short = pinLabel(p.label);
+      // 1.18.0 (鏡屋): shortened to the width of the room, and a row that would fall out of the room is left out (the pin keeps its <title>)
+      const home = r || roomAt(plan, px, pz, floor), fs = (o.fontSize || 12) * 0.85;
       if (home) {
-        const row = (pinRow.get(home.id) || 0) + 1, cx = X(home.x + home.w / 2), cz = Z(home.z + home.d / 2);
+        const row = (pinRow.get(home.id) || 0) + 1, cx = X(home.x + home.w / 2), cz = Z(home.z + home.d / 2), vert = home.d > home.w * 1.5;
         pinRow.set(home.id, row);
-        txt = `<text class="ms-pin-t" x="${cx}" y="${cz}" dy="${(row * 1.25).toFixed(2)}em" text-anchor="middle"${home.d > home.w * 1.5 ? ` transform="rotate(-90 ${cx} ${cz})"` : ""}>${esc(short)}</text>`;
-      } else txt = `<text class="ms-pin-t" x="${X(px) + 8}" y="${Z(pz) + 3}">${esc(short)}</text>`;
+        const depth = (vert ? home.w : home.d) * scale, short = fitLabel(pinLabel(p.label), roomSpan(home, scale), fs);
+        if ((row + 0.5) * fs * 1.25 <= depth / 2 + fs * 0.6) txt = `<text class="ms-pin-t" x="${cx}" y="${cz}" dy="${(row * 1.25).toFixed(2)}em" text-anchor="middle"${vert ? ` transform="rotate(-90 ${cx} ${cz})"` : ""}>${esc(short)}</text>`;
+      } else txt = `<text class="ms-pin-t" x="${X(px) + 8}" y="${Z(pz) + 3}">${esc(pinLabel(p.label))}</text>`;
     }
-    out += `<g class="ms-pinG" data-pin="${esc(p.id)}">${p.label ? `<title>${esc(p.label)}</title>` : ""}<circle class="ms-pin${p.kind === "item" ? " ms-pin--item" : ""}" cx="${X(px)}" cy="${Z(pz)}" r="5.5"/>${txt}</g>`;
+    out += `<g class="ms-pinG" data-pin="${esc(p.id)}">${p.label ? `<title>${esc(p.label)}</title>` : ""}<circle class="ms-pin${p.kind === "item" ? " ms-pin--item" : ""}${p.next ? " ms-pin--next" : ""}" cx="${X(px)}" cy="${Z(pz)}" r="5.5"/>${txt}</g>`;
   }
   if (pos && (pos.floor || 0) === floor) {
     const h = st.heading || 0;
@@ -167,6 +170,17 @@ export function renderFloor(plan, floor, opts = {}) {
 
 // a pin name on the map: a task title can be a whole sentence; 8 characters is what fits a room of about 100 px (the full text is the pin's <title>) (pure)
 export const PIN_LABEL_MAX = 8;
+// the long side of a room in px (a name runs along it: rotated in a tall room) (pure)
+export const roomSpan = (r, scale = 16) => (r.d > r.w * 1.5 ? r.d : r.w) * scale;
+// a text cut to what fits `px` at a font of `fs` px (a full-width character ~ fs, half-width ~ fs * 0.55), at least 2 characters (pure,
+// standard 1.18.0, 鏡屋: the cellar's name and its pin name ran out of the small room and were clipped). tools/check-playtest.mjs P16 lists
+// rooms too small for three characters of their name.
+export const textPx = (s, fs = 12) => [...String(s)].reduce((w, ch) => w + (/[\u0000-\u00ff\uff61-\uff9f]/.test(ch) ? fs * 0.55 : fs), 0);
+export const fitLabel = (s, px, fs = 12) => {
+  const c = [...String(s)]; if (textPx(s, fs) <= px - 4) return c.join("");
+  let n = c.length - 1; while (n > 2 && textPx(c.slice(0, n).join("") + "…", fs) > px - 4) n--;
+  return `${c.slice(0, n).join("")}…`;
+};
 export const pinLabel = (s) => { const c = [...String(s)]; return c.length > PIN_LABEL_MAX ? `${c.slice(0, PIN_LABEL_MAX - 1).join("")}…` : c.join(""); };
 
 export function floorLabel(f) {

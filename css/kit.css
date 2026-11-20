@@ -1,4 +1,4 @@
-/* game-kit 74ad163: css/kit.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 2e206ef: css/kit.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: shared styles for first-person browser games (windows, HUD, buttons, touch controls,
    status chips, steppers, kanban, app-like software screens, tabs, stamps, share buttons; at the end
    progression pg-*, sim UI nt-/tb-/dl-/ch-*, journal jr-* / stream veil st-* / hiding hd-*, chat cx-*).
@@ -3620,3 +3620,20 @@ body.touch #say.on { pointer-events: auto; }   /* a tap on the thought band open
 .mgx-layer-hint b { color: var(--gf-accent, #3a7a5a); margin-right: 6px; }
 .mgx-layer-tools { justify-content: center; flex-wrap: wrap; }
 .mgx-layer-tools .btn { min-height: 48px; }
+
+/* standard 1.18.0 (鏡屋 kagamiya feedback): the timed-shot band (js/timed-shot.js), the viewfinder size / focus guide (mg-photo-focus), the next pin of the map */
+.gf-timed { min-width: min(420px, 86vw); padding: 8px 12px 9px; border-radius: 8px; background: rgba(14, 8, 8, 0.86); color: #f3e7dc; border: 1px solid rgba(255, 170, 140, 0.55); text-align: center; pointer-events: none; }
+.gf-timed[hidden] { display: none; }
+.gf-timed-label { font-size: 17px; font-weight: 700; letter-spacing: 0.04em; line-height: 1.5; }
+.gf-timed-track { height: 8px; margin: 6px 0 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.14); /* pair-ok */ overflow: hidden; }
+.gf-timed-track i { display: block; height: 100%; width: 100%; background: #f0b27a; /* pair-ok */ }
+.gf-timed.gf-timed-low .gf-timed-track i { background: #ff7a5c; /* pair-ok */ }
+.gf-timed-key { font-size: 14px; color: #e8d6c8; }
+.mgx-photo-outline { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); border: 2px dashed #ff9d7a; /* pair-ok */ pointer-events: none; transition: width 0.15s ease-out, height 0.15s ease-out; box-sizing: border-box; }
+.mgx-photo-outline.mgx-photo-outline--ok { border-color: #8fe0a0; /* pair-ok */ border-style: solid; }
+.mgx-photo-frame.mgx-photo-frame--ok { border-color: #8fe0a0; /* pair-ok */ }
+.mgx-photo-read { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; width: min(400px, 100%); margin: 0 auto; font-size: 15px; line-height: 1.5; }
+.mgx-photo-read span { padding: 2px 8px; border-radius: 6px; background: rgba(0, 0, 0, 0.35); /* pair-ok */ color: #ffc2a8; /* pair-ok */ }
+.mgx-photo-read span.mgx-photo-good { color: #a8f0b4; /* pair-ok */ }
+@media (max-height: 500px) { .mgx-photo-read { font-size: 14px; } }
+.ms-pin--next { fill: var(--gf-danger, #d0603a); }

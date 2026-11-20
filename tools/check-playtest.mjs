@@ -13,10 +13,17 @@
 //   P7  the death card of each game.json "deaths" reason: it must cover the screen, have its button, and give play back (#23)
 //   P8  a things.json ひとこと that repeats the text (#6)
 //   P9  the menu has 操作方法 (#16)
+//   P10 a flat paper / charm / poster whose middle is inside a wall, a post or a door frame (札の家 #2 #4 #14): use js/wall-paste.js
+//   P11 a plain box with no texture, 0.25-2.4 m (札の家 #9)    P12 something standing in a doorway (札の家 #3)
+//   P13 a thing to look at with nothing under it: floating (札の家 #1 #6)
+//   P14 a paper high on a wall (a doc at 1 m or more) still lying flat: a sheet sticking out of the plaster (鏡屋 #1; the kit stands it since 1.18.0)
+//   P15 a reason the game passes to ctx.die / ctx.hurt with no card of its own in game.json "deaths" (鏡屋: the hands and the woman of the
+//       washroom said the same words)    P16 a room on the map too small for three characters of its name (鏡屋: 地下室 clipped)
 // Exit 1 on an error (P4, P7, P9) or, with --strict, on a warning. The play scripts of a game check the rest (contact, speed, softlocks).
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { launch } from './cdp.mjs';
 
 const args = process.argv.slice(2), arg = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
@@ -40,7 +47,23 @@ const data = game.data || {};
   for (const w of who) { const base = w.replace(/[（(].*$/, '').trim(); if (!self.has(w) && !self.has(base) && !portraits[w] && !portraits[base] && !/声|放送|無線の雑音|アナウンス|？/.test(w)) Wn('P6', `speaker "${w}" has no portrait (game.json portraits)`); }
   const things = data.things ? readJson(data.things) : null;
   const n = (x) => String(x || '').replace(/[\s「」『』（）()、。・…！？!?\-ー―*]/g, '');
-  for (const t of things || []) { const tx = [].concat(t.text || []); if (t.feeling && tx.some((x) => n(x) && (n(x) === n(t.feeling) || (n(t.feeling).length > 8 && n(x).includes(n(t.feeling)))))) Wn('P8', `thing "${t.id}": ひとこと repeats the text`); }
+  for (const t of (Array.isArray(things) ? things : (things && things.things) || [])) {   /* 1.17.2: things.json may be { photos, things } */ const tx = [].concat(t.text || []); if (t.feeling && tx.some((x) => n(x) && (n(x) === n(t.feeling) || (n(t.feeling).length > 8 && n(x).includes(n(t.feeling)))))) Wn('P8', `thing "${t.id}": ひとこと repeats the text`); }
+}
+
+// P15: every death reason in the game's code has its own card (the default card says nothing about what caught you)
+if (game.deaths) {
+  const reasons = new Map(), walkJs = (d) => { for (const f of fs.existsSync(d) ? fs.readdirSync(d, { withFileTypes: true }) : []) { const q = path.join(d, f.name); if (f.isDirectory()) { if (f.name !== 'kit' && f.name !== 'vendor') walkJs(q); } else if (/\.m?js$/.test(f.name)) { const src = fs.readFileSync(q, 'utf8'); for (const m of src.matchAll(/\b(?:die|hurt)\(\s*['"]([\w-]+)['"]/g)) reasons.set(m[1], path.relative(dir, q)); } } };
+  walkJs(path.join(dir, 'js'));
+  for (const [r, f] of reasons) if (!game.deaths[r]) Wn('P15', `death reason "${r}" (${f}) has no card in game.json "deaths": the player is not told what caught them`);
+}
+// P16: room names that do not fit their room on the map
+{
+  const plan = data.plan ? readJson(data.plan) : null;
+  const ms = [path.join(dir, 'js', 'kit', 'map-svg.js'), path.join(import.meta.dirname, '..', 'js', 'map-svg.js')].find((f) => fs.existsSync(f));
+  if (plan && ms) {
+    const { fitLabel, roomSpan } = await import(pathToFileURL(ms).href);
+    for (const r of plan.rooms || []) { const name = String(r.name || ''), fit = fitLabel(name, roomSpan(r, 16), 12); if ([...name].length > 3 && [...fit].length < 4) Wn('P16', `room "${r.id}" (${name}) shows as 「${fit}」 on the map: too small for its name (a shorter name, or "mapName")`); }
+  }
 }
 
 // ---- in the page ----
@@ -107,6 +130,68 @@ try {
         if (free < Math.max(1.2, narrow * 0.7)) { out.p3.push(r.id + ' (' + (r.name || '') + ') free ' + free.toFixed(2) + ' m at ' + (alongX ? 'x ' + x.toFixed(1) : 'z ' + z.toFixed(1))); t += 2; }
       }
     }
+    // 1.17.3 (札の家 #1 #2 #3 #4 #6 #9 #14): what the eye found wrong in a built house
+    const axisOk = (m) => { const e = m.matrixWorld.elements; for (const c of [[e[0], e[1], e[2]], [e[4], e[5], e[6]], [e[8], e[9], e[10]]]) { const L = Math.hypot(...c) || 1; if (Math.max(...c.map((v) => Math.abs(v) / L)) < 0.995) return false; } return true; };
+    const solid = meshes.filter(({ m, s }) => !m.isSprite && !m.isInstancedMesh && Math.min(s.x, s.y, s.z) > 0.04 && axisOk(m) && ![].concat(m.material).some((mt) => mt && (mt.transparent || mt.visible === false || mt.colorWrite === false)));
+    const near = (a, b) => { for (let x = a; x; x = x.parent) if (x === b) return true; for (let x = b; x; x = x.parent) if (x === a) return true; return a.parent && a.parent === b.parent && a.parent !== W.group && a.parent !== g.scene; };
+    out.p10 = []; out.p11 = []; out.p12 = []; out.p13 = [];
+    // P10: a paper / charm / poster (a flat mesh) with something right in front of its face (within 3 cm): it is inside a wall, a post or a door
+    // frame, or another paper lies on it (#2 #4 #14). Five points of the face are tried from the front (+Z of a plane; both sides of a thin box).
+    const rc10 = new T.Raycaster(), tg10 = meshes.filter(({ m }) => !m.isSprite && !m.isInstancedMesh).map(({ m }) => m);
+    for (const { m, s, b } of meshes) {
+      if (m.isSprite || m.isInstancedMesh || !m.geometry) continue;
+      const dims = [s.x, s.y, s.z], plane = m.geometry.type === 'PlaneGeometry';
+      if (!plane && (Math.min(...dims) > 0.02 || dims.filter((v) => v > 0.05 && v < 1.6).length < 2)) continue;
+      if (plane && (dims.filter((v) => v > 0.05 && v < 1.6).length < 2 || dims.some((v) => v > 1.6))) continue;
+      const q = new T.Quaternion(); m.getWorldQuaternion(q); const n = new T.Vector3(0, 0, 1).applyQuaternion(q).normalize();
+      if (Math.abs(n.y) > 0.7) continue;   // papers on a wall; a mat or a ceiling board is not one
+      const u = new T.Vector3(1, 0, 0).applyQuaternion(q), v = new T.Vector3(0, 1, 0).applyQuaternion(q), c = b.getCenter(new T.Vector3());
+      const pp = m.geometry.parameters || {}, hw = (pp.width || s.x) * m.getWorldScale(new T.Vector3()).x * 0.35, hh = (pp.height || s.y) * m.getWorldScale(new T.Vector3()).y * 0.35;
+      const pts = [c, c.clone().addScaledVector(u, hw).addScaledVector(v, hh), c.clone().addScaledVector(u, -hw).addScaledVector(v, hh), c.clone().addScaledVector(u, hw).addScaledVector(v, -hh), c.clone().addScaledVector(u, -hw).addScaledVector(v, -hh)];
+      const others = tg10.filter((o) => o !== m && !near(m, o));
+      const covered = (side) => pts.filter((pt) => { rc10.set(pt.clone().addScaledVector(n, side * 0.3), n.clone().multiplyScalar(-side)); rc10.far = 0.3 - 0.0005; const h = rc10.intersectObjects(others, false)[0]; return h && h.distance > 0.27; }).length;
+      const k = plane ? covered(1) : Math.min(covered(1), covered(-1));
+      if (k >= 2) out.p10.push((m.name || m.parent && m.parent.name || m.geometry.type) + ' at ' + c.x.toFixed(2) + ',' + c.y.toFixed(2) + ',' + c.z.toFixed(2) + ' (' + k + '/5 of the face covered)');
+    }
+    // P11: a plain box with no picture on it, bigger than a hand and smaller than a wall: reads as a placeholder (#9)
+    for (const { m, s, b } of solid) {
+      const grp = m.parent; if (grp && grp !== W.group && grp !== g.scene && grp.children.filter((x) => x.isMesh).length > 1) continue;   // a part of a made prop (a chest of drawers with its drawers): not a placeholder
+      if (m.geometry.type !== 'BoxGeometry' || Math.min(s.x, s.y, s.z) < 0.25 || Math.max(s.x, s.y, s.z) > 2.4 || (m.userData && (m.userData.plainOk || m.userData.interact))) continue;
+      const mats = [].concat(m.material); if (mats.some((mt) => mt.map || mt.isShaderMaterial || mt.isMeshBasicMaterial)) continue;
+      const c = b.getCenter(new T.Vector3()); out.p11.push((m.name || 'box') + ' ' + s.x.toFixed(2) + 'x' + s.y.toFixed(2) + 'x' + s.z.toFixed(2) + ' at ' + c.x.toFixed(1) + ',' + c.z.toFixed(1));
+    }
+    // P12: something standing in a doorway: the middle of the opening, 0.7 m either side of the door (#3)
+    const allCols = (W.colliders || []).filter((c) => c.box && !c.off && !c.low && !c.gate);
+    for (const [id, d] of W.doors || new Map()) {
+      if (!d.col || !d.col.box) continue; const B = d.col.box, sx = B.max.x - B.min.x, sz = B.max.z - B.min.z, alongX = sx > sz, w = Math.max(sx, sz);
+      const cx = (B.min.x + B.max.x) / 2, cz = (B.min.z + B.max.z) / 2;
+      const way = new T.Box3(new T.Vector3(alongX ? cx - w * 0.3 : cx - 0.7, B.min.y + 0.3, alongX ? cz - 0.7 : cz - w * 0.3), new T.Vector3(alongX ? cx + w * 0.3 : cx + 0.7, B.min.y + 1.6, alongX ? cz + 0.7 : cz + w * 0.3));
+      const doorColsAll = new Set([...W.doors.values()].map((x) => x.col).filter(Boolean));
+      const blk = allCols.find((c) => !doorColsAll.has(c) && c.box.intersectsBox(way) && (c.box.max.x - c.box.min.x) < 3 && (c.box.max.z - c.box.min.z) < 3);
+      if (blk) out.p12.push(id + ' at ' + cx.toFixed(1) + ',' + cz.toFixed(1) + ' (something ' + (blk.box.max.x - blk.box.min.x).toFixed(2) + 'x' + (blk.box.max.z - blk.box.min.z).toFixed(2) + ' at ' + ((blk.box.min.x + blk.box.max.x) / 2).toFixed(1) + ',' + ((blk.box.min.z + blk.box.max.z) / 2).toFixed(1) + ')');
+    }
+    // P13: a thing to look at hanging in the air: nothing within 6 cm under it (#1 #6). userData.hangs = true for a thing that hangs on purpose.
+    const rc = new T.Raycaster(); const targets = meshes.filter(({ m }) => !m.isSprite).map(({ m }) => m);
+    for (const it of W.interactables || []) {
+      const u = it.userData && it.userData.interact; if (!u || !shown(it) || it.userData.off || it.userData.hangs || u.kind === 'door' || u.kind === 'hide') continue;
+      const b = new T.Box3().setFromObject(it); if (!isFinite(b.min.y) || floorYs.some((y) => b.min.y - y < 0.06)) continue;
+      const vis = []; it.traverse((m) => { if (m !== it && targets.includes(m)) vis.push(m); }); if (!vis.length && !(it.isMesh && drawn(it))) continue; const body = vis.length ? vis : [it];   // an invisible hit box (a station, a look) is not the thing itself
+      const bb = new T.Box3(); for (const m of body) bb.union(new T.Box3().setFromObject(m)); if (!isFinite(bb.min.y) || bb.max.y - bb.min.y < 0.005) continue;
+      const c = bb.getCenter(new T.Vector3()); rc.set(new T.Vector3(c.x, bb.min.y + 0.002, c.z), new T.Vector3(0, -1, 0)); rc.far = 3;
+      const others = targets.filter((m) => !body.includes(m) && m !== it);
+      const onWall = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dz]) => { rc.set(c.clone(), new T.Vector3(dx, 0, dz)); rc.far = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z) / 2 + 0.08; return rc.intersectObjects(others, false).length > 0; });
+      if (onWall) continue;   // a notice, a sign, a calendar: hung on the wall
+      rc.set(new T.Vector3(c.x, bb.min.y + 0.002, c.z), new T.Vector3(0, -1, 0)); rc.far = 3;
+      const h = rc.intersectObjects(others, false)[0];
+      if (h && h.distance > 0.06 && !(h.object.userData && h.object.userData.interact)) out.p13.push(u.kind + ':' + u.id + ' ' + h.distance.toFixed(2) + ' m above ' + (h.object.name || h.object.geometry.type) + ' at ' + c.x.toFixed(1) + ',' + c.z.toFixed(1));
+    }
+    // P14: a paper above 1 m lying flat (a doc pickup whose model is a horizontal sheet)
+    out.p14 = [];
+    for (const it of W.interactables || []) {
+      const u = it.userData && it.userData.interact, def = it.userData && it.userData.def; if (!u || u.kind !== 'doc' || !def || !(def.y >= 1) || def.wall === false) continue;
+      const md = it.userData.model || it, b = new T.Box3().setFromObject(md), s = b.getSize(new T.Vector3());
+      if (isFinite(s.y) && s.y < 0.05 && Math.max(s.x, s.z) > 0.1) out.p14.push(u.id + ' at ' + it.position.x.toFixed(1) + ',' + it.position.y.toFixed(1) + ',' + it.position.z.toFixed(1));
+    }
     // P4: low zones
     for (const Z of g.lowZones || []) if (!Z.standingBlocked()) out.p4.push(Z.id);
     out.jumps = window.__gfNpcJumps || [];
@@ -118,6 +203,11 @@ try {
   for (const x of audit.p3) Wn('P3', `corridor narrowed: ${x}`);
   for (const x of audit.p4) E('P4', `low zone "${x}" lets a standing body in`);
   for (const j of audit.jumps) Wn('P5', `person jumped: ${j.name} ${j.from} -> ${j.to}`);
+  for (const x of audit.p10.slice(0, 20)) Wn('P10', `a paper / charm with something on its face (inside a wall / a frame, or under another paper): ${x}`);
+  for (const x of audit.p11.slice(0, 20)) Wn('P11', `a plain untextured box (a placeholder look; userData.plainOk if meant): ${x}`);
+  for (const x of audit.p12) Wn('P12', `a doorway half blocked: ${x}`);
+  for (const x of audit.p14) Wn('P14', `a paper on the wall lies flat (sticks out of the plaster): ${x}`);
+  for (const x of audit.p13.slice(0, 20)) Wn('P13', `a thing floating in the air: ${x}`);
   // P9: 操作方法 in the menu
   const ctl = await G(`(async () => { if (!g.pm) return 'no menu'; g.pm.open(); await new Promise((r) => setTimeout(r, 400)); const ok = [...document.querySelectorAll('.wm-layer button, .pm button')].some((b) => /操作方法/.test(b.textContent)); g.pm.close && g.pm.close(); return ok; })()`);
   if (ctl !== true) E('P9', `the menu has no 操作方法 (${ctl})`);

@@ -37,7 +37,8 @@ async function inPage() {
   const plan = await (await fetch((await (await fetch('game.json')).json()).data.plan || 'data/plan.json')).json();
   const doorCols = new Set(); if (W.doors) for (const d of W.doors.values()) { if (d.col) doorCols.add(d.col); if (d.collider) doorCols.add(d.collider); }
   // a low zone (js/low-zone.js, low: true) is passable crouching: it is not a wall (1.17.0)
-  const cols = W.colliders.filter((c) => !c.off && !c.low && !doorCols.has(c) && c.box.max.y >= 0.15 && c.box.min.y <= 1.6);
+  // a gate (gate: true, 1.17.3: a lattice door, a story barrier the game opens) shuts a place for a while, like a door: not a wall either
+  const cols = W.colliders.filter((c) => !c.off && !c.low && !c.gate && !doorCols.has(c) && c.box.max.y >= 0.15 && c.box.min.y <= 1.6);
   const rooms = plan.rooms.filter((r) => !r.y);
   let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
   for (const r of rooms) { x0 = Math.min(x0, r.x); z0 = Math.min(z0, r.z); x1 = Math.max(x1, r.x + r.w); z1 = Math.max(z1, r.z + r.d); }

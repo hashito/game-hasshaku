@@ -1,4 +1,4 @@
-/* game-kit 74ad163: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 2e206ef: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -69,8 +69,10 @@ import { installGuidance, stepRoom } from './guidance.js';
 import { buildProgressionDef, taskAtStation, pickEnding } from './game-data.js';
 import { showEndingScene, foundEndings } from './ending-scene.js';
 import { mountShareBar } from './share-bar.js';
+import { pasteOn } from './wall-paste.js';
+import { installTimedShot } from './timed-shot.js';
 
-export const CORE_VERSION = '1.17.1';
+export const CORE_VERSION = '1.18.0';
 // the mini game library's types (js/mg-library.js LIBRARY; test/story-hooks.test.mjs keeps the two equal): game.json "minigames" naming one of these loads the library
 export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath', 'layer-board'];
 const $ = (id) => document.getElementById(id);
@@ -130,6 +132,7 @@ export function createGame(cfg) {
   const plan = data.plan, tasks = data.tasks || [], items = data.items || [], docs = data.docs || [], endings = data.endings || [];
   const taskById = new Map(tasks.map((t) => [t.id, t]));
   const roomName = (id) => (plan.rooms.find((r) => r.id === id) || {}).name || id;
+  let phaseNow = null;   // ctx.phase (1.17.3)
   const ctx = { padOpen: [], warmSteps: [], manifest, data, ext, bus, THREE, qa: Q.has('qa') || !!cfg.qa, debug: Q.has('debug'), calm: Q.has('calm'), floor: 0, blockers: [], booted: false };
   window.__game = ctx;
   const wdef = ext.reg.world.list().pop() || null;     // the game's own world (ext.registerWorld), else world-from-plan
@@ -285,6 +288,20 @@ export function createGame(cfg) {
   };
   if (!(wdef && wdef.pickups === 'self')) { items.filter((i) => !i.start && !i.given).forEach((i) => addPickup('item', i)); docs.forEach((d) => addPickup('doc', d)); }
   // put each pickup on its support (a desk top, a shelf board, the floor): x.y wins; run again after the recipes have placed the furniture
+  // a paper high on a wall (a doc, or anything with "wall": true; a doc at y 1 m or more near a wall unless "wall": false) stands flat on the
+  // first surface it meets, facing the room - not a sheet lying flat and sticking out of the plaster (standard 1.18.0, 鏡屋 #1 「札が壁に突き
+  // 刺さっている」). tools/check-playtest.mjs P14 finds a paper above 1 m still lying flat.
+  const onWall = (x, mesh) => x.wall === true || (x.wall !== false && mesh.name.startsWith('doc:') && x.y >= 1 && !!nearWall(x));
+  const nearWall = (x) => { const R = world.rooms && world.rooms.get && world.rooms.get(x.room), r = R && R.room; if (!r || x.x == null || x.z == null) return null;
+    const c = [[x.x - r.x, -1, 0], [r.x + r.w - x.x, 1, 0], [x.z - r.z, 0, -1], [r.z + r.d - x.z, 0, 1]].sort((a, b) => a[0] - b[0])[0];
+    return c[0] <= (x.wall === true ? 9 : 0.45) ? { dx: c[1], dz: c[2] } : null; };
+  const pasteDoc = (mesh, x, R, fy) => {
+    const w = nearWall(x); if (!w) return;
+    const model = mesh.userData.model;
+    if (!mesh.userData.stood) { mesh.userData.stood = true; mesh.geometry.rotateX(Math.PI / 2); if (model) { model.position.set(0, 0, 0); model.rotation.x = Math.PI / 2; } }
+    const y = fy + x.y + 0.15, r = pasteOn(ctx, mesh, { from: { x: x.x - w.dx * 0.5, y, z: x.z - w.dz * 0.5 }, dir: { x: w.dx, z: w.dz }, gap: 0.006, avoid: !mesh.userData.pasted, roll: ((hue(x.id) % 7) - 3) * 0.012 });
+    if (r.ok) mesh.userData.pasted = { normal: { x: r.normal.x, y: r.normal.y, z: r.normal.z } };
+  };
   ctx.seatPickups = () => {
     const used = new Map();   // top -> things on it
     for (const mesh of pickups.values()) {
@@ -294,7 +311,7 @@ export function createGame(cfg) {
       if ((x.x == null || x.z == null) && x.y == null && R && R.room) {
         for (const t of topsIn(world.colliders, R.room, fy)) { const k = `${t.minX},${t.minZ},${t.y}`, n = used.get(k) || 0, s = slotOn(t, n, w, d); if (s) { mesh.position.x = s.x; mesh.position.z = s.z; used.set(k, n + 1); break; } }
       }
-      if (x.y != null) { mesh.position.y = fy + x.y + h / 2; continue; }
+      if (x.y != null) { mesh.position.y = fy + x.y + h / 2; if (onWall(x, mesh)) pasteDoc(mesh, x, R, fy); continue; }
       // on whatever is under it, moved inward so nothing sticks out over the edge (seatOn)
       const s = seatOn(world.colliders, mesh.position.x, mesh.position.z, w, d, fy);
       mesh.position.x = s.x; mesh.position.z = s.z; mesh.position.y = s.y + h / 2;
@@ -451,7 +468,7 @@ export function createGame(cfg) {
   };
   ctx.completeTask = (id, o = {}) => {
     if (state.tasks.includes(id)) return;
-    state.tasks.push(id); prog.flag(id); ctx.checkpoint = { x: camera.position.x, z: camera.position.z, yaw: fp.yaw, floor: ctx.floor };
+    state.tasks.push(id); prog.flag(id); if (!phaseNow) ctx.checkpoint = { x: camera.position.x, z: camera.position.z, yaw: fp.yaw, floor: ctx.floor };   // inside a phase the checkpoint stays at its start (1.17.3)
     if (!o.quiet) { ui.toast(`✓ ${esc((taskById.get(id) || {}).title || id)}`, 'ok'); sound('beep', true); }
     bus.emit('task:done', { id });
     for (const it of items) if (it.given === id && !state.inv.includes(it.id)) { state.inv.push(it.id); if (!o.quiet) { if (it.photo) lane.push({ kind: 'card', cls: 'tl-lookcard tl-pickcard', key: `pickup:${it.id}`, ttl: 7000, html: viewItemHtml({ photo: it.photo, title: `受け取った：${it.name}` }) }); else ui.toast(`受け取った：${esc(it.name)}`); }   /* 1.17.0 (水無瀬病院 #8): an item a task gives shows its picture, like one picked up */ bus.emit('item:given', { id: it.id, task: id }); }   // "given": <task id> (standard 1.7)
@@ -548,12 +565,30 @@ export function createGame(cfg) {
   let mapView = null;
   const mapDef = uiDef('map');
   const stationPos = (id) => { const m = world.interactables.find((o) => o.userData.interact && o.userData.interact.kind === 'station' && o.userData.interact.id === id); return m ? { x: m.position.x, z: m.position.z } : {}; };
+  // the map shows what is next (standard 1.18.0, 鏡屋 #3 「アイテムの場所がわからない」): the task the step guide is on gets 「次：」 (and its
+  // own colour), and an item a task still needs (tasks.json "needItems": ["ID"]) is marked where it lies, once the task is the one to do
+  // (its `needs` done, its stage reached) - 「マッチ（ランプに要る）」. game.json "mapView": { "next": false } keeps the old pins.
+  const pickupOf = (id) => world.interactables.find((o) => o.name === `item:${id}`);
+  ctx.nextTask = () => { const ok = (x) => x.steps && x.steps.length && ctx.canStart(x) === true; return tasks.find((x) => ok(x) && !x.optional) || tasks.find(ok) || null; };
+  const mapPins = () => {
+    const nextOn = !(manifest.mapView && manifest.mapView.next === false), nx = nextOn ? ctx.nextTask() : null;
+    const out = tasks.filter((t) => t.station && ctx.canStart(t) === true).map((t) => ({ id: t.id, room: t.room, ...stationPos(t.station), label: nx && nx.id === t.id ? `次：${t.title}` : t.title, kind: 'task', next: !!(nx && nx.id === t.id) }));
+    if (!nextOn) return out;
+    for (const t of tasks) {
+      if (!t.needItems || state.tasks.includes(t.id) || ctx.levelIndex(t.stage) > prog.index || !(t.needs || []).every((n) => state.tasks.includes(n))) continue;
+      for (const id of t.needItems) {
+        const m = pickupOf(id), it = items.find((i) => i.id === id); if (state.inv.includes(id) || !m || !m.visible || !it || (it.stage && ctx.levelIndex(it.stage) > prog.index)) continue;
+        out.push({ id: `need:${id}`, room: it.room, x: m.position.x, z: m.position.z, label: `${it.name || id}（${t.short || t.title}に要る）`, kind: 'item' });
+      }
+    }
+    return out;
+  };
   const mapState = () => {
     const known = manifest.mapView && manifest.mapView.revealAll ? plan.rooms.map((r) => r.id) : state.visited;
     const base = {
       pos: { x: camera.position.x, z: camera.position.z, floor: ctx.floor }, heading: (-fp.yaw * 180) / Math.PI, visited: known, named: known,
       locked: [...world.doors.values()].filter((d) => d.locked()).map((d) => d.def.id),
-      pins: tasks.filter((t) => t.station && ctx.canStart(t) === true).map((t) => ({ id: t.id, room: t.room, ...stationPos(t.station), label: t.title, kind: 'task' })),
+      pins: mapPins(),
     };
     return mapDef.state ? { ...base, ...mapDef.state(ctx, base) } : base;
   };
@@ -692,8 +727,22 @@ export function createGame(cfg) {
   // back to the checkpoint (standard 1.13: games' own death sequences call this instead of copying it)
   ctx.respawn = (cp = ctx.checkpoint) => {
     ctx.setFloor(cp.floor || 0, cp); fp.yaw = cp.yaw || 0;
-    bus.emit('player:respawn', { room: world.roomAt(cp.x, cp.z, camera.position.y) });
+    if (phaseNow && phaseNow.reset) safe(() => phaseNow.reset(ctx, phaseNow.id));
+    bus.emit('player:respawn', { room: world.roomAt(cp.x, cp.z, camera.position.y), phase: phaseNow ? phaseNow.id : null });
   };
+  // a phase (standard 1.17.3, 札の家 #15 / 水無瀬病院 #23: caught, and then the game could not go on): a stretch of play a catch sends you back
+  // to the start of, as it was. ctx.phase(id, { at, reset }) pins the checkpoint to `at` (default: where you stand) - the tasks done inside it
+  // no longer move it - and after a death the respawn calls reset(ctx, id) to put the world back (the monster, the seals, the doors).
+  // ctx.phase(null) ends it (the checkpoint moves with the tasks again). ctx.phaseId() is the one running. The save keeps the checkpoint (cp).
+  ctx.phase = (id, o = {}) => {
+    if (!id) { phaseNow = null; return null; }
+    const at = o.at || { x: camera.position.x, z: camera.position.z, yaw: fp.yaw, floor: ctx.floor };
+    phaseNow = { id, reset: o.reset || null }; ctx.checkpoint = { floor: ctx.floor, yaw: 0, ...at };
+    bus.emit('phase:start', { id }); return phaseNow;
+  };
+  ctx.phaseId = () => (phaseNow ? phaseNow.id : null);
+  // a flat thing on a wall (js/wall-paste.js): ctx.pasteOn(mesh, { from, dir }) sits it on the first surface, not inside a post or a frame
+  ctx.pasteOn = (mesh, o) => pasteOn(ctx, mesh, o);
   // ctx.hold(fn): nothing moves or opens while fn (async) runs (standard 1.13; every game had its own busy flag and try / finally)
   let holds = 0;
   ctx.blockers.push(() => holds > 0);
@@ -794,6 +843,7 @@ export function createGame(cfg) {
     bus.on('player:respawn', () => { for (const t of timed) if (!state.tasks.includes(t.id)) state.timers[t.id] = 0; });
   }
   ctx.systems = systems;
+  installTimedShot(ctx, { bus, systems });   // ctx.timedShot, ctx.hurt, ctx.aimAt (standard 1.18.0, 鏡屋 #4 #9)
   systems.push(followSystem);   // ctx.followStation (1.17.0)
   installGuideAids(ctx, { bus, systems, tasks, stages: data.stages });   // **emphasis**, the wait bar, the recap, the map tip (standard 1.14)
   // guiding the player (standard 1.13, js/guidance.js): ctx.lookTo, task "reach" / when(), game.json "pointer" and "hud"

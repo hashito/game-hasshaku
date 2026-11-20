@@ -56,6 +56,10 @@
       "y": {
         "type": "number"
       },
+      "wall": {
+        "type": "boolean",
+        "description": "standard 1.18.0: true = stood and pasted on the nearest wall; false = keep lying flat (a doc at y 1 m or more near a wall is pasted by default)"
+      },
       "scale": {
         "type": "number",
         "minimum": 0.2,
