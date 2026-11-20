@@ -1,5 +1,5 @@
 {
-  "kit": "f1cd86f",
+  "kit": "8bda952",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -237,7 +237,7 @@
     "js\\kit\\text-contrast.js": "7ee42856ab86",
     "js\\kit\\monster-nav.js": "e8c9ff6e2b4c",
     "js\\kit\\monster-escape.js": "4a9e4dd0e05d",
-    "js\\kit\\game-core.js": "ac81ff16cc7a",
+    "js\\kit\\game-core.js": "373d8d2ee562",
     "js\\kit\\item-kinds.js": "42b609ccaa9a",
     "js\\kit\\item-models.js": "611975f171a7",
     "js\\kit\\prop-geo.js": "b7d46c577d9a",
