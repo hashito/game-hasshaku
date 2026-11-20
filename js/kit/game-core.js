@@ -1,4 +1,4 @@
-/* game-kit 8e20d97: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 74ad163: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -46,6 +46,8 @@ import { createWindowManager, hudLayout } from './win-manager.js';
 import { createTabMenu } from './tab-menu.js';
 import { installGuideAids, recapTab } from './guide-aids.js';
 import { createPauseMenu } from './pause-menu.js';
+import { installControlHelp } from './control-help.js';
+import { renderPaperDoc, paperDocHtml } from './paper-doc.js';
 import { createJournal } from './journal-ui.js';
 import { createMapSvg } from './map-svg.js';
 import { createStepGuide, minigameSteps } from './step-guide.js';
@@ -68,7 +70,7 @@ import { buildProgressionDef, taskAtStation, pickEnding } from './game-data.js';
 import { showEndingScene, foundEndings } from './ending-scene.js';
 import { mountShareBar } from './share-bar.js';
 
-export const CORE_VERSION = '1.16.4';
+export const CORE_VERSION = '1.17.1';
 // the mini game library's types (js/mg-library.js LIBRARY; test/story-hooks.test.mjs keeps the two equal): game.json "minigames" naming one of these loads the library
 export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath', 'layer-board'];
 const $ = (id) => document.getElementById(id);
@@ -173,7 +175,7 @@ export function createGame(cfg) {
     return { added, removed };
   };
   const snapshot = () => {
-    const s = { tasks: state.tasks, inv: state.inv, docsRead: state.docsRead, doors: state.doors, flags: state.flags, visited: state.visited, prog: ctx.prog.serialize(), pos: { x: ctx.camera.position.x, z: ctx.camera.position.z, yaw: ctx.fp.yaw, floor: ctx.floor } };
+    const s = { tasks: state.tasks, inv: state.inv, docsRead: state.docsRead, doors: state.doors, flags: state.flags, visited: state.visited, prog: ctx.prog.serialize(), pos: { x: ctx.camera.position.x, z: ctx.camera.position.z, yaw: ctx.fp.yaw, floor: ctx.floor }, cp: ctx.checkpoint ? { x: ctx.checkpoint.x, z: ctx.checkpoint.z, yaw: ctx.checkpoint.yaw || 0, floor: ctx.checkpoint.floor || 0 } : null };   // cp (1.17.0): a resumed game dies back to its checkpoint, not the house's spawn
     const extra = {};
     for (const p of ext.reg.persist.list()) { const v = p.serialize(ctx); if (v === null) return null; extra[p.id] = v; }   // null = do not save now
     if (Object.keys(extra).length) s.ext = extra;
@@ -196,7 +198,7 @@ export function createGame(cfg) {
   const inputMode = ctx.inputMode = new InputMode({ mode: Q.has('touch') || cfg.touch ? 'touch' : undefined, pin: Q.has('touch') || !!cfg.touch })   // ?touch=1 pins touch (tests);
   const touchCapable = matchMedia('(pointer: coarse)').matches || matchMedia('(any-pointer: coarse)').matches || (navigator.maxTouchPoints || 0) > 0 || Q.has('touch') || cfg.touch;
   if (touchCapable) {
-    const extraTouch = [...(controls.crouch && !(controls.touch || []).some((b) => b.k === 'KeyC') ? [{ k: 'KeyC', label: 'しゃがむ' }] : []), ...(controls.flashlight && !(controls.touch || []).some((b) => b.k === 'KeyF') ? [{ k: 'KeyF', label: '灯り' }] : [])];   // standard 1.7
+    const extraTouch = [...((controls.runButton || (controls.gate && controls.gate.run)) && !(controls.touch || []).some((b) => /^Shift/.test(b.k)) ? [{ k: 'ShiftLeft', label: '走る', cls: 'hold' }] : []), ...(controls.crouch && !(controls.touch || []).some((b) => b.k === 'KeyC') ? [{ k: 'KeyC', label: 'しゃがむ' }] : []), ...(controls.flashlight && !(controls.touch || []).some((b) => b.k === 'KeyF') ? [{ k: 'KeyF', label: '灯り' }] : [])];   // standard 1.7
     const btns = [...(controls.touch || DEFAULT_TOUCH), ...extraTouch].map((b) => `<button data-k="${b.k}"${b.id ? ` id="${b.id}"` : ''} class="${b.cls || ''}">${esc(b.label)}</button>`).join('');
     mk('div', 'touch', `<div id="t-look"></div><div id="t-stick"><div id="t-knob"></div></div><div id="t-right"><div id="t-buttons">${btns}</div></div><button id="t-menu" aria-label="メニュー">${icon("menu", { size: 24 })}</button>`).classList.add('hidden');
   }
@@ -452,7 +454,7 @@ export function createGame(cfg) {
     state.tasks.push(id); prog.flag(id); ctx.checkpoint = { x: camera.position.x, z: camera.position.z, yaw: fp.yaw, floor: ctx.floor };
     if (!o.quiet) { ui.toast(`✓ ${esc((taskById.get(id) || {}).title || id)}`, 'ok'); sound('beep', true); }
     bus.emit('task:done', { id });
-    for (const it of items) if (it.given === id && !state.inv.includes(it.id)) { state.inv.push(it.id); if (!o.quiet) ui.toast(`受け取った：${esc(it.name)}`); bus.emit('item:given', { id: it.id, task: id }); }   // "given": <task id> (standard 1.7)
+    for (const it of items) if (it.given === id && !state.inv.includes(it.id)) { state.inv.push(it.id); if (!o.quiet) { if (it.photo) lane.push({ kind: 'card', cls: 'tl-lookcard tl-pickcard', key: `pickup:${it.id}`, ttl: 7000, html: viewItemHtml({ photo: it.photo, title: `受け取った：${it.name}` }) }); else ui.toast(`受け取った：${esc(it.name)}`); }   /* 1.17.0 (水無瀬病院 #8): an item a task gives shows its picture, like one picked up */ bus.emit('item:given', { id: it.id, task: id }); }   // "given": <task id> (standard 1.7)
     const reg = ext.reg.task.get(id); if (!ctx.skipping) reg && reg.onDone && reg.onDone(ctx, taskById.get(id));
     if (!o.noSave) ctx.save();
     checkEndings();
@@ -509,7 +511,7 @@ export function createGame(cfg) {
     item: { prompt: (o) => `[E] 拾う：${items.find((i) => i.id === o.id).name}`,
       run: (o) => { const it = items.find((i) => i.id === o.id); remove('item', o.id); state.inv.push(o.id); sound('pickup'); ctx.lastPickup = { it, at: Date.now() }; if (it.photo) lane.push({ kind: 'card', cls: 'tl-lookcard tl-pickcard', key: `pickup:${it.id}`, ttl: 6000, html: viewItemHtml({ photo: it.photo, title: `入手：${it.name}` }) }); else ui.toast(`入手：${esc(it.name)}`); ui.say(esc(it.feeling));   /* an item with a photo shows its picture card (the feeling stays in the thought band) */ bus.emit('item:pickup', { id: o.id }); ctx.save(); checkEndings(); } },
     doc: { prompt: (o) => `[E] 読む：${docs.find((d) => d.id === o.id).title}`,
-      run: (o) => { const d = docs.find((x) => x.id === o.id); if (!state.docsRead.includes(o.id)) state.docsRead.push(o.id); sound('paper'); wm.open('doc', { title: d.title, size: 's', render: (el) => { el.innerHTML = `${d.photo ? `<img class="gf-doc-img" src="${esc(d.photo)}" alt="">` : ''}${d.text.split('\n').map((p) => `<p>${esc(p)}</p>`).join('')}${d.feeling ? `<p class="iv-feel">${esc(d.feeling)}</p>` : ''}`; } }); bus.emit('doc:read', { id: o.id }); ctx.save(); } },
+      run: (o) => { const d = docs.find((x) => x.id === o.id); if (!state.docsRead.includes(o.id)) state.docsRead.push(o.id); sound('paper'); wm.open('doc', { title: d.title, size: (manifest.docStyle === 'paper' || d.paper) ? 'm' : 's', render: (el) => { if (manifest.docStyle === 'paper' || d.paper) { renderPaperDoc(el, d); return; } el.innerHTML = `${d.photo ? `<img class="gf-doc-img" src="${esc(d.photo)}" alt="">` : ''}${d.text.split('\n').map((p) => `<p>${esc(p)}</p>`).join('')}${d.feeling ? `<p class="iv-feel">${esc(d.feeling)}</p>` : ''}`; } });   /* 1.17.0: game.json docStyle "paper" / docs.json "paper": the document as a sheet (js/paper-doc.js) */ bus.emit('doc:read', { id: o.id }); ctx.save(); } },
     // locked stairs say why (the plan's hint, else the progression's lock text) and stay shut: [E] gives the reason in the thought band (1.9.1)
     stairs: { prompt: (o) => (o.locked && o.locked() ? `[E] ${lockedLabel(o.label || '階段', 'いまは使えません')}` : `[E] ${o.label || '階段を使う'}`),
       run: (o) => { if (o.locked && o.locked()) { ui.say(esc(o.hint || prog.lockText(o.unlock) || 'いまは、この階段を使えません。先に、いまの目標を進めましょう。'), 6, { urgent: true }); bus.emit('stairs:locked', { id: o.id, unlock: o.unlock }); return; } ctx.useStairs(o); } },
@@ -538,7 +540,7 @@ export function createGame(cfg) {
     ...(jrDef.onOpen ? { onOpen: (e, jr) => jrDef.onOpen(e, jr, ctx) } : {}), ...(jrDef.storage !== undefined ? { storage: jrDef.storage } : {}),
     getEntries: () => (jrDef.entries ? jrDef.entries(ctx) : [
       ...items.filter((i) => state.inv.includes(i.id)).map((i) => ({ id: `item:${i.id}`, tab: 'notes', title: i.name, text: i.desc, line: i.feeling, img: i.photo || undefined, group: i.room, groupLabel: roomName(i.room) })),
-      ...docs.filter((d) => state.docsRead.includes(d.id)).map((d) => ({ id: `doc:${d.id}`, tab: 'notes', title: d.title, text: d.text, line: d.feeling, img: d.photo || undefined, group: d.room, groupLabel: roomName(d.room) })),
+      ...docs.filter((d) => state.docsRead.includes(d.id)).map((d) => ({ id: `doc:${d.id}`, tab: 'notes', title: d.title, text: d.text, line: d.feeling, img: d.photo || undefined, paperHtml: manifest.docStyle === 'paper' || d.paper ? () => paperDocHtml(d, { feeling: false }) : undefined, group: d.room, groupLabel: roomName(d.room) })),
       ...(ctx.things ? ctx.things.entries() : []),   // what was looked at (data/things.json)
     ]),
   });
@@ -666,6 +668,26 @@ export function createGame(cfg) {
     },
   });
 
+  // ctx.followStation(stationId, object3D, { dy }) (1.17.0, 水無瀬病院 #2): a station that is a person goes where the person goes. Its [E] box
+  // (and the name and ring over it) follows the object every frame and is not offered while the object is hidden; before this the label
+  // 「ひなた」 stayed at the place she had left.
+  const followed = [];
+  ctx.followStation = (id, obj, o = {}) => {
+    const m = world.interactables.find((x) => x.name === `station:${id}`) || world.group.getObjectByName(`station:${id}`);
+    if (!m || !obj) return false;
+    const col = world.colliders.find((c) => c.box && c.station === id); if (col) col.off = true;
+    followed.push({ m, obj, dy: o.dy ?? 0.9 }); return true;
+  };
+  const fwp = new THREE.Vector3();
+  const followSystem = { id: 'follow-stations', def: { update: () => {
+    for (const f of followed) {
+      let vis = true; for (let x = f.obj; x; x = x.parent) if (x.visible === false) { vis = false; break; }
+      const i = world.interactables.indexOf(f.m);
+      if (!vis) { if (i >= 0) world.interactables.splice(i, 1); continue; }
+      if (i < 0) world.interactables.push(f.m);
+      f.obj.getWorldPosition(fwp); f.m.position.set(fwp.x, fwp.y + f.dy, fwp.z); f.m.updateMatrixWorld();
+    }
+  } }, inst: null };
   // ---- player: rooms, die / respawn ----
   // back to the checkpoint (standard 1.13: games' own death sequences call this instead of copying it)
   ctx.respawn = (cp = ctx.checkpoint) => {
@@ -743,7 +765,8 @@ export function createGame(cfg) {
   if (gate.run) { const run0 = fp.running.bind(fp); fp.running = () => run0() && ctx.controlOpen('run'); }
   if (gate.crouch) { const c0 = ctx.setCrouch; ctx.setCrouch = (on) => (on && !ctx.controlOpen('crouch') ? notYet() : c0(on)); }
   if (gate.light) { const l0 = ctx.setLight; ctx.setLight = (on) => (on && !ctx.controlOpen('light') ? notYet() : l0(on)); }
-  bus.on('stage:up', ({ level }) => { for (const [k, at] of Object.entries(gate)) if (at === level) { const g = GATE[k] || [`${k} が使えるようになりました`, '', '']; ui.toast(esc(`${g[0]}${g[1] ? `（${ctx.isTouch ? g[2] : g[1]}）` : ''}`)); } });
+  // 1.17.0: the opened control is shown as a big key card (js/control-help.js), not a toast that passes unread (水無瀬病院 #17 / #22)
+  void GATE; installControlHelp(ctx);
 
   // timed tasks (tasks.json "timer": { "seconds": 150, "label": "夜明けまで" }, standard 1.7): once the task can be worked on (its stage, its needs),
   // play time counts up and the task completes by itself; ext.registerTask(id, { beforeDone: async (ctx, task) => ... }) runs first (a conversation).
@@ -771,6 +794,7 @@ export function createGame(cfg) {
     bus.on('player:respawn', () => { for (const t of timed) if (!state.tasks.includes(t.id)) state.timers[t.id] = 0; });
   }
   ctx.systems = systems;
+  systems.push(followSystem);   // ctx.followStation (1.17.0)
   installGuideAids(ctx, { bus, systems, tasks, stages: data.stages });   // **emphasis**, the wait bar, the recap, the map tip (standard 1.14)
   // guiding the player (standard 1.13, js/guidance.js): ctx.lookTo, task "reach" / when(), game.json "pointer" and "hud"
   const guidance = installGuidance(ctx, { manifest, tasks, plan: wdef ? null : plan, stationPos, taskReg: (id) => ext.reg.task.get(id), reachOk: (t) => ctx.levelIndex(t.stage) <= prog.index && (t.needs || []).every((n) => state.tasks.includes(n)) });
@@ -863,7 +887,8 @@ ${it.desc}` : ''}`, ...(it.photo ? { img: it.photo } : {}) };
         for (const id of state.doors) { const d = world.doors.get(id); if (d && d.open() && d.snap) d.snap(); }   // a restored door is already open (no swing on load)
         for (const id of state.inv) remove('item', id);
         if (snap.pos) { placeCamera(snap.pos.x, snap.pos.z, snap.pos.floor || 0); fp.yaw = snap.pos.yaw || 0; }
-      } else if (!o.keepSave && !TEST_MODE) store.clear();
+        ctx.checkpoint = snap.cp ? { ...snap.cp } : snap.pos ? { x: snap.pos.x, z: snap.pos.z, yaw: snap.pos.yaw || 0, floor: snap.pos.floor || 0 } : { ...world.spawn, floor: world.spawn.floor || 0 };
+      } else { ctx.checkpoint = { ...world.spawn, floor: world.spawn.floor || 0 }; if (!o.keepSave && !TEST_MODE) store.clear(); }
       for (const p of ext.reg.persist.list()) p.restore(resume ? (snap.ext && snap.ext[p.id]) ?? null : null, ctx, { ...o, resume, saved: resume ? snap : null });
       title.classList.add('hidden'); hud.classList.remove('hidden'); state.started = true; applyInput();
       // ?scene=<id> (standard 1.12): a known scene of ext.registerTestScenes runs after game:start; an unknown one says so and starts from the beginning

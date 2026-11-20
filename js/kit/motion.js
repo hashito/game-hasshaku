@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/motion.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 74ad163: js/motion.js — edit in game-kit and run tools/kit-sync.js */
 // Motion for people: poses, crossfades, a speed-matched walk / run, two-bone leg IK, head look-at.
 // Pure maths (no three.js import), so it runs in Node tests and is shared by the procedural
 // character (js/character.js) and the glTF animator (js/gltf-character.js).
@@ -14,7 +14,7 @@
 //   shoulder "abd"  = arm away from the body (the rig mirrors it for the right arm)
 //   head / neck / chest x = +nod down, y = +turn to the character's left
 
-export const STATES = ['idle', 'walk', 'run', 'sit', 'talk', 'lookAround', 'scared', 'crouch'];
+export const STATES = ['idle', 'walk', 'run', 'sit', 'talk', 'lookAround', 'scared', 'crouch', 'lean'];
 export const TRANSITIONS = ['sitDown', 'standUp'];
 
 // default body (metres): thigh = hip joint to knee, shin = knee to ankle, ankleH = ankle above sole
@@ -349,6 +349,28 @@ const POSES = {
     p.headY = wobble(t * 3, ctx.seed) * 0.08;
     return p;
   },
+  // 1.17.0 (水無瀬病院 #12): waiting with the back against a wall (root facing away from the wall, about 0.25 m in front of it), arms
+  // folded, the weight off one foot; now and then the head comes up
+  lean(ctx) {
+    const p = standBase({ ...REST }, ctx);
+    const t = ctx.t;
+    p.hipsY = ctx.body.hipH - 0.035;
+    p.hipsZ = -0.07;
+    p.footLz = 0.14; p.footRz = 0.2;
+    p.footLx = 0.03; p.footRx = 0.05;
+    p.footRpitch = 0.25;
+    p.waistX = -0.08;
+    p.chestX = -0.1;
+    p.breath = Math.sin(t * 1.4);
+    p.shLx = p.shRx = -0.3;
+    p.shLabd = p.shRabd = -0.25;
+    p.elL = -1.3; p.elR = -1.2;   // forearms across the belly (1.17.1: -1.95 raised the hands over the head)
+    const up = Math.max(0, Math.sin(t * 0.21 + ctx.seed));
+    p.headX = 0.1 - up * 0.15;
+    p.headY = Math.sin(t * 0.17 + ctx.seed) * 0.2;
+    p.headZ = 0.06;
+    return p;
+  },
   crouch(ctx) {
     const p = { ...REST };
     const b = ctx.body;
@@ -543,7 +565,7 @@ export function resolveClips(names, aliases = CLIP_ALIASES) {
   return out;
 }
 // fallbacks when a model has no clip for a state
-export const CLIP_FALLBACK = { lookAround: 'idle', talk: 'idle', scared: 'crouch', crouch: 'idle', sit: 'idle', sitDown: 'sit', standUp: 'idle', run: 'walk', walk: 'idle', wave: 'idle', jump: 'idle' };
+export const CLIP_FALLBACK = { lean: 'idle', lookAround: 'idle', talk: 'idle', scared: 'crouch', crouch: 'idle', sit: 'idle', sitDown: 'sit', standUp: 'idle', run: 'walk', walk: 'idle', wave: 'idle', jump: 'idle' };
 export function clipFor(state, map) {
   const seen = new Set();
   let s = state;

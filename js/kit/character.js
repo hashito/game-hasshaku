@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/character.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 74ad163: js/character.js — edit in game-kit and run tools/kit-sync.js */
 // People, version 2: one skinned mesh per person (2 draw calls instead of ~30), a proper skeleton,
 // and the motion layer of js/motion.js (idle / walk / run / sit / sit down / stand up / talk /
 // look around / scared / crouch, crossfaded; speed-matched feet; head tracking; blinking; mouth).
@@ -551,7 +551,20 @@ export class Character {
     }
     this.apply(pose, dt);
     this.faceUpdate(dt, pose);
+    this.watchJump();
     return this;
+  }
+  // 1.17.0 (水無瀬病院 #13 「突然別の部屋にいて驚く」): a person seen at one place and then, the next frame, metres away has been teleported.
+  // Every jump of a visible person over 1.2 m between two updates is written to window.__gfNpcJumps (tools/check-playtest.mjs and the play
+  // scripts read it). A move behind the player's back (c.root.visible = false first, or c.noteMove()) is not a jump.
+  noteMove() { this._jp = null; }
+  watchJump() {
+    if (typeof window === 'undefined') return;
+    let vis = true; for (let o = this.root; o; o = o.parent) if (o.visible === false) { vis = false; break; }
+    if (!vis) { this._jp = null; return; }
+    const p = this.root.getWorldPosition(this._jw || (this._jw = new THREE.Vector3()));
+    if (this._jp && this._jp.lengthSq() > 1e-6 && this._jp.distanceTo(p) > 1.2) (window.__gfNpcJumps = window.__gfNpcJumps || []).push({ name: this.root.name || 'person', from: this._jp.toArray().map((v) => +v.toFixed(2)), to: p.toArray().map((v) => +v.toFixed(2)), at: Math.round(performance.now()) });
+    (this._jp || (this._jp = new THREE.Vector3())).copy(p);
   }
   apply(p, dt) {
     const B = this.bones;

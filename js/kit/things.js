@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/things.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 74ad163: js/things.js — edit in game-kit and run tools/kit-sync.js */
 // "Things you can look at" (standard 1.5): data/things.json + the examine interaction. (届けるな has 107 of them; 未然調書 / 日陰 / 薬局 have the same.)
 //   things.json: [ { "id": "A_CLOCK", "room": "A", "position": [4, 17], "y": 1.25, "label": "勤怠端末", "photo": "assets/media/th_A_CLOCK.jpg",
 //                    "text": ["first look", "second look and later"], "feeling": "the protagonist's one line (journal + card)", "requires": { "stage": "L2", "flags": [..], "tasks": [..], "items": [..], "looked": [..] }, "size": 0.6 } ]
@@ -41,7 +41,8 @@ export function installThings(ctx) {
 
   let card = null, cardT = 0;
   const showCard = (t) => {
-    if (ctx.lane) { ctx.lane.push({ kind: 'card', cls: 'tl-lookcard', key: `look:${t.id}`, ttl: 6000, html: viewItemHtml({ photo: t.photo, title: t.label, feeling: t.feeling }) }); return; }   // U27: the look-at card is an item of the toast lane (no box of its own that could sit on the clock)
+    if (ctx.lane) { try { const L = ctx.lane.model; for (const i of [...((L && L.items) || [])]) if (typeof i.key === 'string' && i.key.startsWith('look:') && i.key !== `look:${t.id}`) L.remove(i.id); ctx.lane.render && ctx.lane.render(); } catch { /* an older lane */ }   // 1.17.0: the card of what you look at now replaces the last one
+      ctx.lane.push({ kind: 'card', cls: t.photo ? 'tl-lookcard tl-photocard' : 'tl-lookcard', key: `look:${t.id}`, ttl: t.photo ? 8000 : 6000, html: viewItemHtml({ photo: t.photo, title: t.label, feeling: t.feeling }) }); return; }   // U27: the look-at card is an item of the toast lane (no box of its own that could sit on the clock)
     if (!card) { card = document.createElement('div'); card.id = 'look'; card.className = 'gf-look'; ctx.hud.appendChild(card); }
     card.innerHTML = viewItemHtml({ photo: t.photo, title: t.label, feeling: t.feeling });
     card.classList.remove('show'); void card.offsetWidth; card.classList.add('show');

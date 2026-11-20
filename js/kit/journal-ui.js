@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/journal-ui.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 74ad163: js/journal-ui.js — edit in game-kit and run tools/kit-sync.js */
 // The journal / collection screen for js/sidestory.js: tabs 進行中・完了・気になること・収集, stories with
 // their progress (done steps, the next one and what it still needs, the rest hidden), locked ones as
 // "？？？" silhouettes, open threads with what was noticed and solved ones with their answer, a reward
@@ -237,7 +237,8 @@ export const entryHtml = (e, { pinned = false, fresh = false, open = false, hasO
 };
 
 // the entry view (U19): the photo card (img, title, text) and the protagonist's line as its own panel. Used by the default tap action.
-export const entryViewHtml = (e, L = J_LABELS) => viewItemHtml({ photo: e.img, title: e.title, text: e.text, feeling: e.line, tag: e.tag }, { feeling: L.feeling, why: "" });
+const sameLine = (a, b) => { const n = (x) => String(x || "").replace(/[\s「」『』（）()、。・…！？!?\-ー―*]/g, ""); return !!n(a) && n(a) === n(b); };
+export const entryViewHtml = (e, L = J_LABELS) => (e.paperHtml ? `${e.paperHtml()}${e.line ? viewItemHtml({ feeling: e.line }, { feeling: L.feeling, why: "" }).replace(/<div class="iv-photocard">.*?<\/div><\/div>/, "") : ""}` : null) || viewItemHtml({ photo: e.img, title: e.title, text: e.text, feeling: sameLine(e.line, e.text) ? "" : e.line, tag: e.tag }, { feeling: L.feeling, why: "" });   // 1.17.0: no ひとこと that repeats the text
 
 const safeStorage = () => {
   try {

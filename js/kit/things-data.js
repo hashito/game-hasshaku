@@ -1,4 +1,4 @@
-/* game-kit 3f1a7d2: js/things-data.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 74ad163: js/things-data.js — edit in game-kit and run tools/kit-sync.js */
 // Pure data side of the "things you can look at" standard (js/things.js is the DOM + THREE side): normalize, textFor, available, journalEntries, checkThings. Runs in Node
 // (js/schema-check.js, tools/check-game-data.mjs). things.json: [ { id, room, position: [x, z] | { x, z, y }, y?, label?, photo?, text: string | [first, repeat], feeling?, requires?: { stage, flags, tasks, items, looked }, size? } ]
 export const KIND = 'look';
@@ -19,9 +19,11 @@ export function available(thing, s = {}) {
   return has(r.flags, s.flags) && has(r.tasks, s.tasks) && has(r.items, s.items) && has(r.looked, s.looked);
 }
 // journal entries (気になること) for what has been looked at: no spoilers (only the looked ones), grouped by room
+// 1.17.0 (水無瀬病院 #6): the ひとこと panel is the protagonist's own line; it was the body text again when a thing had no feeling
+export const sameWords = (a, b) => { const n = (x) => String(x || '').replace(/[\s「」『』（）()、。・…！？!?\-ー―*]/g, ''); return !!n(a) && !!n(b) && (n(a) === n(b) || (n(a).length > 8 && (n(b).includes(n(a)) || n(a).includes(n(b))))); };
 export function journalEntries(things, looked, roomName = (id) => id) {
   const seen = new Set(looked || []);
-  return things.filter((t) => seen.has(t.id)).map((t) => ({ id: `thing:${t.id}`, tab: 'notes', group: t.room, groupLabel: roomName(t.room), title: t.label, text: t.text[0] || '', line: t.feeling || t.text[0] || '', img: t.photo || undefined, tag: '調べた' }));
+  return things.filter((t) => seen.has(t.id)).map((t) => ({ id: `thing:${t.id}`, tab: 'notes', group: t.room, groupLabel: roomName(t.room), title: t.label, text: t.text[0] || '', line: sameWords(t.feeling, t.text[0]) ? '' : t.feeling || '', img: t.photo || undefined, tag: '調べた' }));
 }
 export function checkThings(list, plan, o = {}) {
   const errors = [], warns = [], ids = new Set();
@@ -35,6 +37,7 @@ export function checkThings(list, plan, o = {}) {
     if (!t.text.length && !t.feeling) warns.push(`thing "${t.id}": no text and no feeling (nothing to say when looked at)`);
     if (t.photo && o.fileExists && !o.fileExists(t.photo)) errors.push(`thing "${t.id}": photo "${t.photo}" does not exist`);
     if (!t.photo) warns.push(`thing "${t.id}": no photo yet`);
+    if (t.feeling && t.text.some((x) => sameWords(t.feeling, x))) warns.push(`thing "${t.id}": feeling (ひとこと) repeats the text; write the protagonist's own line or leave it out`);
   }
   return { errors, warns };
 }

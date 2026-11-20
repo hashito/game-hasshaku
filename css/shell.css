@@ -1,4 +1,4 @@
-/* game-kit 2246e71: css/shell.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 74ad163: css/shell.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: the standard 3D shell (js/game-core.js): title screen, prompt, endings, pause menu, custom mini-game layer.
    Tokens only (css/theme.css); loaded after kit.css and theme.css. A game restyles it through tokens in css/theme-game.css. */
 #title { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; text-align: center; padding: var(--gf-win-margin, 16px); overflow-y: auto; overscroll-behavior: contain;
@@ -176,6 +176,10 @@ body.touch #hud-right { top: calc(max(12px, var(--gf-safe-t, 0px)) + 52px); }   
 /* the pickup card (an item with a photo just taken): the picture large on top, the name and the one line under it */
 .tl-lookcard.tl-pickcard .iv-photocard { flex-direction: column; align-items: stretch; }
 .tl-lookcard.tl-pickcard .iv-photo { width: 280px; max-width: 100%; max-height: 28vh; aspect-ratio: 4 / 3; border-radius: var(--gf-radius, 8px); }
+/* 1.17.0 (水無瀬病院 #7): a thing with a picture shows the picture when you look at it (not an 84 px thumbnail) */
+.tl-lookcard.tl-photocard .iv-photocard { flex-direction: column; align-items: stretch; }
+.tl-lookcard.tl-photocard .iv-photo { width: 340px; max-width: 100%; max-height: min(34vh, calc(var(--gf-lane-free, 260px) - 7em)); height: auto; aspect-ratio: 4 / 3; border-radius: var(--gf-radius, 8px); }   /* the name and the ひとこと stay inside the lane's room */
+.tl-item.tl-photocard { width: min(360px, 100%); }
 @media (max-height: 520px) { .tl-lookcard.tl-pickcard .iv-photo { max-width: 180px; } }
 .tl-quest-note, .tl-ok { border-left-color: var(--gf-ok, #2e7a4a); }
 .tl-card { border-left-color: var(--gf-accent-2, #e8a040); }
