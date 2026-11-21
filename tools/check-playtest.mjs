@@ -19,7 +19,14 @@
 //   P14 a paper high on a wall (a doc at 1 m or more) still lying flat: a sheet sticking out of the plaster (鏡屋 #1; the kit stands it since 1.18.0)
 //   P15 a reason the game passes to ctx.die / ctx.hurt with no card of its own in game.json "deaths" (鏡屋: the hands and the woman of the
 //       washroom said the same words)    P16 a room on the map too small for three characters of its name (鏡屋: 地下室 clipped)
-// Exit 1 on an error (P4, P7, P9) or, with --strict, on a warning. The play scripts of a game check the rest (contact, speed, softlocks).
+//   1.20.0 (水無瀬病院 2nd play test, 15 items):
+//   P17 a person in a wall / floating / standing on furniture (js/npc-audit.js: bones with radius vs colliders; window.__gfNpcBad while play runs)
+//   P18 a control hint card that overlaps another notice or HUD part, or a second hint that replaced the first instead of waiting (#7)
+//   P19 standing up under a low ceiling (C inside a low zone must keep the body crouched) (#9)
+//   P20 a ladder / flight that moves the player at once (no climb) (#13)
+//   P21 two opaque faces in the same plane, overlapping (z-fighting: the flicker of squares on the wall behind ひなた) (#1)
+//   P22 a voice played around the one voice channel (new Audio / decodeAudioData in the game's own code) (#3)
+// Exit 1 on an error (P4, P7, P9, P19) or, with --strict, on a warning. The play scripts of a game check the rest (contact, speed, softlocks).
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -55,6 +62,11 @@ if (game.deaths) {
   const reasons = new Map(), walkJs = (d) => { for (const f of fs.existsSync(d) ? fs.readdirSync(d, { withFileTypes: true }) : []) { const q = path.join(d, f.name); if (f.isDirectory()) { if (f.name !== 'kit' && f.name !== 'vendor') walkJs(q); } else if (/\.m?js$/.test(f.name)) { const src = fs.readFileSync(q, 'utf8'); for (const m of src.matchAll(/\b(?:die|hurt)\(\s*['"]([\w-]+)['"]/g)) reasons.set(m[1], path.relative(dir, q)); } } };
   walkJs(path.join(dir, 'js'));
   for (const [r, f] of reasons) if (!game.deaths[r]) Wn('P15', `death reason "${r}" (${f}) has no card in game.json "deaths": the player is not told what caught them`);
+}
+// P22: voices that do not go through the voice channel (ctx.voiceLine / ctx.playVoice, js/voice-queue.js): two voices at once
+{
+  const walk = (d) => { for (const f of fs.existsSync(d) ? fs.readdirSync(d, { withFileTypes: true }) : []) { const q = path.join(d, f.name); if (f.isDirectory()) { if (!['kit', 'vendor', 'node_modules'].includes(f.name)) walk(q); } else if (/\.m?js$/.test(f.name)) { const src = fs.readFileSync(q, 'utf8'); if (/new Audio\([^)]*voice|voice[^\n]{0,80}decodeAudioData|createBufferSource\(\)[^\n]{0,200}voice/i.test(src)) Wn('P22', `${path.relative(dir, q)} plays a voice by itself: use ctx.voiceLine(src, null, { prio }) so two voices never overlap`); } } };
+  walk(path.join(dir, 'js'));
 }
 // P16: room names that do not fit their room on the map
 {
@@ -193,6 +205,31 @@ try {
       const md = it.userData.model || it, b = new T.Box3().setFromObject(md), s = b.getSize(new T.Vector3());
       if (isFinite(s.y) && s.y < 0.05 && Math.max(s.x, s.z) > 0.1) out.p14.push(u.id + ' at ' + it.position.x.toFixed(1) + ',' + it.position.y.toFixed(1) + ',' + it.position.z.toFixed(1));
     }
+    // P21 (1.20.0, 水無瀬病院 2nd #1 「チラチラ正方形の図が見えます」): two opaque faces in one plane facing the same way, overlapping - z-fighting.
+    // Box faces and planes that are axis-aligned; a notice board sunk into the wall had its front face exactly on the plaster.
+    out.p21 = [];
+    { const faces = new Map(), key = (ax, sg, c) => ax + sg + Math.round(c * 400);
+      const opaque = (m) => [].concat(m.material).every((mt) => mt && !mt.transparent && mt.visible !== false && mt.colorWrite !== false && !mt.polygonOffset);
+      for (const { m, b } of meshes) {
+        if (m.isSprite || m.isInstancedMesh || !m.geometry || !opaque(m) || !axisOk(m)) continue;
+        const t = m.geometry.type; if (t !== 'BoxGeometry' && t !== 'PlaneGeometry') continue;
+        const q = new T.Quaternion(); m.getWorldQuaternion(q);
+        const add = (ax, sg, c, r) => { const k = key(ax, sg, c); if (!faces.has(k)) faces.set(k, []); faces.get(k).push({ m, c, r }); };
+        const rect = (ax) => (ax === 'x' ? [b.min.y, b.max.y, b.min.z, b.max.z] : ax === 'y' ? [b.min.x, b.max.x, b.min.z, b.max.z] : [b.min.x, b.max.x, b.min.y, b.max.y]);
+        if (t === 'BoxGeometry') { for (const ax of ['x', 'y', 'z']) { add(ax, '+', b.max[ax], rect(ax)); if (ax !== 'y') add(ax, '-', b.min[ax], rect(ax)); } }   // the underside of a box is never seen
+        else { const n = new T.Vector3(0, 0, 1).applyQuaternion(q); const ax = Math.abs(n.x) > 0.99 ? 'x' : Math.abs(n.y) > 0.99 ? 'y' : Math.abs(n.z) > 0.99 ? 'z' : null; if (!ax) continue; add(ax, n[ax] > 0 ? '+' : '-', (b.min[ax] + b.max[ax]) / 2, rect(ax)); if (m.material.side === T.DoubleSide) add(ax, n[ax] > 0 ? '-' : '+', (b.min[ax] + b.max[ax]) / 2, rect(ax)); }
+      }
+      const seen21 = new Set();
+      for (const list of faces.values()) {
+        if (list.length < 2 || list.length > 400) continue;
+        for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+          const A = list[i], B = list[j]; if (A.m === B.m || near(A.m, B.m) || Math.abs(A.c - B.c) > 0.0015) continue;
+          const w = Math.min(A.r[1], B.r[1]) - Math.max(A.r[0], B.r[0]), h = Math.min(A.r[3], B.r[3]) - Math.max(A.r[2], B.r[2]);
+          const kitMade = (x) => /^(wall|ceil|floor|doorlook|hidelook|stair|lamp)/.test(x.m.name || (x.m.parent && x.m.parent.name) || '') || (x.m.name || '') === 'world';   // the kit's own joints (wall ends in a door frame) are left to the kit's tests
+          if (w > 0.08 && h > 0.08 && w * h > 0.015 && !(kitMade(A) && kitMade(B))) { const nm = (x) => x.m.name || (x.m.parent && x.m.parent.name) || x.m.geometry.type, k2 = [nm(A), nm(B)].sort().join('|') + Math.round(A.c * 10); if (seen21.has(k2)) continue; seen21.add(k2); out.p21.push(nm(A) + ' and ' + nm(B) + ' share a face plane at ' + A.c.toFixed(3) + ' (' + (w * h).toFixed(3) + ' m2)'); }
+        }
+      }
+    }
     // P4: low zones
     for (const Z of g.lowZones || []) if (!Z.standingBlocked()) out.p4.push(Z.id);
     out.jumps = window.__gfNpcJumps || [];
@@ -209,6 +246,46 @@ try {
   for (const x of audit.p12) Wn('P12', `a doorway half blocked: ${x}`);
   for (const x of audit.p14) Wn('P14', `a paper on the wall lies flat (sticks out of the plaster): ${x}`);
   for (const x of audit.p13.slice(0, 20)) Wn('P13', `a thing floating in the air: ${x}`);
+  for (const x of (audit.p21 || []).slice(0, 20)) Wn('P21', `z-fighting (two faces in one plane flicker): ${x}`);
+  // P17: people (js/npc-audit.js, 1.20.0): what the audit saw while the game ran, and now
+  {
+    await sleep(1200);
+    const npc = await G(`(() => ({ bad: (window.__gfNpcBad || []).map((x) => x.what + ': ' + x.detail), now: g.npcAudit ? g.npcAudit.now().map((x) => x.what + ': ' + x.detail) : null, n: g.npcAudit ? g.npcAudit.people().length : 0 }))()`);
+    for (const x of [...new Set([...(npc.bad || []), ...(npc.now || [])])].slice(0, 20)) Wn('P17', `a person ${x}`);
+  }
+  // P19: a crouching body under a low ceiling cannot stand up (C keeps it crouched)
+  {
+    const r = await G(`(async () => { const out = []; if (!g.setCrouch || !(g.lowZones || []).length) return out; const c = g.camera.position, back = { x: c.x, z: c.z, floor: g.floor };
+      for (const Z of g.lowZones) { g.teleport({ x: (Z.x0 + Z.x1) / 2, z: (Z.z0 + Z.z1) / 2, floor: Z.floor || 0 }); g.fp.crouching = true; await new Promise((r) => setTimeout(r, 150)); g.setCrouch(false); if (!g.fp.crouching) out.push(Z.id); g.fp.crouching = false; }
+      g.teleport(back); return out; })()`);
+    for (const id of r || []) E('P19', `low zone "${id}": C stands the body up under the low ceiling (ctx.setCrouch must keep it crouched: ctx.canStand)`);
+  }
+  // P18: a control hint lives in the notification lane, below / beside the others, never over them; a second one waits
+  {
+    const r = await G(`(async () => { if (!g.controlHint) return null; const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      g.ui && g.ui.toast && g.ui.toast('テストの通知'); g.controlHint('__t1', { text: 'テストの操作その一', key: 'T', once: false }); g.controlHint('__t2', { text: 'テストの操作その二', key: 'U', once: false }); await wait(700);
+      const card = document.querySelector('.gf-ch'); if (!card) return { none: true };
+      const R = (e) => { const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height }; }, cr = R(card), hit = [];
+      const vis = (e) => { if (!e || !e.offsetParent && getComputedStyle(e).position !== 'fixed') return false; const r = e.getBoundingClientRect(); return r.width > 4 && r.height > 4 && getComputedStyle(e).visibility !== 'hidden' && +getComputedStyle(e).opacity > 0.05; };
+      const parts = [...document.querySelectorAll('#hud-left > *, #hud-right > *, #hs-tc > *, #say, #gf-timed, .toast, #prompt')].filter((e) => e !== card && !card.contains(e) && !e.contains(card) && vis(e));
+      for (const e of parts) { const r = R(e); if (r.l < cr.r - 1 && cr.l < r.r - 1 && r.t < cr.b - 1 && cr.t < r.b - 1) hit.push((e.id || e.className || e.tagName).toString().slice(0, 40)); }
+      const shown = card.textContent, queued = g.controlHintQueue ? g.controlHintQueue() : null;
+      card.querySelector('button') && card.querySelector('button').click(); await wait(500); const second = (document.querySelector('.gf-ch') || {}).textContent || ''; document.querySelectorAll('.gf-ch button').forEach((b) => b.click());
+      return { hit, first: /その一/.test(shown), queued, second: /その二/.test(second) }; })()`);
+    if (r && !r.none) {
+      for (const x of r.hit || []) Wn('P18', `the control hint card overlaps "${x}" (it belongs in the notification lane, js/control-help.js 1.20.0)`);
+      if (!r.first || !r.second) Wn('P18', `two control hints at once: the first ${r.first ? 'showed' : 'did not show'}, the second ${r.second ? 'waited and showed' : 'was lost'} (queue: ${JSON.stringify(r.queued)})`);
+    }
+  }
+  // P20: a ladder / flight is climbed (the floor changes after a short climb, not at once)
+  {
+    const r = await G(`(async () => { const st = (g.world.interactables || []).find((o) => o.userData.interact && /stairs|ladder/.test(o.userData.interact.kind) && o.userData.interact.to && o.userData.interact.look !== 'lift' && (o.userData.interact.to.floor || 0) !== (g.floor || 0)); if (!st || !g.useStairs) return null;
+      const o = st.userData.interact, back = { x: g.camera.position.x, z: g.camera.position.z, floor: g.floor }, f0 = g.floor, t0 = performance.now(); g.useStairs(o);
+      const at0 = g.floor; let t1 = null; for (let i = 0; i < 60; i++) { await new Promise((r) => setTimeout(r, 100)); if (g.floor !== f0 && t1 == null) t1 = performance.now(); if (!(g.climbing && g.climbing())) break; }   // the end on the player's floor
+      await new Promise((r) => setTimeout(r, 300)); const moved = g.floor !== f0; g.teleport(back); return { id: o.id, look: o.look, instant: at0 !== f0, ms: t1 == null ? null : Math.round(t1 - t0), moved }; })()`);
+    if (r && r.instant) Wn('P20', `stairs "${r.id}" (${r.look}) move the player at once: no climb (game-core useStairs 1.20.0, game.json controls.climb)`);
+    else if (r && !r.moved) Wn('P20', `stairs "${r.id}": the climb did not reach the other floor`);
+  }
   // P9: 操作方法 in the menu
   const ctl = await G(`(async () => { if (!g.pm) return 'no menu'; g.pm.open(); await new Promise((r) => setTimeout(r, 400)); const ok = [...document.querySelectorAll('.wm-layer button, .pm button')].some((b) => /操作方法/.test(b.textContent)); g.pm.close && g.pm.close(); return ok; })()`);
   if (ctl !== true) E('P9', `the menu has no 操作方法 (${ctl})`);

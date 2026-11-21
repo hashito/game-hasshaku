@@ -1,4 +1,4 @@
-/* game-kit 8bda952: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 1d506003: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -71,8 +71,10 @@ import { showEndingScene, foundEndings } from './ending-scene.js';
 import { mountShareBar } from './share-bar.js';
 import { pasteOn } from './wall-paste.js';
 import { installTimedShot } from './timed-shot.js';
+import { VoiceQueue } from './voice-queue.js';
+import { installNpcAudit } from './npc-audit.js';
 
-export const CORE_VERSION = '1.18.2';
+export const CORE_VERSION = '1.20.0';
 // the mini game library's types (js/mg-library.js LIBRARY; test/story-hooks.test.mjs keeps the two equal): game.json "minigames" naming one of these loads the library
 export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath', 'layer-board'];
 const $ = (id) => document.getElementById(id);
@@ -340,22 +342,32 @@ export function createGame(cfg) {
       if (!cache.has(state.room)) cache.set(state.room, stepSurfaceOf(plan.rooms.find((r) => r.id === state.room), { def })); return cache.get(state.room); }; }
   // positional cues behind walls are muffled (audio.at(pos).door(), js/audio-at.js): the occlusion of a position = the doors between its room and the listener's room
   { let g = null; audio.occlusionOf = (pos) => { g = g || roomGraph(plan); return occlusion(g, state.room, roomOf(g, pos.x, pos.z, ctx.floor), (id) => { const d = world.doors && world.doors.get(id); return d ? (d.isOpen ? 1 : 0) : 1; }); }; }
-  // in-world voices (rule S15): ctx.playVoice(src, 'phone' | 'pa' | 'radio' | 'wall', { pos, intensity }) -> js/voice-fx.js (manifest "voice": true)
-  if (cfg.mods && cfg.mods.voice) { let vfx = null; ctx.playVoice = (src, preset, opt = {}) => { unlockAudio(); if (!vfx && audio.ctx) vfx = cfg.mods.voice.createVoiceFx(audio.ctx, { out: audio.master }); return vfx ? vfx.play(src, preset, opt) : null; }; }
-  // a spoken line (talk window, timed lines): ctx.voiceLine(src, preset | null, { volume }) -> { stop() }. A preset goes through playVoice (S15);
+  // in-world voices (rule S15): ctx.playVoice(src, 'phone' | 'pa' | 'radio' | 'wall', { pos, intensity, prio }) -> js/voice-fx.js (manifest "voice": true)
+  // standard 1.20.0 (水無瀬病院 2nd play test #3 「声が被る」): every voice goes through ONE channel (js/voice-queue.js): opt.prio 'story' |
+  // 'hint' (default) | 'idle'; a higher one cuts, a lower one waits a little or is dropped. ctx.voiceBusy() -> 0 (quiet) .. 3 (a story line).
+  const voices = ctx.voices = new VoiceQueue();
+  ctx.voiceBusy = () => voices.busy();
+  if (typeof window !== 'undefined') window.__gfVoices = voices;
+  if (cfg.mods && cfg.mods.voice) { let vfx = null; const raw = (src, preset, opt = {}) => { unlockAudio(); if (!vfx && audio.ctx) vfx = cfg.mods.voice.createVoiceFx(audio.ctx, { out: audio.master }); return vfx ? vfx.play(src, preset, opt) : null; };
+    ctx.playVoice = (src, preset, opt = {}) => voices.request(() => raw(src, preset, opt), { prio: opt.prio, wait: opt.wait, cut: opt.cut, id: String(src).slice(-40) }); }
+  // a spoken line (talk window, timed lines): ctx.voiceLine(src, preset | null, { volume, prio }) -> { stop() }. A preset goes through playVoice (S15);
   // null = a voice in the same room, played clean on the master bus. Fails silently (the subtitle carries the words).
-  ctx.voiceLine = (src, preset = null, opt = {}) => {
-    unlockAudio();
-    if (preset && ctx.playVoice) return ctx.playVoice(src, preset, opt);
+  const rawLine = (src, opt) => {
     const ac = audio.ctx; if (!ac) return null;
-    let node = null, stopped = false;
+    let node = null, stopped = false, fin; const done = new Promise((r) => (fin = r));
     fetch(src).then((r) => r.arrayBuffer()).then((b) => ac.decodeAudioData(b)).then((buf) => {
       if (stopped) return;
       node = ac.createBufferSource(); node.buffer = buf;
       const gain = ac.createGain(); gain.gain.value = opt.volume ?? 1;
-      node.connect(gain).connect(audio.master || ac.destination); node.start();
-    }).catch(() => {});
-    return { stop() { stopped = true; try { node && node.stop(); } catch (e) {} } };
+      node.connect(gain).connect(audio.master || ac.destination); node.onended = () => fin(); node.start();
+    }).catch(() => fin());
+    return { done, stop() { stopped = true; try { node && node.stop(); } catch (e) {} fin(); } };
+  };
+  ctx.voiceLine = (src, preset = null, opt = {}) => {
+    unlockAudio();
+    if (preset && ctx.playVoice) return ctx.playVoice(src, preset, opt);
+    if (!audio.ctx) return null;
+    return voices.request(() => rawLine(src, opt), { prio: opt.prio, wait: opt.wait, cut: opt.cut, id: String(src).slice(-40) });
   };
 
   // short messages (say / toast) and progress-ui's dialogs: KitUI. Menus, tabs, docs, endings: the window manager (ONE window at a time).
@@ -549,7 +561,40 @@ export function createGame(cfg) {
   ctx.interact = () => { if (blocked() || !target) return false; const h = handlerOf(target.kind); if (!h) return false; bus.emit('player:interact', { kind: target.kind, id: target.id }); h.run(target, ctx); return true; };
   // floors: a stairs / lift end ({ to: { x, z, floor, yaw } }) moves the player; worlds without stairs never call it
   ctx.setFloor = (floor, p = null) => { const from = ctx.floor; if (p) { placeCamera(p.x, p.z, floor); if (p.yaw != null) fp.yaw = p.yaw; } else placeCamera(camera.position.x, camera.position.z, floor); if (world.setLampFloor) world.setLampFloor(floor); if (from !== floor) bus.emit('player:floor', { from, to: floor }); };
-  ctx.useStairs = (o) => { const to = o.to || (o.def && o.def.to); if (!to) return false; if (world.useStairs) return world.useStairs(o, ctx); ctx.setFloor(to.floor || 0, to); return true; };
+  // 1.20.0 (水無瀬病院 2nd play test #13 「はしごを昇り降りする時にすぐに上下するのではなく音などをつけて間をつくって」): a ladder or a
+  // flight is climbed, not jumped: ~1.7 s (a flight ~1.2 s) of the body going up or down at the foot of it - the view turns to the ladder and up
+  // (or down through the hatch), the eye rises rung by rung with a hand / foot sound on each, a short dark at the hatch, then the arrival
+  // continues the climb out. Lifts stay a cut. game.json controls.climb: false (or ?qa) keeps the old instant move. ctx.climbing() -> bool.
+  let climbing = false; ctx.climbing = () => climbing;
+  const tween = (sec, f) => new Promise((res) => { const t0 = performance.now(); const tick = () => { const k = Math.min(1, (performance.now() - t0) / 1000 / sec); try { f(k); } catch (e) { console.error(e); } if (k >= 1) res(); else requestAnimationFrame(tick); }; requestAnimationFrame(tick); });
+  const ease = (k) => k * k * (3 - 2 * k), lerpA = (a, b, k) => a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * k;
+  let climbDark = null;
+  const dark = (on, sec = 0.2) => { if (typeof document === 'undefined') return; if (!climbDark) { climbDark = document.createElement('div'); climbDark.id = 'gf-climb-dark'; climbDark.style.cssText = 'position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:40;transition:opacity .2s linear'; document.body.appendChild(climbDark); } climbDark.style.transitionDuration = `${sec}s`; climbDark.style.opacity = on ? '0.92' : '0'; };
+  const climb = (o, to) => ctx.hold(async () => {
+    climbing = true; bus.emit('player:climb', { id: o.id, up: o.up, look: o.look });
+    try {
+      const flight = o.look === 'flight', up = o.up ?? ((to.floor || 0) > (ctx.floor || 0)), rise = flight ? 0.7 : 0.95, n = flight ? 4 : 5;
+      if (fp.crouching) { fp.crouching = false; bus.emit('player:crouch', { on: false }); }
+      const c0 = camera.position.clone(), at = o.at || { x: c0.x, z: c0.z }, d = Math.hypot(at.x - c0.x, at.z - c0.z);
+      const ux = d > 0.05 ? (at.x - c0.x) / d : -Math.sin(fp.yaw), uz = d > 0.05 ? (at.z - c0.z) / d : -Math.cos(fp.yaw);
+      const fx = at.x - ux * 0.55, fz = at.z - uz * 0.55, yaw0 = fp.yaw, yawL = Math.atan2(-ux, -uz), p0 = fp.pitch, pL = flight ? (up ? 0.25 : -0.45) : (up ? 0.6 : -0.75);
+      const rung = (i) => sound(flight ? 'step' : 'rung', flight ? 'concrete' : i, flight ? {} : { up });
+      // to the foot, facing it
+      await tween(0.35, (k) => { const e = ease(k); camera.position.x = c0.x + (fx - c0.x) * e; camera.position.z = c0.z + (fz - c0.z) * e; fp.yaw = lerpA(yaw0, yawL, e); fp.pitch = p0 + (pL - p0) * e; });
+      // the climb: rung by rung
+      let last = -1;
+      await tween(flight ? 0.55 : 0.8, (k) => { const i = Math.floor(k * n); if (i !== last && i < n) { last = i; rung(i); } const step = (k * n) % 1; fp.yOff = (up ? 1 : -1) * rise * k + Math.sin(step * Math.PI) * 0.035; if (k > 0.7) dark(true, 0.18); });
+      // through the hatch / round the landing
+      ctx.setFloor(to.floor || 0, to);
+      fp.yOff = (up ? -1 : 1) * rise * 0.8; fp.pitch = up ? 0.35 : -0.3; const yaw1 = fp.yaw;
+      await new Promise((r) => setTimeout(r, 90)); dark(false, 0.35);
+      last = -1;
+      await tween(flight ? 0.45 : 0.6, (k) => { const i = Math.floor(k * 2); if (i !== last && i < 2) { last = i; rung(n + i); } fp.yOff = (up ? -1 : 1) * rise * 0.8 * (1 - ease(k)); fp.pitch = (up ? 0.35 : -0.3) * (1 - ease(k)); fp.yaw = yaw1; });
+    } finally { fp.yOff = 0; dark(false, 0.2); climbing = false; bus.emit('player:climbed', { id: o.id }); }
+  });
+  ctx.useStairs = (o) => { const to = o.to || (o.def && o.def.to); if (!to) return false; if (world.useStairs) return world.useStairs(o, ctx); if (climbing) return false;
+    if (ctx.qa || controls.climb === false || o.look === 'lift' || !(o.look === 'ladder' || o.look === 'flight')) { ctx.setFloor(to.floor || 0, to); return true; }
+    climb(o, to); return true; };
 
   // ---- menus: tab menu (items / tasks / notes / map + the game's tabs), pause menu, step guide ----
   const journal = ctx.journal = createJournal({
@@ -785,7 +830,27 @@ export function createGame(cfg) {
   const systems = ext.reg.system.list().map((s) => ({ id: s.id, def: s, inst: s.create ? s.create(ctx) : null }));
   // crouch and flashlight (game.json "controls": { "crouch": true, "flashlight": true | { "on": true, "intensity": 24 } }, standard 1.7): [C] / [F] and touch
   // buttons; ctx.visibility() tells the monster how easy you are to notice (crouching 0.6, a light on 1.3: controls.crouchVisibility / lightVisibility)
-  ctx.setCrouch = (on) => { if (!controls.crouch) return; fp.crouching = !!on; bus.emit('player:crouch', { on: fp.crouching }); ui.toast(fp.crouching ? 'しゃがんだ（Cで立つ）' : '立ち上がった'); };
+  // 1.20.0 (水無瀬病院 2nd play test #9 「天井が低いところで C で立ち上がれる」): standing up needs headroom. Under a low collider (a low zone's
+  // slab, a ceiling a game marks low) or anything solid over the head, C keeps the body crouched and says why. ctx.headroom() -> metres free.
+  ctx.headroom = (p = camera.position) => {
+    const fy0 = fp.floorY ?? 0, r = 0.28; let free = 9;
+    for (const c of world.colliders) { const B = c.box; if (!B || c.off || c.gate || p.x < B.min.x - r || p.x > B.max.x + r || p.z < B.min.z - r || p.z > B.max.z + r) continue;
+      if (B.max.y <= fy0 + 0.35) continue;                                   // a step, a kerb: under the feet
+      if (!c.low && B.min.y <= fy0 + 0.35) continue;                          // a wall the body is beside, not under (the walls stop the walk)
+      free = Math.min(free, Math.max(0, B.min.y - fy0)); }
+    return free;
+  };
+  ctx.canStand = (p) => ctx.headroom(p) >= (EYE + 0.12);
+  let roofSaid = 0;
+  ctx.setCrouch = (on) => {
+    if (!controls.crouch) return;
+    if (!on && fp.crouching && !ctx.canStand()) {
+      const now = performance.now();
+      if (now - roofSaid > 1500) { roofSaid = now; ctx.answer ? ctx.answer('天井が低くて、立てません。しゃがんだまま通れます。', 2.6) : ui.say('天井が低くて、立てません。', 2.6); sound('noise', 'thud', { gain: 0.25 }); }
+      bus.emit('player:crouch-blocked', {}); return false;
+    }
+    fp.crouching = !!on; bus.emit('player:crouch', { on: fp.crouching }); ui.toast(fp.crouching ? 'しゃがんだ（Cで立つ）' : '立ち上がった'); return true;
+  };
   ctx.body = createBodyFx(ctx);   // the body's effects (standard 1.12.1, js/body-fx.js): dizzy, stagger, heartbeat, ringing, collapse, wake
   // the approach (standard 1.11, game.json "approach"): vignette + heartbeat + shake from ctx.fxState, the warning pulse, the catch close-up
   ctx.approach = manifest.approach ? createApproach(ctx, manifest.approach) : null;
@@ -845,6 +910,7 @@ export function createGame(cfg) {
   ctx.systems = systems;
   installTimedShot(ctx, { bus, systems });   // ctx.timedShot, ctx.hurt, ctx.aimAt (standard 1.18.0, 鏡屋 #4 #9)
   systems.push(followSystem);   // ctx.followStation (1.17.0)
+  installNpcAudit(ctx, { systems });   // ctx.npcAudit, window.__gfNpcBad: people in walls, floating, on furniture (standard 1.20.0)
   installGuideAids(ctx, { bus, systems, tasks, stages: data.stages });   // **emphasis**, the wait bar, the recap, the map tip (standard 1.14)
   // guiding the player (standard 1.13, js/guidance.js): ctx.lookTo, task "reach" / when(), game.json "pointer" and "hud"
   const guidance = installGuidance(ctx, { manifest, tasks, plan: wdef ? null : plan, stationPos, taskReg: (id) => ext.reg.task.get(id), reachOk: (t) => ctx.levelIndex(t.stage) <= prog.index && (t.needs || []).every((n) => state.tasks.includes(n)) });
@@ -855,14 +921,14 @@ export function createGame(cfg) {
   const thoughtDir = String(manifest.thoughtVoices || '').replace(/[^/]*$/, '');
   ctx.monologue = (text, sec = 2.2, o) => {
     const v = thoughtVoices && thoughtVoices[text];
-    if (v && !ctx.qa) { safe(() => thoughtNode && thoughtNode.stop && thoughtNode.stop()); safe(() => { thoughtNode = ctx.voiceLine(thoughtDir + v.file); }); sec = Math.max(sec, (v.sec || 0) + 1); }
+    if (v && !ctx.qa) { safe(() => thoughtNode && thoughtNode.stop && thoughtNode.stop()); safe(() => { thoughtNode = ctx.voiceLine(thoughtDir + v.file, null, { prio: (o && o.prio) || 'hint' }); }); sec = Math.max(sec, (v.sec || 0) + 1); }
     return ui.say(esc(text), sec, o);
   };   // the protagonist's thought line (U23); monster hints ("走れ") go through it
   // the answer to what the player just did ([E] on something, a key): at once, never dropped from a full queue (standard 1.10.15, deguchi K8)
   ctx.answer = (text, sec) => ctx.monologue(text, sec ?? Math.min(9, 2.4 + String(text).length * 0.09), { urgent: true });
   systems.push({ id: 'door-hold', def: { update: (dt = 0.016, c, active) => { if (active && world.doors) for (const d of world.doors.values()) if (d.monsterHold > 0) d.monsterHold = Math.max(0, d.monsterHold - dt); } } });
   // the conversation window and the choice (js/talk-ui.js, standard 1.7): ctx.talk(lines | 'key of data/talk.json', o), ctx.choose({ who, text, options })
-  { const T = createTalk({ fx: (f) => ctx.body && ctx.body.play(f), wm, qa: !!ctx.qa, data: data.talk || null, portraits: manifest.portraits || null, log: (ctx.talkLog = []), said: (L) => ui.sayLine.remember(`<span class="who">${esc(L.who || '')}</span>${esc(L.text || '')}`), voice: (L) => ctx.voiceLine(L.voice, L.vfx || null) }); ctx.choose = T.choose;
+  { const T = createTalk({ fx: (f) => ctx.body && ctx.body.play(f), wm, qa: !!ctx.qa, data: data.talk || null, portraits: manifest.portraits || null, log: (ctx.talkLog = []), said: (L) => ui.sayLine.remember(`<span class="who">${esc(L.who || '')}</span>${esc(L.text || '')}`), voice: (L) => ctx.voiceLine(L.voice, L.vfx || null, { prio: L.prio || 'story' }), sound: (n) => sound(n) }); ctx.choose = T.choose;
     // a talk that opens right after a pick-up (the item finished a task, the story answers it) used to cover the item card at once: the player
     // never read what they had picked up. Such a talk now starts with the item itself (picture, name, desc) as its first page, read at the player's pace.
     // a line { t: '...' } in a talk is a thought (deguchi K6): the spoken lines go in the window, then the thoughts in the thought band

@@ -1,4 +1,4 @@
-/* game-kit 1b8c7db: js/controller.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 1d506003: js/controller.js — edit in game-kit and run tools/kit-sync.js */
 // First-person controller: pointer lock + mouse look, WASD / arrows + Shift to run, a touch stick and
 // swipe-to-look for phones, circle-vs-box collisions, footstep callbacks.
 // Extracted from ひだまり薬局 (game-yakkyoku, js/game.js); the same scheme runs 未然調書 and the police game.
@@ -249,7 +249,7 @@ export class FirstPersonController {
     const ty = this.floorY + this.o.eye * (this.crouching ? this.o.crouchEye ?? 0.6 : 1);   // standard 1.7: crouching lowers the eye and slows the walk
     if (this.o.smoothY === false || this._y == null || Math.abs(ty - this._y) > 0.8) this._y = ty;
     else this._y += (ty - this._y) * (1 - Math.exp(-Math.min(dt, 0.1) * 16));
-    p.y = this._y;
+    p.y = this._y + (this.yOff || 0);   // yOff: a climb (game-core useStairs, standard 1.20.0) lifts / lowers the eye for a moment
     this.camera.rotation.set(this.pitch, this.yaw, 0);
   }
 }

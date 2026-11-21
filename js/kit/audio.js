@@ -1,4 +1,4 @@
-/* game-kit 8e20d97: js/audio.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 1d506003: js/audio.js — edit in game-kit and run tools/kit-sync.js */
 import { muffle as muffleOf } from './audio-at.js';
 import { stepParts, noiseParts } from './step-sound.js';
 // Procedural sound (Web Audio API). The engine (noise bursts, tones, positional output, generated
@@ -263,6 +263,33 @@ export class Audio {
   // footsteps by the floor underfoot (js/step-sound.js: lino wax wood tatami carpet tile concrete gravel grass dirt snow mud water metal grating)
   step(surface = 'lino', { run = false, crouch = false, pos = null } = {}) {
     for (const p of stepParts(surface, { run, crouch })) this.part(p, pos);
+  }
+
+  // a ladder rung (standard 1.20.0): a hand on cold steel, then a boot on the rung, alternating; i = the rung number
+  rung(i = 0, { up = true, pos = null } = {}) {
+    const hand = i % 2 === 0, f = 380 + (i % 3) * 37;
+    if (hand) { this.noiseBurst({ dur: 0.05, freq: 2600, q: 3, gain: 0.07, pos }); this.tone({ dur: 0.18, freq: f * 2.3, type: 'triangle', gain: 0.018, wet: 0.5, pos }); }
+    else { this.noiseBurst({ dur: 0.07, freq: 300, q: 1.5, gain: 0.22, type: 'lowpass', pos }); this.tone({ at: 0.01, dur: 0.35, freq: f, type: 'triangle', gain: 0.035, slide: 0.97, wet: 0.55, pos }); this.tone({ at: 0.01, dur: 0.5, freq: f * 2.71, type: 'sine', gain: 0.012, wet: 0.6, pos }); }
+    void up;
+  }
+
+  // a machine running (standard 1.20.0, 水無瀬病院 2nd play test #8 「発電機の唸る音がありません」): a positional loop - the mains hum and its
+  // harmonics through a low-pass, a slow beat, and the rattle of the housing. audio.hum('gen', { x, y, z }, { freq: 50, gain: 0.5 }); audio.stopLoop('gen')
+  hum(name, pos, { freq = 50, gain = 0.5, rattle = 0.5, ref = 1.6 } = {}) {
+    this.startLoop(name, () => {
+      const ctx = this.ctx, out = ctx.createGain(); out.gain.value = 0;
+      out.gain.linearRampToValueAtTime(gain, ctx.currentTime + 1.2);   // spins up
+      const p = ctx.createPanner(); p.distanceModel = 'inverse'; p.refDistance = ref; p.rolloffFactor = 1.3;
+      if (p.positionX) { p.positionX.value = pos.x; p.positionY.value = pos.y; p.positionZ.value = pos.z; } else p.setPosition(pos.x, pos.y, pos.z);
+      out.connect(p).connect(this.master);
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700; lp.connect(out);
+      const nodes = [];
+      for (const [mul, g, type] of [[1, 0.22, 'sawtooth'], [2, 0.12, 'square'], [3, 0.05, 'sawtooth'], [1.007, 0.1, 'sine']]) { const o = ctx.createOscillator(); o.type = type; o.frequency.value = freq * mul; const gg = ctx.createGain(); gg.gain.value = g; o.connect(gg).connect(lp); nodes.push(o); }
+      const beat = ctx.createOscillator(); beat.frequency.value = 0.7; const bg = ctx.createGain(); bg.gain.value = 0.08; beat.connect(bg).connect(out.gain); nodes.push(beat);
+      if (this.noiseBuf && rattle > 0) { const n = ctx.createBufferSource(); n.buffer = this.noiseBuf; n.loop = true; const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = 1.2; const ng = ctx.createGain(); ng.gain.value = 0.05 * rattle; const am = ctx.createOscillator(); am.frequency.value = freq / 2; const ag = ctx.createGain(); ag.gain.value = 0.04 * rattle; am.connect(ag).connect(ng.gain); n.connect(bp).connect(ng).connect(out); nodes.push(n, am); }
+      nodes.forEach((x) => x.start());
+      return { gain: out, nodes };
+    });
   }
 
   // a house noise from js/step-sound.js NOISES (knock thud rattle scrape slide creakFloor drip tap rustle splash)

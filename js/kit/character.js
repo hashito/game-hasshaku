@@ -1,4 +1,4 @@
-/* game-kit 74ad163: js/character.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 1d506003: js/character.js — edit in game-kit and run tools/kit-sync.js */
 // People, version 2: one skinned mesh per person (2 draw calls instead of ~30), a proper skeleton,
 // and the motion layer of js/motion.js (idle / walk / run / sit / sit down / stand up / talk /
 // look around / scared / crouch, crossfaded; speed-matched feet; head tracking; blinking; mouth).
@@ -560,6 +560,7 @@ export class Character {
   noteMove() { this._jp = null; }
   watchJump() {
     if (typeof window === 'undefined') return;
+    if (!this._listed) { this._listed = true; (globalThis.__gfPeople = globalThis.__gfPeople || new Set()).add(this); }   // js/npc-audit.js (1.20.0) checks every person that has been updated
     let vis = true; for (let o = this.root; o; o = o.parent) if (o.visible === false) { vis = false; break; }
     if (!vis) { this._jp = null; return; }
     const p = this.root.getWorldPosition(this._jw || (this._jw = new THREE.Vector3()));
